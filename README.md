@@ -20,7 +20,7 @@ Proyek ini dikembangkan sebagai solusi digitalisasi administrasi akademik di SMK
 | :--- | :--- | :--- |
 | **Dinar Fauziah** | F52123078 | Project Manager & QA |
 | **Arya Yudhistira Syafrul** | F52123079 | Back-End Developer |
-| **Muh. Zulhajir AR** | F52123052 | Back-End Developer |
+| **Muh. Zulhajir AR** | F55123052 | Back-End Developer |
 | **Dwi Candra Andika** | F55123028 | Front-End Developer |
 | **Moh. Faathir Ash Shaff** | F55123040 | Front-End Developer |
 | **Rafika Nur Indriani** | F52123097 | UI/UX Designer |
