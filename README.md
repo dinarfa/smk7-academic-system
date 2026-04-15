@@ -1,0 +1,1 @@
+# smk7-academic-system
