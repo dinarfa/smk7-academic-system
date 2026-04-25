@@ -37,3 +37,60 @@ Proyek ini dikembangkan sebagai solusi digitalisasi administrasi akademik di SMK
 3. **Perancangan Sistem:** Minggu 4-6.
 4. **Implementasi & Coding:** Minggu 7-14.
 5. **Pengujian & Evaluasi:** Minggu 15-16.
+
+## ▶️ Cara Menjalankan Project (Laravel)
+
+### 1) Prasyarat
+- PHP 8.3+
+- Composer
+- Node.js + npm
+- Database MySQL/PostgreSQL
+
+### 2) Setup cepat (disarankan)
+Jalankan dari root project:
+
+```bash
+composer setup
+composer run dev
+```
+
+Perintah `composer setup` di project ini akan otomatis:
+- install dependency PHP (`composer install`)
+- membuat file `.env` jika belum ada
+- generate `APP_KEY`
+- menjalankan migrasi database
+- install dependency frontend (`npm install`)
+- build aset awal (`npm run build`)
+
+Lalu `composer run dev` akan menjalankan server Laravel + queue worker + log tail + Vite sekaligus.
+
+### 3) Setup manual (opsional)
+Jika ingin per langkah:
+
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
+```
+
+Edit konfigurasi database di `.env` (`DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`), lalu lanjutkan:
+
+```bash
+php artisan migrate
+php artisan db:seed
+npm install
+composer run dev
+```
+
+Akun email / password  
+Siswa : murid@example.com / password  
+Guru : guru@example.com / password  
+
+### 4) Akses aplikasi
+- Buka `http://localhost:8000` di browser.
+
+### 5) Menjalankan test
+```bash
+php artisan test --compact
+```
+
