@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\AttendanceSession;
 use App\Models\User;
+use App\Policies\AttendanceSessionPolicy;
 use App\Policies\UserPolicy;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
@@ -35,6 +37,7 @@ class AppServiceProvider extends ServiceProvider
      */
     protected function registerPolicies(): void
     {
+        Gate::policy(AttendanceSession::class, AttendanceSessionPolicy::class);
         Gate::policy(User::class, UserPolicy::class);
     }
 
