@@ -8,6 +8,8 @@ use App\Http\Controllers\Admin\SubjectController as AdminSubjectController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Student\AttendanceController as StudentAttendanceController;
 use App\Http\Controllers\Teacher\AttendanceSessionController;
+use App\Http\Controllers\Teacher\ExamController;
+use App\Http\Controllers\Teacher\QuestionController;
 use App\Http\Controllers\Teacher\SchoolClassController;
 use App\Http\Controllers\Teacher\StudentController;
 use Illuminate\Support\Facades\Route;
@@ -62,6 +64,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::post('attendance-sessions', [AttendanceSessionController::class, 'store'])->name('attendance-sessions.store');
         Route::patch('attendance-sessions/{attendanceSession}/close', [AttendanceSessionController::class, 'close'])->name('attendance-sessions.close');
+
+        // Exam management
+        Route::get('exams', [ExamController::class, 'index'])->name('exams.index');
+        Route::get('exams/create', [ExamController::class, 'create'])->name('exams.create');
+        Route::post('exams', [ExamController::class, 'store'])->name('exams.store');
+
+        // Exam questions
+        Route::get('exams/{exam}/questions', [QuestionController::class, 'index'])->name('exams.questions.index');
+        Route::get('exams/{exam}/questions/create', [QuestionController::class, 'create'])->name('exams.questions.create');
+        Route::post('exams/{exam}/questions', [QuestionController::class, 'store'])->name('exams.questions.store');
+        Route::get('exams/{exam}/questions/{question}/edit', [QuestionController::class, 'edit'])->name('exams.questions.edit');
+        Route::put('exams/{exam}/questions/{question}', [QuestionController::class, 'update'])->name('exams.questions.update');
+        Route::delete('exams/{exam}/questions/{question}', [QuestionController::class, 'destroy'])->name('exams.questions.destroy');
     });
 
     Route::middleware('role:student')->prefix('student')->name('student.')->group(function () {

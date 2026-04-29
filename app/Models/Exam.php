@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['subject_id', 'created_by', 'title', 'instructions', 'duration_minutes', 'starts_at', 'ends_at', 'status', 'access_code'])]
+#[Fillable(['subject_id', 'class_id', 'created_by', 'title', 'instructions', 'duration_minutes', 'starts_at', 'ends_at', 'status', 'access_code'])]
 class Exam extends Model
 {
     use HasFactory;
@@ -33,6 +33,14 @@ class Exam extends Model
     public function subject(): BelongsTo
     {
         return $this->belongsTo(Subject::class);
+    }
+
+    /**
+     * Class this exam belongs to.
+     */
+    public function class(): BelongsTo
+    {
+        return $this->belongsTo(SchoolClass::class);
     }
 
     /**

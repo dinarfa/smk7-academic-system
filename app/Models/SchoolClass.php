@@ -39,9 +39,17 @@ class SchoolClass extends Model
     }
 
     /**
+     * Exams for this class.
+     */
+    public function exams(): HasMany
+    {
+        return $this->hasMany(Exam::class);
+    }
+
+    /**
      * Exams available through the subjects in this class.
      */
-    public function exams(): HasManyThrough
+    public function examsViaSubjects(): HasManyThrough
     {
         return $this->hasManyThrough(Exam::class, Subject::class);
     }
