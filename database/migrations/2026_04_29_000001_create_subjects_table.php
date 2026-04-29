@@ -13,14 +13,9 @@ return new class extends Migration
     {
         Schema::create('subjects', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('school_class_id')->constrained('school_classes')->cascadeOnDelete();
-            $table->foreignId('teacher_id')->constrained('users')->cascadeOnDelete();
+            $table->string('code')->unique();
             $table->string('name');
-            $table->text('description')->nullable();
-            $table->boolean('is_active')->default(true)->index();
             $table->timestamps();
-
-            $table->unique(['school_class_id', 'name']);
         });
     }
 

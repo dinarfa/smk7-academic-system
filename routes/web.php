@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AdminAuditLogController;
 use App\Http\Controllers\Admin\AdminReportController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\SchoolClassController as AdminSchoolClassController;
+use App\Http\Controllers\Admin\SubjectController as AdminSubjectController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Student\AttendanceController as StudentAttendanceController;
 use App\Http\Controllers\Teacher\AttendanceSessionController;
@@ -25,6 +26,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Class generation
         Route::get('classes', [AdminSchoolClassController::class, 'index'])->name('classes.index');
         Route::post('classes', [AdminSchoolClassController::class, 'store'])->name('classes.store');
+
+        // Subject management
+        Route::get('subjects', [AdminSubjectController::class, 'index'])->name('subjects.index');
+        Route::post('subjects', [AdminSubjectController::class, 'store'])->name('subjects.store');
+        Route::get('subjects/{subject}/edit', [AdminSubjectController::class, 'edit'])->name('subjects.edit');
+        Route::put('subjects/{subject}', [AdminSubjectController::class, 'update'])->name('subjects.update');
+        Route::delete('subjects/{subject}', [AdminSubjectController::class, 'destroy'])->name('subjects.destroy');
 
         // User management
         Route::get('users', [AdminUserController::class, 'index'])->name('users.index');
