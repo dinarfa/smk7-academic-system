@@ -93,6 +93,30 @@ class User extends Authenticatable
     }
 
     /**
+     * Subjects owned by this teacher.
+     */
+    public function subjects(): HasMany
+    {
+        return $this->hasMany(Subject::class, 'teacher_id');
+    }
+
+    /**
+     * Exams created by this user.
+     */
+    public function examsCreated(): HasMany
+    {
+        return $this->hasMany(Exam::class, 'created_by');
+    }
+
+    /**
+     * Exam attempts submitted by this student.
+     */
+    public function examAttempts(): HasMany
+    {
+        return $this->hasMany(ExamAttempt::class, 'student_id');
+    }
+
+    /**
      * Audit logs performed by this admin.
      */
     public function auditLogsPerformed(): HasMany
