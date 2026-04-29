@@ -58,7 +58,7 @@ class AdminReportController extends Controller
             ])->values(),
             'recentSessions' => $recentSessions->map(fn (AttendanceSession $session): array => [
                 'id' => $session->id,
-                'type' => $session->type,
+                'type' => $session->type?->value,
                 'subject' => $session->subject,
                 'opened_by' => $session->openedBy->name,
                 'created_at' => $session->created_at?->toIso8601String(),
@@ -89,7 +89,7 @@ class AdminReportController extends Controller
         return Inertia::render('admin/reports/by-session', [
             'sessions' => $sessions->through(fn (AttendanceSession $session): array => [
                 'id' => $session->id,
-                'type' => $session->type,
+                'type' => $session->type?->value,
                 'subject' => $session->subject,
                 'opened_by' => $session->openedBy->name,
                 'starts_at' => $session->starts_at?->toIso8601String(),
@@ -100,7 +100,7 @@ class AdminReportController extends Controller
                     'id' => $record->id,
                     'student_name' => $record->student->name,
                     'student_email' => $record->student->email,
-                    'status' => $record->status,
+                    'status' => $record->status?->value,
                     'scanned_at' => $record->scanned_at?->toIso8601String(),
                 ])->values(),
             ])->values(),
@@ -129,9 +129,9 @@ class AdminReportController extends Controller
                 'records_count' => $student->attendance_records_count,
                 'records' => $student->attendanceRecords->map(fn (AttendanceRecord $record): array => [
                     'id' => $record->id,
-                    'session_type' => $record->session->type,
+                    'session_type' => $record->session->type?->value,
                     'session_subject' => $record->session->subject,
-                    'status' => $record->status,
+                    'status' => $record->status?->value,
                     'scanned_at' => $record->scanned_at?->toIso8601String(),
                 ])->values(),
             ])->values(),
@@ -149,7 +149,7 @@ class AdminReportController extends Controller
 
         $csv = "Student Name,Email,Session Type,Subject,Status,Scanned At\n";
         foreach ($records as $record) {
-            $csv .= "\"{$record->student->name}\",\"{$record->student->email}\",\"{$record->session->type}\",\"{$record->session->subject}\",\"{$record->status}\",\"{$record->scanned_at}\"\n";
+            $csv .= "\"{$record->student->name}\",\"{$record->student->email}\",\"{$record->session->type?->value}\",\"{$record->session->subject}\",\"{$record->status?->value}\",\"{$record->scanned_at}\"\n";
         }
 
         return response($csv)

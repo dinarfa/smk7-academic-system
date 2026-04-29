@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\AttendanceQrType;
 use App\Models\AttendanceSession;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -20,7 +21,7 @@ class AttendanceSessionFactory extends Factory
     {
         return [
             'opened_by' => User::factory(),
-            'type' => $this->faker->randomElement(['Morning', 'Afternoon', 'Evening']),
+            'type' => $this->faker->randomElement(AttendanceQrType::cases())->value,
             'subject' => $this->faker->word(),
             'qr_token' => $this->faker->unique()->sha256(),
             'starts_at' => now(),

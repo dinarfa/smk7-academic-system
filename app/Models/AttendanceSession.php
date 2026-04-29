@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AttendanceQrType;
 use BaconQrCode\Renderer\Color\Rgb;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
@@ -36,6 +37,7 @@ class AttendanceSession extends Model
     protected function casts(): array
     {
         return [
+            'type' => AttendanceQrType::class,
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
             'is_active' => 'boolean',

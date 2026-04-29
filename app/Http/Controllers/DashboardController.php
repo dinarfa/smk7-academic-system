@@ -53,7 +53,7 @@ class DashboardController extends Controller
                 ],
                 'activeSessions' => $activeSessions->map(fn (AttendanceSession $session): array => [
                     'id' => $session->id,
-                    'type' => $session->type,
+                    'type' => $session->type?->value,
                     'subject' => $session->subject,
                     'starts_at' => $session->starts_at?->toIso8601String(),
                     'ends_at' => $session->ends_at?->toIso8601String(),
@@ -70,7 +70,7 @@ class DashboardController extends Controller
                     ->map(fn (AttendanceRecord $record): array => [
                         'id' => $record->id,
                         'student_name' => $record->student?->name,
-                        'session_type' => $record->session?->type,
+                        'session_type' => $record->session?->type?->value,
                         'subject' => $record->session?->subject,
                         'scanned_at' => $record->scanned_at?->toIso8601String(),
                     ])->values(),
@@ -91,7 +91,7 @@ class DashboardController extends Controller
             ],
             'recentRecords' => $records->map(fn (AttendanceRecord $record): array => [
                 'id' => $record->id,
-                'session_type' => $record->session?->type,
+                'session_type' => $record->session?->type?->value,
                 'subject' => $record->session?->subject,
                 'scanned_at' => $record->scanned_at?->toIso8601String(),
             ])->values(),
