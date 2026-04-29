@@ -1,6 +1,9 @@
 <?php
 
+use App\Enums\AttendanceQrType;
+use App\Enums\AttendanceStatus;
 use App\Enums\UserRole;
+use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
 use App\Models\SchoolClass;
 use App\Models\User;
@@ -22,6 +25,31 @@ test('teacher can open a new attendance qr session', function () {
         'type' => 'morning',
         'is_active' => 1,
     ]);
+});
+
+test('attendance types and statuses are cast to enums', function () {
+    $teacher = User::factory()->teacher()->create();
+    $student = User::factory()->student()->create();
+
+    $session = AttendanceSession::query()->create([
+        'opened_by' => $teacher->id,
+        'type' => 'subject',
+        'subject' => 'Matematika',
+        'qr_token' => 'ENUM-TOKEN-001',
+        'starts_at' => now(),
+        'ends_at' => now()->addMinutes(30),
+        'is_active' => true,
+    ]);
+
+    $record = AttendanceRecord::query()->create([
+        'attendance_session_id' => $session->id,
+        'student_id' => $student->id,
+        'status' => 'present',
+        'scanned_at' => now(),
+    ]);
+
+    expect($session->type)->toBe(AttendanceQrType::Subject);
+    expect($record->status)->toBe(AttendanceStatus::Present);
 });
 
 test('teacher can only close their own attendance session', function () {
