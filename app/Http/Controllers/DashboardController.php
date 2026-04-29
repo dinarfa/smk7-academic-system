@@ -19,6 +19,24 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
+        if ($user->role === UserRole::Admin) {
+            $totalUsers = User::count();
+            $totalTeachers = User::where('role', UserRole::Teacher)->count();
+            $totalStudents = User::where('role', UserRole::Student)->count();
+            $totalSessions = AttendanceSession::count();
+            $todayRecords = AttendanceRecord::whereDate('scanned_at', now()->toDateString())->count();
+
+            return Inertia::render('admin/dashboard', [
+                'summary' => [
+                    'total_users' => $totalUsers,
+                    'total_teachers' => $totalTeachers,
+                    'total_students' => $totalStudents,
+                    'total_sessions' => $totalSessions,
+                    'today_records' => $todayRecords,
+                ],
+            ]);
+        }
+
         if ($user->role === UserRole::Teacher) {
             $activeSessions = AttendanceSession::query()
                 ->withCount('records')

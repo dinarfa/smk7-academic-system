@@ -1,5 +1,6 @@
-import { Head, Form } from '@inertiajs/react';
+import { Head, Form, Link } from '@inertiajs/react';
 import StudentController from '@/actions/App/Http/Controllers/Teacher/StudentController';
+import SchoolClassController from '@/actions/App/Http/Controllers/Teacher/SchoolClassController';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,16 +11,26 @@ type Student = {
     id: number;
     name: string;
     email: string;
+    school_class_name: string | null;
     created_at: string | null;
 };
 
+type SchoolClass = {
+    id: number;
+    name: string;
+    code: string | null;
+    academic_year: string | null;
+    students_count: number;
+};
+
 type Props = {
+    schoolClass: SchoolClass | null;
     students: {
         data: Student[];
     };
 };
 
-export default function TeacherStudents({ students }: Props) {
+export default function TeacherStudents({ schoolClass, students }: Props) {
     return (
         <>
             <Head title="Data Siswa" />
@@ -27,11 +38,56 @@ export default function TeacherStudents({ students }: Props) {
             <div className="space-y-6 p-4">
                 <Card>
                     <CardHeader>
+                        <CardTitle>Kelas Wali</CardTitle>
+                        <CardDescription>Kelola kelas yang menjadi tanggung jawab Anda.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {schoolClass ? (
+                            <div className="grid gap-2 rounded-lg border p-4 md:grid-cols-4">
+                                <div>
+                                    <p className="text-sm text-muted-foreground">Nama Kelas</p>
+                                    <p className="font-medium">{schoolClass.name}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-muted-foreground">Kode</p>
+                                    <p className="font-medium">{schoolClass.code ?? '-'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-muted-foreground">Tahun Ajaran</p>
+                                    <p className="font-medium">{schoolClass.academic_year ?? '-'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-muted-foreground">Jumlah Siswa</p>
+                                    <p className="font-medium">{schoolClass.students_count}</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="space-y-3 rounded-lg border border-dashed p-4">
+                                <p className="text-sm text-muted-foreground">
+                                    Anda belum memiliki kelas wali. Buat kelas terlebih dahulu sebelum menambahkan siswa.
+                                </p>
+                                <Button asChild>
+                                    <Link href={SchoolClassController.index.url()}>
+                                        Buat Kelas
+                                    </Link>
+                                </Button>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
                         <CardTitle>Tambah Siswa</CardTitle>
                         <CardDescription>Buat akun siswa baru.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Form {...StudentController.store.form()} className="grid gap-4 md:grid-cols-2">
+                        {!schoolClass ? (
+                            <p className="text-sm text-muted-foreground">
+                                Form siswa akan aktif setelah kelas wali dibuat.
+                            </p>
+                        ) : (
+                            <Form {...StudentController.store.form()} className="grid gap-4 md:grid-cols-2">
                             {({ processing, errors }) => (
                                 <>
                                     <div className="grid gap-2">
@@ -69,7 +125,8 @@ export default function TeacherStudents({ students }: Props) {
                                     </div>
                                 </>
                             )}
-                        </Form>
+                            </Form>
+                        )}
                     </CardContent>
                 </Card>
 
@@ -107,6 +164,9 @@ export default function TeacherStudents({ students }: Props) {
                                                     placeholder="Email siswa"
                                                     required
                                                 />
+                                                <div className="md:col-span-2 rounded-md bg-muted p-3 text-sm text-muted-foreground">
+                                                    Kelas: {student.school_class_name ?? schoolClass?.name ?? '-'}
+                                                </div>
                                                 <Input
                                                     name="password"
                                                     type="password"
