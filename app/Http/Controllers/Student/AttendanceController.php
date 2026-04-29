@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Student;
 
+use App\Enums\AttendanceStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Student\ScanAttendanceRequest;
 use App\Models\AttendanceRecord;
@@ -70,7 +71,7 @@ class AttendanceController extends Controller
                 'student_id' => $request->user()->id,
             ],
             [
-                'status' => 'present',
+                'status' => AttendanceStatus::Present->value,
                 'scanned_at' => now(),
             ],
         );

@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\AttendanceStatus;
 use App\Enums\UserRole;
 use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
@@ -23,7 +24,7 @@ class AttendanceRecordFactory extends Factory
         return [
             'attendance_session_id' => AttendanceSession::factory(),
             'student_id' => User::factory()->state(['role' => UserRole::Student]),
-            'status' => $this->faker->randomElement(['present', 'late', 'absent']),
+            'status' => $this->faker->randomElement(AttendanceStatus::cases())->value,
             'scanned_at' => now(),
         ];
     }
