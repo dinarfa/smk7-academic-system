@@ -74,6 +74,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('exams/{exam}/questions', [QuestionController::class, 'index'])->name('exams.questions.index');
         Route::get('exams/{exam}/questions/create', [QuestionController::class, 'create'])->name('exams.questions.create');
         Route::post('exams/{exam}/questions', [QuestionController::class, 'store'])->name('exams.questions.store');
+        Route::post('exams/{exam}/questions/attach', [QuestionController::class, 'attach'])->name('exams.questions.attach');
         Route::get('exams/{exam}/questions/{question}/edit', [QuestionController::class, 'edit'])->name('exams.questions.edit');
         Route::put('exams/{exam}/questions/{question}', [QuestionController::class, 'update'])->name('exams.questions.update');
         Route::delete('exams/{exam}/questions/{question}', [QuestionController::class, 'destroy'])->name('exams.questions.destroy');

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Teacher\AttachExamQuestionsRequest;
 use App\Http\Requests\Teacher\StoreQuestionRequest;
 use App\Http\Requests\Teacher\UpdateQuestionRequest;
 use App\Models\Exam;
@@ -181,6 +182,25 @@ class QuestionController extends Controller
         $question->delete();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Question deleted successfully.')]);
+
+        return to_route('teacher.exams.questions.index', $exam);
+    }
+
+    /**
+     * Attach selected question bank items to the exam.
+     */
+    public function attach(AttachExamQuestionsRequest $request, Exam $exam): RedirectResponse
+    {
+        $questionIds = collect($request->validated('question_ids'))
+            ->values()
+            ->mapWithKeys(fn (int $questionId, int $index): array => [
+                $questionId => ['sort_order' => $index],
+            ])
+            ->all();
+
+        $exam->attachedQuestions()->sync($questionIds);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Questions attached successfully.')]);
 
         return to_route('teacher.exams.questions.index', $exam);
     }
