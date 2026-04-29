@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers\Student;
 
-use App\Enums\AttendanceStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Student\ScanAttendanceRequest;
 use App\Models\AttendanceRecord;
-use App\Models\AttendanceSession;
+use App\Services\Attendance\AttendanceScanService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -45,19 +44,13 @@ class AttendanceController extends Controller
     /**
      * Submit attendance from scanned QR token.
      */
-    public function scan(ScanAttendanceRequest $request): RedirectResponse
-    {
+    public function scan(
+        ScanAttendanceRequest $request,
+        AttendanceScanService $attendanceScanService,
+    ): RedirectResponse {
         $rawToken = trim($request->validated('qr_token'));
-        $token = $this->extractToken($rawToken);
-
-        $session = AttendanceSession::query()
-            ->where('qr_token', $token)
-            ->where('is_active', true)
-            ->where('starts_at', '<=', now())
-            ->where(function ($query): void {
-                $query->whereNull('ends_at')->orWhere('ends_at', '>=', now());
-            })
-            ->first();
+        $token = $attendanceScanService->extractToken($rawToken);
+        $session = $attendanceScanService->findActiveSessionByToken($token);
 
         if (! $session) {
             return back()->withErrors([
@@ -65,16 +58,7 @@ class AttendanceController extends Controller
             ]);
         }
 
-        $record = AttendanceRecord::query()->firstOrCreate(
-            [
-                'attendance_session_id' => $session->id,
-                'student_id' => $request->user()->id,
-            ],
-            [
-                'status' => AttendanceStatus::Present->value,
-                'scanned_at' => now(),
-            ],
-        );
+        $record = $attendanceScanService->record($request->user(), $session);
 
         if (! $record->wasRecentlyCreated) {
             Inertia::flash('toast', ['type' => 'warning', 'message' => __('Anda sudah absen pada sesi ini.')]);
@@ -85,29 +69,5 @@ class AttendanceController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Absensi berhasil direkam.')]);
 
         return back();
-    }
-
-    /**
-     * Normalize a scanned payload into a qr_token value.
-     */
-    private function extractToken(string $rawToken): string
-    {
-        if (str_starts_with($rawToken, 'attendance:')) {
-            return str($rawToken)->after('attendance:')->toString();
-        }
-
-        if (str_contains($rawToken, '?')) {
-            $query = parse_url($rawToken, PHP_URL_QUERY);
-
-            if ($query) {
-                parse_str($query, $params);
-
-                if (! empty($params['token']) && is_string($params['token'])) {
-                    return $params['token'];
-                }
-            }
-        }
-
-        return $rawToken;
     }
 }

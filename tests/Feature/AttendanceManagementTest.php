@@ -84,6 +84,29 @@ test('teacher can only close their own attendance session', function () {
     ]);
 });
 
+test('student cannot close a teacher attendance session', function () {
+    $teacher = User::factory()->teacher()->create();
+    $student = User::factory()->student()->create();
+
+    $session = AttendanceSession::query()->create([
+        'opened_by' => $teacher->id,
+        'type' => 'morning',
+        'qr_token' => 'SESSION-TOKEN-STUDENT-BLOCKED',
+        'starts_at' => now()->subMinutes(5),
+        'ends_at' => now()->addMinutes(20),
+        'is_active' => true,
+    ]);
+
+    $this->actingAs($student)
+        ->patch(route('teacher.attendance-sessions.close', $session))
+        ->assertForbidden();
+
+    $this->assertDatabaseHas('attendance_sessions', [
+        'id' => $session->id,
+        'is_active' => 1,
+    ]);
+});
+
 test('teacher opening a session only closes their own active sessions', function () {
     $teacher = User::factory()->teacher()->create();
     $otherTeacher = User::factory()->teacher()->create();
@@ -146,6 +169,36 @@ test('student can scan active qr token and record attendance', function () {
         'student_id' => $student->id,
         'status' => 'present',
     ]);
+});
+
+test('duplicate scans do not create duplicate attendance records', function () {
+    $teacher = User::factory()->teacher()->create();
+    $student = User::factory()->student()->create();
+
+    $session = AttendanceSession::query()->create([
+        'opened_by' => $teacher->id,
+        'type' => 'subject',
+        'subject' => 'Matematika',
+        'qr_token' => 'CONCURRENCY-TOKEN-001',
+        'starts_at' => now()->subMinutes(5),
+        'ends_at' => now()->addMinutes(20),
+        'is_active' => true,
+    ]);
+
+    $payload = ['qr_token' => 'attendance:CONCURRENCY-TOKEN-001'];
+
+    $this->actingAs($student)
+        ->post(route('student.attendance.scan'), $payload)
+        ->assertRedirect();
+
+    $this->actingAs($student)
+        ->post(route('student.attendance.scan'), $payload)
+        ->assertRedirect();
+
+    expect(AttendanceRecord::query()
+        ->where('attendance_session_id', $session->id)
+        ->where('student_id', $student->id)
+        ->count())->toBe(1);
 });
 
 test('teacher can create update and delete student data', function () {
