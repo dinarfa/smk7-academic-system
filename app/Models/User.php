@@ -8,12 +8,13 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
-#[Fillable(['name', 'email', 'role', 'password'])]
+#[Fillable(['name', 'email', 'role', 'school_class_id', 'password'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -52,6 +53,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Determine if this user is an admin.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === UserRole::Admin;
+    }
+
+    /**
      * Attendance sessions opened by this teacher.
      */
     public function openedAttendanceSessions(): HasMany
@@ -65,5 +74,37 @@ class User extends Authenticatable
     public function attendanceRecords(): HasMany
     {
         return $this->hasMany(AttendanceRecord::class, 'student_id');
+    }
+
+    /**
+     * Class assigned to this student.
+     */
+    public function schoolClass(): BelongsTo
+    {
+        return $this->belongsTo(SchoolClass::class, 'school_class_id');
+    }
+
+    /**
+     * Classes where this user is the homeroom teacher.
+     */
+    public function homeroomClasses(): HasMany
+    {
+        return $this->hasMany(SchoolClass::class, 'homeroom_teacher_id');
+    }
+
+    /**
+     * Audit logs performed by this admin.
+     */
+    public function auditLogsPerformed(): HasMany
+    {
+        return $this->hasMany(AuditLog::class, 'admin_id');
+    }
+
+    /**
+     * Audit logs that targeted this user.
+     */
+    public function auditLogsAsTarget(): HasMany
+    {
+        return $this->hasMany(AuditLog::class, 'target_user_id');
     }
 }

@@ -1,6 +1,5 @@
 <?php
 
-
 use Laravel\Fortify\Features;
 
 beforeEach(function () {
