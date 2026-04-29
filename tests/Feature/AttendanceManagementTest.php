@@ -24,6 +24,76 @@ test('teacher can open a new attendance qr session', function () {
     ]);
 });
 
+test('teacher can only close their own attendance session', function () {
+    $owner = User::factory()->teacher()->create();
+    $otherTeacher = User::factory()->teacher()->create();
+
+    $session = AttendanceSession::query()->create([
+        'opened_by' => $owner->id,
+        'type' => 'morning',
+        'qr_token' => 'SESSION-TOKEN-OWNER',
+        'starts_at' => now()->subMinutes(5),
+        'ends_at' => now()->addMinutes(20),
+        'is_active' => true,
+    ]);
+
+    $this->actingAs($otherTeacher)
+        ->patch(route('teacher.attendance-sessions.close', $session))
+        ->assertForbidden();
+
+    $this->assertDatabaseHas('attendance_sessions', [
+        'id' => $session->id,
+        'is_active' => 1,
+    ]);
+
+    $this->actingAs($owner)
+        ->patch(route('teacher.attendance-sessions.close', $session))
+        ->assertRedirect();
+
+    $this->assertDatabaseHas('attendance_sessions', [
+        'id' => $session->id,
+        'is_active' => 0,
+    ]);
+});
+
+test('teacher opening a session only closes their own active sessions', function () {
+    $teacher = User::factory()->teacher()->create();
+    $otherTeacher = User::factory()->teacher()->create();
+
+    $ownActiveSession = AttendanceSession::query()->create([
+        'opened_by' => $teacher->id,
+        'type' => 'morning',
+        'qr_token' => 'OWN-ACTIVE-001',
+        'starts_at' => now()->subMinutes(10),
+        'ends_at' => now()->addMinutes(20),
+        'is_active' => true,
+    ]);
+
+    $otherActiveSession = AttendanceSession::query()->create([
+        'opened_by' => $otherTeacher->id,
+        'type' => 'morning',
+        'qr_token' => 'OTHER-ACTIVE-001',
+        'starts_at' => now()->subMinutes(10),
+        'ends_at' => now()->addMinutes(20),
+        'is_active' => true,
+    ]);
+
+    $this->actingAs($teacher)->post(route('teacher.attendance-sessions.store'), [
+        'type' => 'morning',
+        'duration_minutes' => 45,
+    ])->assertRedirect();
+
+    $this->assertDatabaseHas('attendance_sessions', [
+        'id' => $ownActiveSession->id,
+        'is_active' => 0,
+    ]);
+
+    $this->assertDatabaseHas('attendance_sessions', [
+        'id' => $otherActiveSession->id,
+        'is_active' => 1,
+    ]);
+});
+
 test('student can scan active qr token and record attendance', function () {
     $teacher = User::factory()->teacher()->create();
     $student = User::factory()->student()->create();

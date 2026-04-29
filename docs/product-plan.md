@@ -187,6 +187,40 @@ The product should optimize daily school operations for teachers and administrat
 
 ## Development Roadmap
 
+### Next Release: Reporting Completion
+
+The next release should focus on completing the reporting workflow before starting CBT.
+
+#### Include
+
+- Keep QR attendance unchanged
+- Attendance history and admin report views
+- CSV export retention
+- Add PDF export
+- Add Excel export
+- Add only the reporting UX needed to support filtering, date range selection, and summary review
+
+#### Defer
+
+- CBT
+- Question bank
+- Exam creation and delivery
+- Auto-scoring beyond attendance reporting
+- Broader analytics and dashboard expansion
+
+#### Why this comes first
+
+- It closes the loop on the system's current daily workflow.
+- It delivers immediate value to admins with low implementation risk.
+- It reduces scope compared with building a full CBT stack.
+
+#### Exit criteria
+
+- Attendance data can be exported as CSV, PDF, and Excel.
+- Admins can filter and review reports without manual spreadsheet work.
+- Export totals match the on-screen attendance summaries.
+- The reporting flow is stable enough for normal school use.
+
 ### Release 1: Attendance Foundation
 
 - Complete authentication and role access.

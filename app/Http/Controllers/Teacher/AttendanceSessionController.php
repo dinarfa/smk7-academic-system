@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Teacher\OpenAttendanceSessionRequest;
 use App\Models\AttendanceSession;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
 class AttendanceSessionController extends Controller
@@ -17,13 +18,20 @@ class AttendanceSessionController extends Controller
     {
         $validated = $request->validated();
 
-        AttendanceSession::query()
+        $activeSessions = AttendanceSession::query()
+            ->where('opened_by', $request->user()->id)
             ->where('is_active', true)
             ->where('type', $validated['type'])
-            ->update([
+            ->get();
+
+        $activeSessions->each(static function (AttendanceSession $attendanceSession): void {
+            Gate::authorize('update', $attendanceSession);
+
+            $attendanceSession->update([
                 'is_active' => false,
                 'ends_at' => now(),
             ]);
+        });
 
         AttendanceSession::query()->create([
             'opened_by' => $request->user()->id,
@@ -45,6 +53,8 @@ class AttendanceSessionController extends Controller
      */
     public function close(AttendanceSession $attendanceSession): RedirectResponse
     {
+        Gate::authorize('close', $attendanceSession);
+
         $attendanceSession->update([
             'is_active' => false,
             'ends_at' => now(),
