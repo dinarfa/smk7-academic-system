@@ -2,6 +2,7 @@
 
 use App\Enums\UserRole;
 use App\Models\AttendanceSession;
+use App\Models\SchoolClass;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -51,6 +52,9 @@ test('student can scan active qr token and record attendance', function () {
 
 test('teacher can create update and delete student data', function () {
     $teacher = User::factory()->teacher()->create();
+    SchoolClass::factory()->create([
+        'homeroom_teacher_id' => $teacher->id,
+    ]);
 
     $this->actingAs($teacher)->post(route('teacher.students.store'), [
         'name' => 'Budi',

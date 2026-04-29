@@ -2,6 +2,7 @@
 
 use App\Enums\UserRole;
 use App\Models\User;
+use Inertia\Testing\AssertableInertia as Assert;
 
 test('admin can view users list', function () {
     $admin = User::factory()->create(['role' => UserRole::Admin]);
@@ -48,8 +49,12 @@ test('admin can view user details with audit logs', function () {
 test('admin can access admin dashboard', function () {
     $admin = User::factory()->create(['role' => UserRole::Admin]);
 
-    $this->actingAs($admin)
-        ->get('/admin/dashboard')
-        ->assertStatus(200)
-        ->assertSee('Admin Dashboard');
+    $response = $this->actingAs($admin)
+        ->get('/admin/dashboard');
+
+    $response->assertOk();
+
+    $response->assertInertia(fn (Assert $page) => $page
+        ->component('admin/dashboard'),
+    );
 });

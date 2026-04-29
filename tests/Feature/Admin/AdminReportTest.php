@@ -4,14 +4,19 @@ use App\Enums\UserRole;
 use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
 use App\Models\User;
+use Inertia\Testing\AssertableInertia as Assert;
 
 test('admin can view reports overview', function () {
     $admin = User::factory()->create(['role' => UserRole::Admin]);
 
-    $this->actingAs($admin)
-        ->get('/admin/reports/overview')
-        ->assertStatus(200)
-        ->assertSee('Reports Overview');
+    $response = $this->actingAs($admin)
+        ->get('/admin/reports/overview');
+
+    $response->assertOk();
+
+    $response->assertInertia(fn (Assert $page) => $page
+        ->component('admin/reports/overview'),
+    );
 });
 
 test('admin can view reports by session', function () {
