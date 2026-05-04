@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 #[Fillable(['homeroom_teacher_id', 'name', 'code', 'academic_year'])]
 class SchoolClass extends Model
@@ -27,5 +28,29 @@ class SchoolClass extends Model
     public function students(): HasMany
     {
         return $this->hasMany(User::class, 'school_class_id');
+    }
+
+    /**
+     * Subjects taught in this class.
+     */
+    public function subjects(): HasMany
+    {
+        return $this->hasMany(Subject::class);
+    }
+
+    /**
+     * Exams for this class.
+     */
+    public function exams(): HasMany
+    {
+        return $this->hasMany(Exam::class);
+    }
+
+    /**
+     * Exams available through the subjects in this class.
+     */
+    public function examsViaSubjects(): HasManyThrough
+    {
+        return $this->hasManyThrough(Exam::class, Subject::class);
     }
 }

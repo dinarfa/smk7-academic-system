@@ -1,119 +1,118 @@
 import { Link } from '@inertiajs/react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import AdminLayout from '@/layouts/AdminLayout'
+import admin from '@/routes/admin'
 
 export default function AdminAuditLogsIndex({ logs }) {
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Audit Logs</h1>
-                    <p className="mt-2 text-gray-600">Track all admin actions and system activities</p>
-                </div>
-                <Link
-                    href="/admin/dashboard"
-                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition font-medium"
-                >
-                    Back to Dashboard
-                </Link>
-            </div>
-
-            {/* Audit Logs Table */}
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Admin
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Action
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Target User
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Description
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Date
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Action
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {logs.data.map((log) => (
-                                <tr key={log.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                        <div>
-                                            <p className="font-medium text-gray-900">{log.admin_name}</p>
-                                            <p className="text-xs text-gray-600">{log.admin_email}</p>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                        <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                            {log.action.replace(/_/g, ' ').toUpperCase()}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                        {log.target_user_name ? (
-                                            <div>
-                                                <p className="font-medium text-gray-900">{log.target_user_name}</p>
-                                                <p className="text-xs text-gray-600">{log.target_user_email}</p>
-                                            </div>
-                                        ) : (
-                                            <span className="text-gray-500">-</span>
-                                        )}
-                                    </td>
-                                    <td className="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">
-                                        {log.description}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                        {new Date(log.created_at).toLocaleDateString()}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                        <Link
-                                            href={`/admin/audit-logs/${log.id}`}
-                                            className="text-blue-600 hover:text-blue-900 font-medium"
-                                        >
-                                            View
-                                        </Link>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+        <AdminLayout title="Audit Logs">
+            <div className="space-y-6">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-semibold text-foreground">Audit Logs</h1>
+                        <p className="mt-2 text-muted-foreground">Track all admin actions and system activities</p>
+                    </div>
+                    <Button asChild variant="secondary">
+                        <Link href={admin.dashboard.url()}>Back to Dashboard</Link>
+                    </Button>
                 </div>
 
-                {/* Pagination */}
-                <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-                    <div className="flex-1 flex justify-between sm:hidden">
-                        {logs.prev_page_url && (
-                            <Link
-                                href={logs.prev_page_url}
-                                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                            >
-                                Previous
-                            </Link>
-                        )}
-                        {logs.next_page_url && (
-                            <Link
-                                href={logs.next_page_url}
-                                className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                            >
-                                Next
-                            </Link>
-                        )}
-                    </div>
-                    <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                        <p className="text-sm text-gray-700">
-                            Page <span className="font-medium">{logs.current_page}</span> of{' '}
-                            <span className="font-medium">{logs.last_page}</span>
-                        </p>
-                    </div>
-                </div>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Activity Table</CardTitle>
+                        <CardDescription>Review recent admin actions and system events.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-border">
+                                <thead className="bg-muted/50">
+                                    <tr>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                            Admin
+                                        </th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                            Action
+                                        </th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                            Target User
+                                        </th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                            Description
+                                        </th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                            Date
+                                        </th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                            Action
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border">
+                                    {logs.data.map((log) => (
+                                        <tr key={log.id} className="hover:bg-muted/40">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                                <div>
+                                                    <p className="font-medium text-foreground">{log.admin_name}</p>
+                                                    <p className="text-xs text-muted-foreground">{log.admin_email}</p>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                                <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-200">
+                                                    {log.action.replace(/_/g, ' ').toUpperCase()}
+                                                </Badge>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                                {log.target_user_name ? (
+                                                    <div>
+                                                        <p className="font-medium text-foreground">{log.target_user_name}</p>
+                                                        <p className="text-xs text-muted-foreground">{log.target_user_email}</p>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-muted-foreground">-</span>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-muted-foreground max-w-xs truncate">
+                                                {log.description}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                                                {new Date(log.created_at).toLocaleDateString()}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                                <Button asChild variant="link" className="h-auto p-0">
+                                                    <Link href={admin.auditLogs.show.url({ auditLog: log.id })}>View</Link>
+                                                </Button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div className="flex items-center justify-between border-t border-border px-6 py-3">
+                            <div className="flex flex-1 justify-between sm:hidden">
+                                {logs.prev_page_url && (
+                                    <Button asChild variant="outline" size="sm">
+                                        <Link href={logs.prev_page_url}>Previous</Link>
+                                    </Button>
+                                )}
+                                {logs.next_page_url && (
+                                    <Button asChild variant="outline" size="sm" className="ml-3">
+                                        <Link href={logs.next_page_url}>Next</Link>
+                                    </Button>
+                                )}
+                            </div>
+                            <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                                <p className="text-sm text-muted-foreground">
+                                    Page <span className="font-medium text-foreground">{logs.current_page}</span> of{' '}
+                                    <span className="font-medium text-foreground">{logs.last_page}</span>
+                                </p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
-        </div>
+        </AdminLayout>
     )
 }

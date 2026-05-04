@@ -1,10 +1,18 @@
-import { Form, Link } from '@inertiajs/react';
+import { Link, useForm } from '@inertiajs/react';
 import SchoolClassController from '@/actions/App/Http/Controllers/Admin/SchoolClassController';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { dashboard } from '@/routes';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import AdminLayout from '@/layouts/AdminLayout';
+import admin from '@/routes/admin';
 
 type Teacher = {
     id: number;
@@ -33,79 +41,120 @@ type Props = {
 };
 
 export default function AdminSchoolClassesIndex({ classes, teachers }: Props) {
+    const { data, setData, post, processing, errors, reset } = useForm({
+        name: '',
+        teacher_id: '',
+    });
+
+    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        post(SchoolClassController.store.url(), {
+            onSuccess: () => reset(),
+        });
+    };
+
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
+        <AdminLayout title="Class Management">
+            <div className="space-y-6">
+            <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Generate Kelas</h1>
-                    <p className="mt-2 text-gray-600">Admin membuat kelas dan menetapkan wali kelasnya.</p>
+                    <h1 className="text-3xl font-semibold text-foreground">Generate Kelas</h1>
+                    <p className="mt-2 text-muted-foreground">Admin membuat kelas dan menetapkan wali kelasnya.</p>
                 </div>
-                <Link
-                    href={dashboard()}
-                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition font-medium"
-                >
-                    Back to Dashboard
-                </Link>
+                <Button asChild variant="secondary">
+                    <Link href={admin.dashboard.url()}>Back to Dashboard</Link>
+                </Button>
             </div>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>Buat Kelas Baru</CardTitle>
-                    <CardDescription>Pilih wali kelas lalu generate kelas untuk mereka.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Form {...SchoolClassController.store.form()} className="grid gap-4 md:grid-cols-2">
-                        {({ processing, errors }) => (
-                            <>
-                                <div className="grid gap-2 md:col-span-2">
-                                    <Label htmlFor="homeroom_teacher_id">Wali Kelas</Label>
-                                    <select
-                                        id="homeroom_teacher_id"
-                                        name="homeroom_teacher_id"
-                                        className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                        required
-                                        defaultValue=""
-                                    >
-                                        <option value="" disabled>Pilih guru</option>
+
+
+
+
+            <div className="grid gap-6 lg:grid-cols-2">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Create Class</CardTitle>
+                        <CardDescription>Add a new class and assign a homeroom teacher.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="name">Class Name</Label>
+                                <Input
+                                    id="name"
+                                    name="name"
+                                    value={data.name}
+                                    onChange={(event) => setData('name', event.target.value)}
+                                    placeholder="Grade 10A"
+                                    aria-invalid={Boolean(errors.name)}
+                                />
+                                {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="teacher_id">Homeroom Teacher</Label>
+                                <Select
+                                    value={data.teacher_id}
+                                    onValueChange={(value) => setData('teacher_id', value)}
+                                >
+                                    <SelectTrigger className="w-full" id="teacher_id">
+                                        <SelectValue placeholder="Select Teacher" />
+                                    </SelectTrigger>
+                                    <SelectContent>
                                         {teachers.map((teacher) => (
-                                            <option key={teacher.id} value={teacher.id}>
-                                                {teacher.name} - {teacher.email}
-                                            </option>
+                                            <SelectItem key={teacher.id} value={String(teacher.id)}>
+                                                {teacher.name}
+                                            </SelectItem>
                                         ))}
-                                    </select>
-                                    {errors.homeroom_teacher_id && (
-                                        <p className="text-sm text-red-600">{errors.homeroom_teacher_id}</p>
-                                    )}
-                                </div>
+                                    </SelectContent>
+                                </Select>
+                                {errors.teacher_id && (
+                                    <p className="text-sm text-destructive">{errors.teacher_id}</p>
+                                )}
+                            </div>
 
-                                <div className="grid gap-2">
-                                    <Label htmlFor="name">Nama Kelas</Label>
-                                    <Input id="name" name="name" placeholder="X IPA 1" required />
-                                    {errors.name && <p className="text-sm text-red-600">{errors.name}</p>}
-                                </div>
+                            <Button type="submit" disabled={processing}>
+                                {processing ? 'Saving...' : 'Save Class'}
+                            </Button>
+                        </form>
+                    </CardContent>
+                </Card>
 
-                                <div className="grid gap-2">
-                                    <Label htmlFor="code">Kode Kelas</Label>
-                                    <Input id="code" name="code" placeholder="X-IPA-1" />
-                                    {errors.code && <p className="text-sm text-red-600">{errors.code}</p>}
-                                </div>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Existing Classes</CardTitle>
+                        <CardDescription>Edit or delete classes as needed.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                        {classes.data.length === 0 ? (
+                            <p className="text-sm text-muted-foreground">No classes created yet.</p>
+                        ) : (
+                            classes.data.map((schoolClass) => (
+                                <div key={schoolClass.id} className="flex items-center justify-between rounded-lg border border-border p-4">
+                                    <div>
+                                        <p className="font-medium text-foreground">{schoolClass.name}</p>
+                                        <p className="text-sm text-muted-foreground">
+                                            Teacher: {schoolClass.homeroom_teacher?.name ?? '-'}
+                                        </p>
+                                    </div>
 
-                                <div className="grid gap-2 md:col-span-2">
-                                    <Label htmlFor="academic_year">Tahun Ajaran</Label>
-                                    <Input id="academic_year" name="academic_year" placeholder="2026/2027" />
-                                    {errors.academic_year && (
-                                        <p className="text-sm text-red-600">{errors.academic_year}</p>
-                                    )}
+                                    <div className="flex items-center gap-2">
+                                        <Button asChild variant="link" className="h-auto p-0">
+                                            <Link href={`/admin/classes/${schoolClass.id}/edit`}>Edit</Link>
+                                        </Button>
+                                        <Button asChild variant="link" className="h-auto p-0 text-destructive">
+                                            <Link href={`/admin/classes/${schoolClass.id}`} method="delete" as="button">
+                                                Delete
+                                            </Link>
+                                        </Button>
+                                    </div>
                                 </div>
-
-                                <div className="md:col-span-2">
-                                    <Button disabled={processing}>Generate Kelas</Button>
-                                </div>
-                            </>
+                            ))
                         )}
-                    </Form>
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
+            </div>
 
             <Card>
                 <CardHeader>
@@ -117,7 +166,7 @@ export default function AdminSchoolClassesIndex({ classes, teachers }: Props) {
                         <p className="text-sm text-muted-foreground">Belum ada kelas.</p>
                     ) : (
                         classes.data.map((schoolClass) => (
-                            <div key={schoolClass.id} className="grid gap-2 rounded-lg border p-4 md:grid-cols-4">
+                            <div key={schoolClass.id} className="grid gap-2 rounded-lg border border-border p-4 md:grid-cols-4">
                                 <div>
                                     <p className="text-sm text-muted-foreground">Nama</p>
                                     <p className="font-medium">{schoolClass.name}</p>
@@ -139,6 +188,7 @@ export default function AdminSchoolClassesIndex({ classes, teachers }: Props) {
                     )}
                 </CardContent>
             </Card>
-        </div>
+            </div>
+        </AdminLayout>
     )
 }

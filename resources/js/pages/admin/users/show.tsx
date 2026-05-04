@@ -1,102 +1,107 @@
 import { Link } from '@inertiajs/react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import AdminLayout from '@/layouts/AdminLayout'
+import admin from '@/routes/admin'
 
 export default function AdminUserShow({ user, auditLogs }) {
     return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold text-gray-900">{user.name}</h1>
-                <p className="mt-2 text-gray-600">User profile and activity</p>
-            </div>
-
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                {/* User Info */}
-                <div className="lg:col-span-1">
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <h2 className="text-lg font-bold text-gray-900 mb-4">User Information</h2>
-                        <div className="space-y-4">
-                            <div>
-                                <p className="text-sm text-gray-600">Name</p>
-                                <p className="text-lg font-medium text-gray-900">{user.name}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-600">Email</p>
-                                <p className="text-lg font-medium text-gray-900">{user.email}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-600">Role</p>
-                                <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium mt-1 ${getRoleBadgeClass(user.role)}`}>
-                                    {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-                                </span>
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-600">Created At</p>
-                                <p className="text-lg font-medium text-gray-900">
-                                    {new Date(user.created_at).toLocaleDateString()}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="mt-6 space-y-2">
-                            <Link
-                                href={`/admin/users/${user.id}/reset-password`}
-                                className="block w-full px-4 py-2 bg-green-600 text-white text-center rounded-lg hover:bg-green-700 transition font-medium"
-                            >
-                                Reset Password
-                            </Link>
-                            <Link
-                                href="/admin/users"
-                                className="block w-full px-4 py-2 bg-gray-200 text-gray-800 text-center rounded-lg hover:bg-gray-300 transition font-medium"
-                            >
-                                Back to Users
-                            </Link>
-                        </div>
-                    </div>
+        <AdminLayout title="User Details">
+            <div className="space-y-6">
+                <div>
+                    <h1 className="text-3xl font-semibold text-foreground">{user.name}</h1>
+                    <p className="mt-2 text-muted-foreground">User profile and activity</p>
                 </div>
 
-                {/* Audit Logs */}
-                <div className="lg:col-span-2">
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <h2 className="text-lg font-bold text-gray-900 mb-4">Activity Log</h2>
-                        <div className="space-y-4">
-                            {auditLogs.length === 0 ? (
-                                <p className="text-gray-600 text-center py-8">No activity recorded</p>
-                            ) : (
-                                auditLogs.map((log) => (
-                                    <div key={log.id} className="border-l-4 border-blue-500 pl-4 py-2">
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <p className="font-medium text-gray-900">
-                                                    {log.action.replace(/_/g, ' ').toUpperCase()}
-                                                </p>
-                                                <p className="text-sm text-gray-600">{log.description}</p>
-                                                <p className="text-xs text-gray-500 mt-1">
-                                                    By: {log.admin_name}
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                    <div className="lg:col-span-1">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>User Information</CardTitle>
+                                <CardDescription>Key account details and role.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div>
+                                    <p className="text-sm text-muted-foreground">Name</p>
+                                    <p className="text-lg font-medium text-foreground">{user.name}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-muted-foreground">Email</p>
+                                    <p className="text-lg font-medium text-foreground">{user.email}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-muted-foreground">Role</p>
+                                    <Badge className={`mt-1 ${getRoleBadgeClass(user.role)}`}>
+                                        {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                                    </Badge>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-muted-foreground">Created At</p>
+                                    <p className="text-lg font-medium text-foreground">
+                                        {new Date(user.created_at).toLocaleDateString()}
+                                    </p>
+                                </div>
+
+                                <div className="pt-2 space-y-2">
+                                    <Button asChild className="w-full">
+                                        <Link href={admin.users.resetPassword.url({ user: user.id })}>Reset Password</Link>
+                                    </Button>
+                                    <Button asChild variant="outline" className="w-full">
+                                        <Link href={admin.users.index.url()}>Back to Users</Link>
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    <div className="lg:col-span-2">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Activity Log</CardTitle>
+                                <CardDescription>Recent actions tied to this user.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                {auditLogs.length === 0 ? (
+                                    <p className="py-8 text-center text-sm text-muted-foreground">No activity recorded</p>
+                                ) : (
+                                    auditLogs.map((log) => (
+                                        <div key={log.id} className="border-l-4 border-primary/60 pl-4 py-2">
+                                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                                <div>
+                                                    <p className="font-medium text-foreground">
+                                                        {log.action.replace(/_/g, ' ').toUpperCase()}
+                                                    </p>
+                                                    <p className="text-sm text-muted-foreground">{log.description}</p>
+                                                    <p className="mt-1 text-xs text-muted-foreground">
+                                                        By: {log.admin_name}
+                                                    </p>
+                                                </div>
+                                                <p className="text-sm text-muted-foreground">
+                                                    {new Date(log.created_at).toLocaleDateString()}
                                                 </p>
                                             </div>
-                                            <p className="text-sm text-gray-500">
-                                                {new Date(log.created_at).toLocaleDateString()}
-                                            </p>
                                         </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
+                                    ))
+                                )}
+                            </CardContent>
+                        </Card>
                     </div>
                 </div>
             </div>
-        </div>
+        </AdminLayout>
     )
 }
 
 function getRoleBadgeClass(role) {
     switch (role) {
         case 'admin':
-            return 'bg-red-100 text-red-800'
+            return 'bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-200'
         case 'teacher':
-            return 'bg-blue-100 text-blue-800'
+            return 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-200'
         case 'student':
-            return 'bg-green-100 text-green-800'
+            return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200'
         default:
-            return 'bg-gray-100 text-gray-800'
+            return 'bg-muted text-muted-foreground'
     }
 }

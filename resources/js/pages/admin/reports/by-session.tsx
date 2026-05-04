@@ -1,126 +1,141 @@
 import { Link } from '@inertiajs/react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import AdminLayout from '@/layouts/AdminLayout'
+import admin from '@/routes/admin'
+
+const sessionStatusClasses = (isActive: boolean) =>
+    isActive
+        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200'
+        : 'bg-muted text-muted-foreground'
+
+const recordStatusClasses = (status: string) => {
+    if (status === 'present') {
+        return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200'
+    }
+    if (status === 'late') {
+        return 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200'
+    }
+
+    return 'bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-200'
+}
 
 export default function AdminReportsBySession({ sessions }) {
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Attendance by Session</h1>
-                    <p className="mt-2 text-gray-600">View attendance records grouped by class/session</p>
-                </div>
-                <Link
-                    href="/admin/reports/overview"
-                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition font-medium"
-                >
-                    Back to Overview
-                </Link>
-            </div>
-
-            {/* Sessions List */}
-            <div className="space-y-4">
-                {sessions.data.map((session) => (
-                    <div key={session.id} className="bg-white rounded-lg shadow p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="flex-1">
-                                <h3 className="text-lg font-bold text-gray-900">{session.subject}</h3>
-                                <p className="text-sm text-gray-600">Type: {session.type}</p>
-                                <p className="text-sm text-gray-600">Opened by: {session.opened_by}</p>
-                                <p className="text-sm text-gray-600">
-                                    {new Date(session.created_at).toLocaleDateString()}
-                                </p>
-                            </div>
-                            <div className="text-right">
-                                <p className="text-2xl font-bold text-blue-600">{session.records_count}</p>
-                                <p className="text-sm text-gray-600">attendees</p>
-                                <p className={`inline-block px-2 py-1 rounded text-xs font-medium mt-2 ${
-                                    session.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                                }`}>
-                                    {session.is_active ? 'Active' : 'Closed'}
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Attendance Records */}
-                        <div className="border-t pt-4">
-                            <h4 className="font-medium text-gray-900 mb-2">Attendance Records</h4>
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Student</th>
-                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Email</th>
-                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Status</th>
-                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Scanned At</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-200">
-                                        {session.records.length === 0 ? (
-                                            <tr>
-                                                <td colSpan={4} className="px-4 py-3 text-center text-gray-600">
-                                                    No attendance records
-                                                </td>
-                                            </tr>
-                                        ) : (
-                                            session.records.map((record) => (
-                                                <tr key={record.id} className="hover:bg-gray-50">
-                                                    <td className="px-4 py-2 text-sm text-gray-900 font-medium">
-                                                        {record.student_name}
-                                                    </td>
-                                                    <td className="px-4 py-2 text-sm text-gray-600">
-                                                        {record.student_email}
-                                                    </td>
-                                                    <td className="px-4 py-2 text-sm">
-                                                        <span className={`px-2 py-1 rounded text-xs font-medium ${
-                                                            record.status === 'present'
-                                                                ? 'bg-green-100 text-green-800'
-                                                                : record.status === 'late'
-                                                                ? 'bg-yellow-100 text-yellow-800'
-                                                                : 'bg-red-100 text-red-800'
-                                                        }`}>
-                                                            {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-4 py-2 text-sm text-gray-600">
-                                                        {new Date(record.scanned_at).toLocaleString()}
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+        <AdminLayout title="Attendance by Session">
+            <div className="space-y-6">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-semibold text-foreground">Attendance by Session</h1>
+                        <p className="mt-2 text-muted-foreground">View attendance records grouped by class/session</p>
                     </div>
-                ))}
-            </div>
+                    <Button asChild variant="secondary">
+                        <Link href={admin.reports.overview.url()}>Back to Overview</Link>
+                    </Button>
+                </div>
 
-            {/* Pagination */}
-            <div className="bg-white rounded-lg shadow px-6 py-3 flex items-center justify-between">
-                <div className="flex-1 flex justify-between sm:hidden">
-                    {sessions.prev_page_url && (
-                        <Link
-                            href={sessions.prev_page_url}
-                            className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                        >
-                            Previous
-                        </Link>
-                    )}
-                    {sessions.next_page_url && (
-                        <Link
-                            href={sessions.next_page_url}
-                            className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                        >
-                            Next
-                        </Link>
-                    )}
+                <div className="space-y-4">
+                    {sessions.data.map((session) => (
+                        <Card key={session.id}>
+                            <CardHeader className="gap-3 md:flex-row md:items-start md:justify-between">
+                                <div className="space-y-1">
+                                    <CardTitle>{session.subject}</CardTitle>
+                                    <CardDescription>
+                                        Type: {session.type} · Opened by: {session.opened_by}
+                                    </CardDescription>
+                                    <p className="text-sm text-muted-foreground">
+                                        {new Date(session.created_at).toLocaleDateString()}
+                                    </p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-2xl font-semibold text-foreground">{session.records_count}</p>
+                                    <p className="text-sm text-muted-foreground">attendees</p>
+                                    <Badge className={`mt-2 ${sessionStatusClasses(session.is_active)}`}>
+                                        {session.is_active ? 'Active' : 'Closed'}
+                                    </Badge>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="border-t border-border pt-4">
+                                    <h4 className="text-sm font-semibold text-foreground">Attendance Records</h4>
+                                    <div className="mt-3 overflow-x-auto">
+                                        <table className="min-w-full divide-y divide-border">
+                                            <thead className="bg-muted/50">
+                                                <tr>
+                                                    <th scope="col" className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                                                        Student
+                                                    </th>
+                                                    <th scope="col" className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                                                        Email
+                                                    </th>
+                                                    <th scope="col" className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                                                        Status
+                                                    </th>
+                                                    <th scope="col" className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                                                        Scanned At
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-border">
+                                                {session.records.length === 0 ? (
+                                                    <tr>
+                                                        <td colSpan={4} className="px-4 py-3 text-center text-sm text-muted-foreground">
+                                                            No attendance records
+                                                        </td>
+                                                    </tr>
+                                                ) : (
+                                                    session.records.map((record) => (
+                                                        <tr key={record.id} className="hover:bg-muted/40">
+                                                            <td className="px-4 py-2 text-sm font-medium text-foreground">
+                                                                {record.student_name}
+                                                            </td>
+                                                            <td className="px-4 py-2 text-sm text-muted-foreground">
+                                                                {record.student_email}
+                                                            </td>
+                                                            <td className="px-4 py-2 text-sm">
+                                                                <Badge className={recordStatusClasses(record.status)}>
+                                                                    {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
+                                                                </Badge>
+                                                            </td>
+                                                            <td className="px-4 py-2 text-sm text-muted-foreground">
+                                                                {new Date(record.scanned_at).toLocaleString()}
+                                                            </td>
+                                                        </tr>
+                                                    ))
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))}
                 </div>
-                <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                    <p className="text-sm text-gray-700">
-                        Page <span className="font-medium">{sessions.current_page}</span> of{' '}
-                        <span className="font-medium">{sessions.last_page}</span>
-                    </p>
-                </div>
+
+                <Card>
+                    <CardContent className="flex items-center justify-between py-4">
+                        <div className="flex flex-1 justify-between sm:hidden">
+                            {sessions.prev_page_url && (
+                                <Button asChild variant="outline" size="sm">
+                                    <Link href={sessions.prev_page_url}>Previous</Link>
+                                </Button>
+                            )}
+                            {sessions.next_page_url && (
+                                <Button asChild variant="outline" size="sm" className="ml-3">
+                                    <Link href={sessions.next_page_url}>Next</Link>
+                                </Button>
+                            )}
+                        </div>
+                        <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                            <p className="text-sm text-muted-foreground">
+                                Page <span className="font-medium text-foreground">{sessions.current_page}</span> of{' '}
+                                <span className="font-medium text-foreground">{sessions.last_page}</span>
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
-        </div>
+        </AdminLayout>
     )
 }

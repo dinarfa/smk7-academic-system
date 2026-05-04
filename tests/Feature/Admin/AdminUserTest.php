@@ -11,7 +11,10 @@ test('admin can view users list', function () {
     $this->actingAs($admin)
         ->get('/admin/users')
         ->assertStatus(200)
-        ->assertSee($user->name);
+        ->assertSee($user->name)
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('admin/users/index'),
+        );
 });
 
 test('non-admin cannot view users list', function () {
