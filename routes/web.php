@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\SubjectController as AdminSubjectController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Student\AttendanceController as StudentAttendanceController;
 use App\Http\Controllers\Student\ExamAttemptController;
+use App\Http\Controllers\Student\ExamController as StudentExamController;
 use App\Http\Controllers\Student\ExamResponseController;
 use App\Http\Controllers\Student\ExamSubmissionController;
 use App\Http\Controllers\Teacher\AttendanceSessionController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\Teacher\ExamController;
 use App\Http\Controllers\Teacher\QuestionController;
 use App\Http\Controllers\Teacher\SchoolClassController;
 use App\Http\Controllers\Teacher\StudentController;
+use App\Http\Controllers\Teacher\SubjectController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 
@@ -59,6 +61,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware('role:teacher')->prefix('teacher')->name('teacher.')->group(function () {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
         Route::get('class', [SchoolClassController::class, 'index'])->name('class.index');
+        Route::get('subjects', [SubjectController::class, 'index'])->name('subjects.index');
 
         Route::get('students', [StudentController::class, 'index'])->name('students.index');
         Route::post('students', [StudentController::class, 'store'])->name('students.store');
@@ -87,6 +90,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
         Route::get('attendance', [StudentAttendanceController::class, 'index'])->name('attendance.index');
         Route::post('attendance/scan', [StudentAttendanceController::class, 'scan'])->name('attendance.scan');
+        Route::get('exams', [StudentExamController::class, 'index'])->name('exams.index');
         // Student exam attempts
         Route::post('exams/{exam}/attempts', [ExamAttemptController::class, 'store'])->name('exams.attempts.store');
         // Save / autosave exam responses

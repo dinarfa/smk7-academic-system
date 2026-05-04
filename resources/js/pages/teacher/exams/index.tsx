@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import ExamController from '@/actions/App/Http/Controllers/Teacher/ExamController';
+import QuestionController from '@/actions/App/Http/Controllers/Teacher/QuestionController';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -98,6 +99,18 @@ export default function TeacherExamsIndex({ exams }: Props) {
                                                 <p className="mt-2 text-xs text-muted-foreground">
                                                     {exam.created_at}
                                                 </p>
+                                                <div className="mt-3 flex flex-col gap-2">
+                                                    <Button asChild size="sm" variant="outline">
+                                                        <Link href={QuestionController.index.url({ exam: exam.id })}>
+                                                            Kelola Soal
+                                                        </Link>
+                                                    </Button>
+                                                    <Button asChild size="sm">
+                                                        <Link href={QuestionController.create.url({ exam: exam.id })}>
+                                                            Tambah Soal
+                                                        </Link>
+                                                    </Button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

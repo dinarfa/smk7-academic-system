@@ -1,7 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid, QrCode, Users } from 'lucide-react';
-import AttendanceController from '@/actions/App/Http/Controllers/Student/AttendanceController';
-import StudentController from '@/actions/App/Http/Controllers/Teacher/StudentController';
+import { BookOpen, BookOpenCheck, ClipboardList, FolderGit2, LayoutGrid, QrCode, School, Users } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -16,6 +14,8 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import student from '@/routes/student';
+import teacher from '@/routes/teacher';
 import type { NavItem } from '@/types';
 
 const footerNavItems: NavItem[] = [
@@ -33,36 +33,64 @@ const footerNavItems: NavItem[] = [
 
 export function AppSidebar() {
     const { auth } = usePage().props;
+    const role = auth.user?.role;
+    const dashboardHref = role === 'teacher'
+        ? teacher.dashboard.url()
+        : role === 'student'
+            ? student.dashboard.url()
+            : dashboard();
 
     const mainNavItems: NavItem[] = [
         {
             title: 'Dashboard',
-            href: dashboard(),
+            href: dashboardHref,
             icon: LayoutGrid,
         },
     ];
 
-    if (auth.user?.role === 'teacher') {
+    if (role === 'teacher') {
         mainNavItems.push(
             {
+                title: 'Kelas Wali',
+                href: teacher.class.index.url(),
+                icon: School,
+            },
+            {
                 title: 'Data Siswa',
-                href: StudentController.index(),
+                href: teacher.students.index.url(),
                 icon: Users,
             },
             {
+                title: 'Subject Management',
+                href: teacher.subjects.index.url(),
+                icon: BookOpenCheck,
+            },
+            {
+                title: 'Ujian',
+                href: teacher.exams.index.url(),
+                icon: ClipboardList,
+            },
+            {
                 title: 'QR Absensi',
-                href: dashboard(),
+                href: teacher.dashboard.url(),
                 icon: QrCode,
             },
         );
     }
 
-    if (auth.user?.role === 'student') {
-        mainNavItems.push({
-            title: 'Kehadiran',
-            href: AttendanceController.index(),
-            icon: QrCode,
-        });
+    if (role === 'student') {
+        mainNavItems.push(
+            {
+                title: 'Ujian',
+                href: student.exams.index.url(),
+                icon: ClipboardList,
+            },
+            {
+                title: 'Kehadiran',
+                href: student.attendance.index.url(),
+                icon: QrCode,
+            },
+        );
     }
 
     return (
@@ -71,7 +99,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch>
+                            <Link href={dashboardHref} prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>
