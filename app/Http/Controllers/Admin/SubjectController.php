@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreSubjectRequest;
 use App\Http\Requests\Admin\UpdateSubjectRequest;
+use App\Models\SchoolClass;
 use App\Models\Subject;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -17,6 +20,17 @@ class SubjectController extends Controller
      */
     public function index(): Response
     {
+        $classes = SchoolClass::query()
+            ->select(['id', 'name'])
+            ->orderBy('name')
+            ->get();
+
+        $teachers = User::query()
+            ->select(['id', 'name', 'email'])
+            ->where('role', UserRole::Teacher)
+            ->orderBy('name')
+            ->get();
+
         $subjects = Subject::query()
             ->select(['id', 'code', 'name', 'created_at', 'updated_at'])
             ->latest('id')
@@ -30,6 +44,8 @@ class SubjectController extends Controller
             ]);
 
         return Inertia::render('admin/subjects/index', [
+            'classes' => $classes,
+            'teachers' => $teachers,
             'subjects' => $subjects,
         ]);
     }
@@ -39,11 +55,26 @@ class SubjectController extends Controller
      */
     public function edit(Subject $subject): Response
     {
+        $classes = SchoolClass::query()
+            ->select(['id', 'name'])
+            ->orderBy('name')
+            ->get();
+
+        $teachers = User::query()
+            ->select(['id', 'name', 'email'])
+            ->where('role', UserRole::Teacher)
+            ->orderBy('name')
+            ->get();
+
         return Inertia::render('admin/subjects/edit', [
+            'classes' => $classes,
+            'teachers' => $teachers,
             'subject' => [
                 'id' => $subject->id,
                 'code' => $subject->code,
                 'name' => $subject->name,
+                'school_class_id' => $subject->school_class_id,
+                'teacher_id' => $subject->teacher_id,
             ],
         ]);
     }

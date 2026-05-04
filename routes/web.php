@@ -7,6 +7,9 @@ use App\Http\Controllers\Admin\SchoolClassController as AdminSchoolClassControll
 use App\Http\Controllers\Admin\SubjectController as AdminSubjectController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Student\AttendanceController as StudentAttendanceController;
+use App\Http\Controllers\Student\ExamAttemptController;
+use App\Http\Controllers\Student\ExamResponseController;
+use App\Http\Controllers\Student\ExamSubmissionController;
 use App\Http\Controllers\Teacher\AttendanceSessionController;
 use App\Http\Controllers\Teacher\ExamController;
 use App\Http\Controllers\Teacher\QuestionController;
@@ -84,6 +87,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
         Route::get('attendance', [StudentAttendanceController::class, 'index'])->name('attendance.index');
         Route::post('attendance/scan', [StudentAttendanceController::class, 'scan'])->name('attendance.scan');
+        // Student exam attempts
+        Route::post('exams/{exam}/attempts', [ExamAttemptController::class, 'store'])->name('exams.attempts.store');
+        // Save / autosave exam responses
+        Route::post('exams/{exam}/attempts/{attempt}/responses', [ExamResponseController::class, 'store'])
+            ->name('exams.attempts.responses.store');
+        // Final submission of an attempt — locks further changes
+        Route::post('exams/{exam}/attempts/{attempt}/submit', [ExamSubmissionController::class, 'store'])
+            ->name('exams.attempts.submit');
     });
 });
 
