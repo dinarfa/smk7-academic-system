@@ -1,5 +1,5 @@
-import { useMemo, useRef, useState, useEffect } from 'react';
 import JoditEditor from 'jodit-react';
+import { useMemo, useRef, useState, useEffect } from 'react';
 
 type RichEditorProps = {
     value: string;
@@ -10,10 +10,11 @@ type RichEditorProps = {
 
 export default function RichEditor({ value, onChange, placeholder, height = 300 }: RichEditorProps) {
     const editor = useRef(null);
-    const [isDark, setIsDark] = useState(false);
+    const [isDark, setIsDark] = useState(
+        typeof document !== 'undefined' ? document.documentElement.classList.contains('dark') : false
+    );
 
     useEffect(() => {
-        setIsDark(document.documentElement.classList.contains('dark'));
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
                 if (mutation.attributeName === 'class') {
@@ -22,6 +23,7 @@ export default function RichEditor({ value, onChange, placeholder, height = 300 
             });
         });
         observer.observe(document.documentElement, { attributes: true });
+
         return () => observer.disconnect();
     }, []);
 

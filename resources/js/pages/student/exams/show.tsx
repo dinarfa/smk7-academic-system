@@ -1,5 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { FormEvent, useEffect, useState } from 'react';
+import type { FormEvent} from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import ExamResponseController from '@/actions/App/Http/Controllers/Student/ExamResponseController';
 import ExamSubmissionController from '@/actions/App/Http/Controllers/Student/ExamSubmissionController';
 import { Button } from '@/components/ui/button';
@@ -141,10 +142,27 @@ function QuestionCard({ examId, attemptId, question }: { examId: number; attempt
 }
 
 export default function StudentExamShow({ exam, attempt, questions }: Props) {
-    const [timeLeft, setTimeLeft] = useState<number>(0);
+    const [timeLeft, setTimeLeft] = useState<number>(() => {
+        if (!attempt.started_at || attempt.status !== 'in_progress') {
+return 0;
+}
+
+        const started = new Date(attempt.started_at).getTime();
+        const durationMs = exam.duration_minutes * 60 * 1000;
+        const endTime = started + durationMs;
+        const now = new Date().getTime();
+
+        return Math.max(0, endTime - now);
+    });
+
+    const submitExam = useCallback(() => {
+        router.post(ExamSubmissionController.store.url({ exam: exam.id, attempt: attempt.id }), {});
+    }, [exam.id, attempt.id]);
 
     useEffect(() => {
-        if (!attempt.started_at || attempt.status !== 'in_progress') return;
+        if (!attempt.started_at || attempt.status !== 'in_progress') {
+return;
+}
 
         const started = new Date(attempt.started_at).getTime();
         const durationMs = exam.duration_minutes * 60 * 1000;
@@ -152,11 +170,9 @@ export default function StudentExamShow({ exam, attempt, questions }: Props) {
 
         const calculateRemaining = () => {
             const now = new Date().getTime();
+
             return Math.max(0, endTime - now);
         };
-
-        // Initialize immediately
-        setTimeLeft(calculateRemaining());
 
         const interval = setInterval(() => {
             const remaining = calculateRemaining();
@@ -169,22 +185,24 @@ export default function StudentExamShow({ exam, attempt, questions }: Props) {
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [attempt.started_at, attempt.status, exam.duration_minutes]);
+    }, [attempt.started_at, attempt.status, exam.duration_minutes, submitExam]);
 
     function formatTimeLeft(ms: number) {
-        if (ms <= 0) return '00:00:00';
+        if (ms <= 0) {
+return '00:00:00';
+}
+
         const totalSeconds = Math.floor(ms / 1000);
         const hours = Math.floor(totalSeconds / 3600);
         const minutes = Math.floor((totalSeconds % 3600) / 60);
         const seconds = totalSeconds % 60;
+
         return [hours, minutes, seconds]
             .map(v => v < 10 ? '0' + v : v)
             .join(':');
     }
 
-    function submitExam(): void {
-        router.post(ExamSubmissionController.store.url({ exam: exam.id, attempt: attempt.id }), {});
-    }
+
 
     return (
         <>

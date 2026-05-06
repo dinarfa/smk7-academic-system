@@ -1,10 +1,10 @@
 import { Head, Link, useForm } from '@inertiajs/react'
 import QuestionController from '@/actions/App/Http/Controllers/Teacher/QuestionController'
+import RichEditor from '@/components/RichEditor'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import RichEditor from '@/components/RichEditor'
 
 type Exam = {
   id: number

@@ -1,8 +1,7 @@
 import { Head, Link, useForm } from '@inertiajs/react';
-import { FormEventHandler } from 'react';
-import ExamController from '@/actions/App/Http/Controllers/Teacher/ExamController';
+import type { FormEventHandler } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { dashboard } from '@/routes';
@@ -46,7 +45,7 @@ type Props = {
 };
 
 export default function ExamCorrection({ exam, attempt, questions }: Props) {
-    const { data, setData, put, processing, errors } = useForm({
+    const { data, setData, put, processing } = useForm({
         grades: questions.map((q) => ({
             question_id: q.id,
             points_awarded: q.response?.points_awarded ?? 0,

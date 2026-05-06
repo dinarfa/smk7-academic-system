@@ -41,9 +41,14 @@ export default function StudentExamsIndex({ exams }: Props) {
 
     function startExam(exam: Exam): void {
         let accessCode = '';
+
         if (exam.has_access_code) {
             const input = window.prompt('Masukkan kode akses ujian:');
-            if (input === null) return; // User cancelled
+
+            if (input === null) {
+return;
+} // User cancelled
+
             accessCode = input;
         }
 
