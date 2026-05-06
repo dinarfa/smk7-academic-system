@@ -62,12 +62,24 @@ test('student sees only active exams for their class', function () {
         'ends_at' => now()->addHour(),
     ]);
 
+    $hiddenExam = Exam::query()->create([
+        'title' => 'Ujian Tersembunyi',
+        'subject_id' => $subject->id,
+        'class_id' => $class->id,
+        'created_by' => $teacher->id,
+        'duration_minutes' => 60,
+        'status' => 'draft',
+        'starts_at' => now()->subHour(),
+        'ends_at' => now()->addHour(),
+    ]);
+
     $this->actingAs($student)
         ->get('/student/exams')
         ->assertStatus(200)
         ->assertSee($activeExam->title)
         ->assertDontSee('Ujian Masa Depan')
         ->assertDontSee('Ujian Kelas Lain')
+        ->assertDontSee($hiddenExam->title)
         ->assertInertia(fn (Assert $page) => $page
             ->component('student/exams/index')
             ->has('exams.data', 1)

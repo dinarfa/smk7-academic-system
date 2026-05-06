@@ -10,7 +10,19 @@ import {
 import AdminLayout from '@/layouts/AdminLayout';
 import admin from '@/routes/admin';
 
-export default function AdminDashboard({ summary }) {
+type Summary = {
+    total_users: number;
+    total_teachers: number;
+    total_students: number;
+    total_sessions: number;
+    today_records: number;
+}
+
+type Props = {
+    summary: Summary;
+}
+
+export default function AdminDashboard({ summary }: Props) {
     const metrics = [
         { key: 'total_users', label: 'Total Users', value: summary.total_users },
         { key: 'total_teachers', label: 'Teachers', value: summary.total_teachers },

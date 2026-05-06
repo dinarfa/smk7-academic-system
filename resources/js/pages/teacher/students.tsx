@@ -1,6 +1,6 @@
 import { Head, Form, Link } from '@inertiajs/react';
-import StudentController from '@/actions/App/Http/Controllers/Teacher/StudentController';
 import SchoolClassController from '@/actions/App/Http/Controllers/Teacher/SchoolClassController';
+import StudentController from '@/actions/App/Http/Controllers/Teacher/StudentController';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';

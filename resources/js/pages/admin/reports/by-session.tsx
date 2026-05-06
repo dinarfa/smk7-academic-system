@@ -14,6 +14,7 @@ const recordStatusClasses = (status: string) => {
     if (status === 'present') {
         return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200'
     }
+
     if (status === 'late') {
         return 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200'
     }
@@ -21,7 +22,36 @@ const recordStatusClasses = (status: string) => {
     return 'bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-200'
 }
 
-export default function AdminReportsBySession({ sessions }) {
+type AttendanceRecord = {
+    id: number;
+    student_name: string;
+    student_email: string;
+    status: string;
+    scanned_at: string;
+}
+
+type Session = {
+    id: number;
+    subject: string;
+    type: string;
+    opened_by: string;
+    created_at: string;
+    records_count: number;
+    is_active: boolean;
+    records: AttendanceRecord[];
+}
+
+type Props = {
+    sessions: {
+        data: Session[];
+        current_page: number;
+        last_page: number;
+        prev_page_url: string | null;
+        next_page_url: string | null;
+    }
+}
+
+export default function AdminReportsBySession({ sessions }: Props) {
     return (
         <AdminLayout title="Attendance by Session">
             <div className="space-y-6">

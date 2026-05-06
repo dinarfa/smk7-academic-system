@@ -5,7 +5,28 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import AdminLayout from '@/layouts/AdminLayout'
 import admin from '@/routes/admin'
 
-export default function AdminUserShow({ user, auditLogs }) {
+type User = {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+    created_at: string;
+}
+
+type AuditLog = {
+    id: number;
+    action: string;
+    description: string;
+    admin_name: string;
+    created_at: string;
+}
+
+type Props = {
+    user: User;
+    auditLogs: AuditLog[];
+}
+
+export default function AdminUserShow({ user, auditLogs }: Props) {
     return (
         <AdminLayout title="User Details">
             <div className="space-y-6">
@@ -93,7 +114,7 @@ export default function AdminUserShow({ user, auditLogs }) {
     )
 }
 
-function getRoleBadgeClass(role) {
+function getRoleBadgeClass(role: string) {
     switch (role) {
         case 'admin':
             return 'bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-200'

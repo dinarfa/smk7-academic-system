@@ -140,6 +140,28 @@ describe('Teacher Question CRUD', function () {
         ]);
     });
 
+    test('teacher can create an essay question without answer options', function () {
+        $response = $this->actingAs($this->teacher)->post(
+            route('teacher.exams.questions.store', $this->exam),
+            [
+                'prompt' => 'Describe the Laravel lifecycle.',
+                'type' => 'essay',
+                'points' => 20,
+            ]
+        );
+
+        $response->assertRedirect(route('teacher.exams.questions.index', $this->exam));
+
+        $this->assertDatabaseHas('questions', [
+            'exam_id' => $this->exam->id,
+            'prompt' => 'Describe the Laravel lifecycle.',
+            'type' => 'essay',
+            'points' => 20,
+        ]);
+    });
+
+
+
     test('teacher can delete a question', function () {
         $question = Question::factory()->create([
             'exam_id' => $this->exam->id,

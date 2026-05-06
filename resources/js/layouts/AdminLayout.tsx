@@ -1,8 +1,8 @@
-import React from 'react'
 import { Link } from '@inertiajs/react'
+import React from 'react'
 import { Button } from '@/components/ui/button'
-import admin from '@/routes/admin'
 import { home } from '@/routes'
+import admin from '@/routes/admin'
 
 export default function AdminLayout({ children, title = 'Admin' }: { children: React.ReactNode; title?: string }) {
   return (

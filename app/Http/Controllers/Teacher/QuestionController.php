@@ -80,7 +80,7 @@ class QuestionController extends Controller
         $validated = $request->validated();
 
         // Extract answer options from validated data
-        $answerOptionsData = $validated['answer_options'];
+        $answerOptionsData = $validated['answer_options'] ?? [];
         unset($validated['answer_options']);
 
         // Create the question
@@ -147,7 +147,7 @@ class QuestionController extends Controller
         $validated = $request->validated();
 
         // Extract answer options from validated data
-        $answerOptionsData = $validated['answer_options'];
+        $answerOptionsData = $validated['answer_options'] ?? [];
         unset($validated['answer_options']);
 
         // Update the question

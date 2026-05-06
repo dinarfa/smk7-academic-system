@@ -10,7 +10,37 @@ const sessionStatusClasses = (isActive: boolean) =>
         ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200'
         : 'bg-muted text-muted-foreground'
 
-export default function AdminReportsOverview({ summary, topStudents, recentSessions }) {
+type Summary = {
+    total_users: number;
+    total_teachers: number;
+    total_students: number;
+    total_sessions: number;
+    total_records: number;
+    today_records: number;
+}
+
+type TopStudent = {
+    student_id: number;
+    student_name: string;
+    student_email: string;
+    attendance_count: number;
+}
+
+type RecentSession = {
+    id: number;
+    subject: string;
+    type: string;
+    opened_by: string;
+    is_active: boolean;
+}
+
+type Props = {
+    summary: Summary;
+    topStudents: TopStudent[];
+    recentSessions: RecentSession[];
+}
+
+export default function AdminReportsOverview({ summary, topStudents, recentSessions }: Props) {
     return (
         <AdminLayout title="Reports Overview">
             <div className="space-y-6">
@@ -119,7 +149,14 @@ export default function AdminReportsOverview({ summary, topStudents, recentSessi
     )
 }
 
-function StatCard({ label, value, icon, color }) {
+type StatCardProps = {
+    label: string;
+    value: number;
+    icon: string;
+    color: 'blue' | 'green' | 'purple' | 'orange' | 'red' | 'indigo';
+}
+
+function StatCard({ label, value, icon, color }: StatCardProps) {
     const colorClasses = {
         blue: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-200',
         green: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200',

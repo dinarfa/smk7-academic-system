@@ -1,5 +1,5 @@
 import { Link, useForm } from '@inertiajs/react'
-import { FormEvent } from 'react'
+import type { FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -7,7 +7,18 @@ import { Label } from '@/components/ui/label'
 import AdminLayout from '@/layouts/AdminLayout'
 import admin from '@/routes/admin'
 
-export default function AdminResetPassword({ user }) {
+type User = {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+}
+
+type Props = {
+    user: User;
+}
+
+export default function AdminResetPassword({ user }: Props) {
     const { data, setData, post, errors, processing } = useForm({
         password: '',
         password_confirmation: '',

@@ -75,6 +75,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('exams', [ExamController::class, 'index'])->name('exams.index');
         Route::get('exams/create', [ExamController::class, 'create'])->name('exams.create');
         Route::post('exams', [ExamController::class, 'store'])->name('exams.store');
+        Route::patch('exams/{exam}/publish', [ExamController::class, 'publish'])->name('exams.publish');
+        Route::patch('exams/{exam}/unpublish', [ExamController::class, 'unpublish'])->name('exams.unpublish');
+        Route::get('exams/{exam}/results', [ExamController::class, 'results'])->name('exams.results');
+        Route::get('exams/{exam}/attempts/{attempt}/correction', [ExamController::class, 'correction'])->name('exams.attempts.correction');
+        Route::put('exams/{exam}/attempts/{attempt}/correction', [ExamController::class, 'updateCorrection'])->name('exams.attempts.updateCorrection');
+        Route::get('exams/{exam}/export', [ExamController::class, 'export'])->name('exams.export');
 
         // Exam questions
         Route::get('exams/{exam}/questions', [QuestionController::class, 'index'])->name('exams.questions.index');
@@ -93,6 +99,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('exams', [StudentExamController::class, 'index'])->name('exams.index');
         // Student exam attempts
         Route::post('exams/{exam}/attempts', [ExamAttemptController::class, 'store'])->name('exams.attempts.store');
+        Route::get('exams/{exam}/attempts/{attempt}', [ExamAttemptController::class, 'show'])->name('exams.attempts.show');
         // Save / autosave exam responses
         Route::post('exams/{exam}/attempts/{attempt}/responses', [ExamResponseController::class, 'store'])
             ->name('exams.attempts.responses.store');

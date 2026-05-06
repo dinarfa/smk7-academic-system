@@ -1,11 +1,38 @@
 import { Head, Link, useForm } from '@inertiajs/react'
 import QuestionController from '@/actions/App/Http/Controllers/Teacher/QuestionController'
+import RichEditor from '@/components/RichEditor'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
-export default function Edit({ exam, question }) {
+type Exam = {
+  id: number
+  title: string
+}
+
+type AnswerOption = {
+  id?: number
+  option_text: string
+  is_correct: boolean
+}
+
+type Question = {
+  id: number
+  prompt: string
+  type: string
+  points: number
+  sort_order: number
+  explanation?: string
+  answer_options: AnswerOption[]
+}
+
+type Props = {
+  exam: Exam
+  question: Question
+}
+
+export default function Edit({ exam, question }: Props) {
   const { data, setData, put, processing, errors } = useForm({
     prompt: question.prompt,
     type: question.type,
@@ -52,14 +79,13 @@ export default function Edit({ exam, question }) {
             <form onSubmit={submit} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="prompt">Pertanyaan</Label>
-                <textarea
-                  id="prompt"
-                  name="prompt"
-                  rows={5}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  value={data.prompt}
-                  onChange={(event) => setData('prompt', event.target.value)}
-                />
+                <div className="min-h-[300px]">
+                  <RichEditor
+                    value={data.prompt}
+                    onChange={(val) => setData('prompt', val)}
+                    placeholder="Ketik soal di sini..."
+                  />
+                </div>
                 {errors.prompt && <p className="text-sm text-destructive">{errors.prompt}</p>}
               </div>
 
@@ -71,10 +97,13 @@ export default function Edit({ exam, question }) {
                     name="type"
                     className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
                     value={data.type}
-                    onChange={(event) => setData('type', event.target.value)}
+                    onChange={(event) => {
+                      const newType = event.target.value;
+                      setData('type', newType);
+                    }}
                   >
                     <option value="multiple_choice">Pilihan Ganda</option>
-                    <option value="objective">Isian / Objektif</option>
+                    <option value="essay">Esai</option>
                   </select>
                   {errors.type && <p className="text-sm text-destructive">{errors.type}</p>}
                 </div>
@@ -107,48 +136,95 @@ export default function Edit({ exam, question }) {
                 </div>
               </div>
 
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label>Jawaban</Label>
-                  <span className="text-xs text-muted-foreground">Minimal 2 jawaban, 1 benar</span>
-                </div>
-
+              {data.type !== 'essay' && (
                 <div className="space-y-3">
-                  {data.answer_options.map((option, index) => (
-                    <div key={index} className="grid gap-3 rounded-lg border border-border p-4 md:grid-cols-[1fr_auto]">
-                      <div className="space-y-2">
-                        <Label htmlFor={`answer_options.${index}.option_text`}>Opsi {index + 1}</Label>
-                        <Input
-                          id={`answer_options.${index}.option_text`}
-                          value={option.option_text}
-                          onChange={(event) => {
-                            const next = [...data.answer_options]
-                            next[index] = { ...next[index], option_text: event.target.value }
-                            setData('answer_options', next)
-                          }}
-                        />
-                      </div>
-                      <label className="flex items-center gap-2 pt-8 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={option.is_correct}
-                          onChange={(event) => {
-                            const next = [...data.answer_options]
-                            next[index] = { ...next[index], is_correct: event.target.checked }
-                            setData('answer_options', next)
-                          }}
-                        />
-                        Benar
-                      </label>
-                    </div>
-                  ))}
-                </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Jawaban</Label>
+                    <span className="text-xs text-muted-foreground">Minimal 2 jawaban, 1 benar</span>
+                  </div>
 
-                {errors.answer_options && <p className="text-sm text-destructive">{errors.answer_options}</p>}
-              </div>
+                  <div className="space-y-3">
+                    {data.answer_options.map((option, index) => (
+                      <div key={index} className="grid gap-3 rounded-lg border border-border p-4 md:grid-cols-[1fr_auto_auto]">
+                        <div className="space-y-2">
+                          <Label>Opsi {index + 1}</Label>
+                          <div className="min-h-[150px]">
+                            <RichEditor
+                              height={150}
+                              value={option.option_text}
+                              onChange={(val) => {
+                                const next = [...data.answer_options]
+                                next[index] = { ...next[index], option_text: val }
+                                setData('answer_options', next)
+                              }}
+                            />
+                          </div>
+                        </div>
+                        <label className="flex items-center gap-2 pt-8 text-sm">
+                          {data.type === 'objective' ? (
+                            <span className="text-muted-foreground italic">Jawaban Benar</span>
+                          ) : (
+                            <input
+                              type="radio"
+                              name="correct_answer"
+                              checked={option.is_correct}
+                              onChange={() => {
+                                const next = data.answer_options.map((opt, i) => ({
+                                  ...opt,
+                                  is_correct: i === index,
+                                }));
+                                setData('answer_options', next);
+                              }}
+                            />
+                          )}
+                          {data.type !== 'objective' && 'Benar'}
+                        </label>
+                        {data.type !== 'true_false' && data.answer_options.length > 2 && (
+                          <div className="pt-8">
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="icon"
+                              className="text-destructive"
+                              onClick={() => {
+                                const next = data.answer_options.filter((_, i) => i !== index);
+                                setData('answer_options', next);
+                              }}
+                            >
+                              &times;
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {data.type !== 'true_false' && data.answer_options.length < 10 && (
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      className="w-full"
+                      onClick={() => {
+                        setData('answer_options', [
+                          ...data.answer_options,
+                          { option_text: '', is_correct: false }
+                        ]);
+                      }}
+                    >
+                      + Tambah Opsi
+                    </Button>
+                  )}
+
+                  {errors.answer_options && <p className="text-sm text-destructive">{errors.answer_options}</p>}
+                </div>
+              )}
 
               <div className="space-y-2">
-                <Label htmlFor="explanation">Pembahasan</Label>
+                <Label htmlFor="explanation">Pembahasan (Opsional)</Label>
+                <p className="text-xs text-muted-foreground">
+                  Penjelasan atau langkah-langkah penyelesaian soal. Siswa dapat melihat pembahasan ini setelah ujian selesai sebagai bahan evaluasi belajar.
+                </p>
                 <textarea
                   id="explanation"
                   name="explanation"

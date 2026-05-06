@@ -5,7 +5,26 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import AdminLayout from '@/layouts/AdminLayout'
 import admin from '@/routes/admin'
 
-export default function AdminAuditLogShow({ log }) {
+type AuditLog = {
+    id: number;
+    admin_name: string;
+    admin_email: string;
+    action: string;
+    target_user_name: string | null;
+    target_user_email: string | null;
+    description: string;
+    created_at: string;
+    model_type: string | null;
+    model_id: string | null;
+    old_values: Record<string, unknown> | null;
+    new_values: Record<string, unknown> | null;
+}
+
+type Props = {
+    log: AuditLog;
+}
+
+export default function AdminAuditLogShow({ log }: Props) {
     return (
         <AdminLayout title="Audit Log Details">
             <div className="space-y-6">

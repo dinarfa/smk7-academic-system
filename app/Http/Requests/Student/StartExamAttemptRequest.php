@@ -36,6 +36,10 @@ class StartExamAttemptRequest extends FormRequest
             return false;
         }
 
+        if ($exam->status !== 'active') {
+            return false;
+        }
+
         return true;
     }
 
@@ -45,6 +49,29 @@ class StartExamAttemptRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [];
+        $exam = $this->route('exam');
+        $rules = [];
+        
+        if ($exam && $exam->access_code) {
+            $rules['access_code'] = ['required', 'string'];
+        }
+        
+        return $rules;
+    }
+
+    /**
+     * Configure the validator instance.
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $exam = $this->route('exam');
+            
+            if ($exam && $exam->access_code) {
+                if ($this->input('access_code') !== $exam->access_code) {
+                    $validator->errors()->add('access_code', 'Kode akses ujian tidak valid.');
+                }
+            }
+        });
     }
 }

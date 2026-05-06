@@ -21,15 +21,15 @@ class ExamController extends Controller
         $exams = Exam::query()
             ->where('class_id', $student->school_class_id)
             ->where('status', 'active')
-            ->where(fn ($query) => $query
+            ->where(fn($query) => $query
                 ->whereNull('starts_at')
                 ->orWhere('starts_at', '<=', $now))
-            ->where(fn ($query) => $query
+            ->where(fn($query) => $query
                 ->whereNull('ends_at')
                 ->orWhere('ends_at', '>=', $now))
             ->with([
                 'subject:id,name',
-                'attempts' => fn ($query) => $query->where('student_id', $student->id),
+                'attempts' => fn($query) => $query->where('student_id', $student->id),
             ])
             ->orderBy('starts_at')
             ->paginate(10)
@@ -51,6 +51,7 @@ class ExamController extends Controller
                         'submitted_at' => $attempt->submitted_at?->toIso8601String(),
                     ] : null,
                     'can_start' => $attempt === null,
+                    'has_access_code' => !empty($exam->access_code),
                 ];
             });
 
