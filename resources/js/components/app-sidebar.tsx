@@ -1,7 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, BookOpenCheck, ClipboardList, FolderGit2, LayoutGrid, QrCode, School, Users } from 'lucide-react';
+import { BookOpenCheck, ClipboardList, LayoutGrid, QrCode, School, Users } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
-import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import {
@@ -18,18 +17,6 @@ import student from '@/routes/student';
 import teacher from '@/routes/teacher';
 import type { NavItem } from '@/types';
 
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: FolderGit2,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
-    },
-];
 
 export function AppSidebar() {
     const { auth } = usePage().props;
@@ -70,11 +57,6 @@ export function AppSidebar() {
                 href: teacher.exams.index.url(),
                 icon: ClipboardList,
             },
-            {
-                title: 'QR Absensi',
-                href: teacher.dashboard.url(),
-                icon: QrCode,
-            },
         );
     }
 
@@ -112,7 +94,6 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
                 <NavUser />
             </SidebarFooter>
         </Sidebar>

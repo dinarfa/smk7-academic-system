@@ -5,7 +5,25 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import AdminLayout from '@/layouts/AdminLayout';
 import admin from '@/routes/admin';
 
-export default function AdminUsersIndex({ users }) {
+type User = {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+    created_at: string;
+}
+
+type Props = {
+    users: {
+        data: User[];
+        current_page: number;
+        last_page: number;
+        prev_page_url: string | null;
+        next_page_url: string | null;
+    }
+}
+
+export default function AdminUsersIndex({ users }: Props) {
     return (
         <AdminLayout title="User Management">
             <div className="space-y-6">
@@ -93,7 +111,7 @@ export default function AdminUsersIndex({ users }) {
     );
 }
 
-function getRoleBadgeClass(role) {
+function getRoleBadgeClass(role: string) {
     switch (role) {
         case 'admin':
             return 'bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-200'

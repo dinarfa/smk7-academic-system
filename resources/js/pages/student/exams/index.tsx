@@ -1,4 +1,4 @@
-import { Head, Link, router, useHttp } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import ExamAttemptController from '@/actions/App/Http/Controllers/Student/ExamAttemptController';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,7 @@ type Exam = {
     status: string;
     attempt: ExamAttempt | null;
     can_start: boolean;
+    has_access_code: boolean;
 };
 
 type Props = {
@@ -36,22 +37,23 @@ type Props = {
 };
 
 export default function StudentExamsIndex({ exams }: Props) {
-    const { post, processing } = useHttp();
     const [startingExamId, setStartingExamId] = useState<number | null>(null);
-    const [startError, setStartError] = useState<string | null>(null);
 
-    async function startExam(examId: number): Promise<void> {
-        setStartError(null);
-        setStartingExamId(examId);
-
-        try {
-            await post(ExamAttemptController.store.url({ exam: examId }));
-            router.reload({ only: ['exams'] });
-        } catch {
-            setStartError('Gagal memulai ujian. Coba lagi.');
-        } finally {
-            setStartingExamId(null);
+    function startExam(exam: Exam): void {
+        let accessCode = '';
+        if (exam.has_access_code) {
+            const input = window.prompt('Masukkan kode akses ujian:');
+            if (input === null) return; // User cancelled
+            accessCode = input;
         }
+
+        setStartingExamId(exam.id);
+
+        router.post(ExamAttemptController.store.url({ exam: exam.id }), { access_code: accessCode }, {
+            onFinish: () => {
+                setStartingExamId(null);
+            },
+        });
     }
 
     function formatDateTime(value: string | null): string {
@@ -73,8 +75,6 @@ export default function StudentExamsIndex({ exams }: Props) {
                         Daftar ujian yang tersedia untuk kelas Anda.
                     </p>
                 </div>
-
-                {startError && <p className="text-sm text-destructive">{startError}</p>}
 
                 <Card>
                     <CardHeader>
@@ -125,12 +125,10 @@ export default function StudentExamsIndex({ exams }: Props) {
                                                         <Button
                                                             type="button"
                                                             size="sm"
-                                                            onClick={() => startExam(exam.id)}
-                                                            disabled={processing && startingExamId === exam.id}
+                                                            onClick={() => startExam(exam)}
+                                                            disabled={startingExamId === exam.id}
                                                         >
-                                                            {processing && startingExamId === exam.id
-                                                                ? 'Memulai...'
-                                                                : 'Mulai Ujian'}
+                                                            {startingExamId === exam.id ? 'Memulai...' : 'Mulai Ujian'}
                                                         </Button>
                                                     ) : (
                                                         <Button type="button" size="sm" variant="secondary" disabled>

@@ -26,13 +26,13 @@ class StoreQuestionRequest extends FormRequest
     {
         return [
             'prompt' => ['required', 'string', 'max:5000'],
-            'type' => ['required', 'string', 'in:multiple_choice,objective'],
+            'type' => ['required', 'string', 'in:multiple_choice,essay'],
             'points' => ['required', 'integer', 'min:1', 'max:100'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'explanation' => ['nullable', 'string', 'max:2000'],
-            'answer_options' => ['required', 'array', 'min:2', 'max:10'],
-            'answer_options.*.option_text' => ['required', 'string', 'max:1000'],
-            'answer_options.*.is_correct' => ['required', 'boolean'],
+            'answer_options' => ['required_unless:type,essay', 'array', 'min:2', 'max:10'],
+            'answer_options.*.option_text' => ['required_with:answer_options', 'string', 'max:1000'],
+            'answer_options.*.is_correct' => ['required_with:answer_options', 'boolean'],
         ];
     }
 
@@ -54,10 +54,16 @@ class StoreQuestionRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
-        // Validate that at least one answer is marked as correct
-        $hasCorrectAnswer = collect($this->answer_options ?? [])->some(fn ($option) => $option['is_correct'] ?? false);
-        if (! $hasCorrectAnswer) {
-            $this->merge(['answer_options' => null]); // Force validation failure
+        if ($this->type !== 'essay') {
+            // Validate that at least one answer is marked as correct
+            $hasCorrectAnswer = collect($this->answer_options ?? [])->some(fn ($option) => $option['is_correct'] ?? false);
+            if (! $hasCorrectAnswer) {
+                $this->merge(['answer_options' => null]); // Force validation failure
+            }
+        } else {
+            // Remove answer options for essay questions
+            $this->request->remove('answer_options');
+            $this->json()->remove('answer_options');
         }
     }
 }

@@ -3,7 +3,33 @@ import QuestionController from '@/actions/App/Http/Controllers/Teacher/QuestionC
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
-export default function Index({ exam, questions }) {
+type Exam = {
+  id: number
+  title: string
+}
+
+type AnswerOption = {
+  id: number
+  option_text: string
+  is_correct: boolean
+}
+
+type Question = {
+  id: number
+  prompt: string
+  type: string
+  points: number
+  sort_order: number
+  explanation?: string
+  answer_options: AnswerOption[]
+}
+
+type Props = {
+  exam: Exam
+  questions: Question[]
+}
+
+export default function Index({ exam, questions }: Props) {
   return (
     <>
       <Head title={`${exam.title} - Soal`} />
@@ -40,7 +66,10 @@ export default function Index({ exam, questions }) {
                       <div className="space-y-2">
                         <div>
                           <p className="text-sm text-muted-foreground">Urutan {question.sort_order}</p>
-                          <p className="font-medium text-foreground">{question.prompt}</p>
+                          <div 
+                            className="font-medium text-foreground prose prose-sm max-w-none dark:prose-invert mt-1"
+                            dangerouslySetInnerHTML={{ __html: question.prompt }}
+                          />
                         </div>
                         <p className="text-sm text-muted-foreground">
                           Tipe: {question.type} · Poin: {question.points}
@@ -77,7 +106,10 @@ export default function Index({ exam, questions }) {
                             className={`rounded-md border p-3 text-sm ${option.is_correct ? 'border-emerald-500 bg-emerald-500/10' : 'border-border bg-background'}`}
                           >
                             <div className="flex items-center justify-between gap-2">
-                              <p>{option.option_text}</p>
+                              <div 
+                                className="prose prose-sm max-w-none dark:prose-invert"
+                                dangerouslySetInnerHTML={{ __html: option.option_text }}
+                              />
                               {option.is_correct && (
                                 <span className="text-xs font-medium text-emerald-600 dark:text-emerald-300">
                                   Benar

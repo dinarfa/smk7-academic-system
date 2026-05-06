@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import ExamController from '@/actions/App/Http/Controllers/Teacher/ExamController';
 import QuestionController from '@/actions/App/Http/Controllers/Teacher/QuestionController';
 import { Button } from '@/components/ui/button';
@@ -93,9 +93,11 @@ export default function TeacherExamsIndex({ exams }: Props) {
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <span className="inline-block rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800">
-                                                    {exam.status}
-                                                </span>
+                                                <div className="flex justify-end gap-2">
+                                                    <span className={exam.status !== 'draft' ? 'inline-block rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800' : 'inline-block rounded-full bg-gray-200 px-3 py-1 text-sm font-medium text-gray-700'}>
+                                                        {exam.status !== 'draft' ? 'Published' : 'Draft'}
+                                                    </span>
+                                                </div>
                                                 <p className="mt-2 text-xs text-muted-foreground">
                                                     {exam.created_at}
                                                 </p>
@@ -105,11 +107,34 @@ export default function TeacherExamsIndex({ exams }: Props) {
                                                             Kelola Soal
                                                         </Link>
                                                     </Button>
+                                                    <Button asChild size="sm" variant="outline">
+                                                        <Link href={ExamController.results.url({ exam: exam.id })}>
+                                                            Lihat Hasil
+                                                        </Link>
+                                                    </Button>
                                                     <Button asChild size="sm">
                                                         <Link href={QuestionController.create.url({ exam: exam.id })}>
                                                             Tambah Soal
                                                         </Link>
                                                     </Button>
+                                                    {exam.status !== 'draft' ? (
+                                                        <Button
+                                                            type="button"
+                                                            size="sm"
+                                                            variant="destructive"
+                                                            onClick={() => router.patch(ExamController.unpublish.url({ exam: exam.id }))}
+                                                        >
+                                                            Tutup Ujian
+                                                        </Button>
+                                                    ) : (
+                                                        <Button
+                                                            type="button"
+                                                            size="sm"
+                                                            onClick={() => router.patch(ExamController.publish.url({ exam: exam.id }))}
+                                                        >
+                                                            Buka Ujian
+                                                        </Button>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>

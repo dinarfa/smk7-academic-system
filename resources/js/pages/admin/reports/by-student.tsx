@@ -16,7 +16,33 @@ const recordStatusClasses = (status: string) => {
     return 'bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-200'
 }
 
-export default function AdminReportsByStudent({ students }) {
+type StudentRecord = {
+    id: number;
+    session_subject: string;
+    session_type: string;
+    status: string;
+    scanned_at: string;
+}
+
+type Student = {
+    id: number;
+    name: string;
+    email: string;
+    records_count: number;
+    records: StudentRecord[];
+}
+
+type Props = {
+    students: {
+        data: Student[];
+        current_page: number;
+        last_page: number;
+        prev_page_url: string | null;
+        next_page_url: string | null;
+    }
+}
+
+export default function AdminReportsByStudent({ students }: Props) {
     return (
         <AdminLayout title="Attendance by Student">
             <div className="space-y-6">

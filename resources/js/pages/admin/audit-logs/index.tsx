@@ -5,7 +5,28 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import AdminLayout from '@/layouts/AdminLayout'
 import admin from '@/routes/admin'
 
-export default function AdminAuditLogsIndex({ logs }) {
+type AuditLog = {
+    id: number;
+    admin_name: string;
+    admin_email: string;
+    action: string;
+    target_user_name: string | null;
+    target_user_email: string | null;
+    description: string;
+    created_at: string;
+}
+
+type Props = {
+    logs: {
+        data: AuditLog[];
+        current_page: number;
+        last_page: number;
+        prev_page_url: string | null;
+        next_page_url: string | null;
+    }
+}
+
+export default function AdminAuditLogsIndex({ logs }: Props) {
     return (
         <AdminLayout title="Audit Logs">
             <div className="space-y-6">

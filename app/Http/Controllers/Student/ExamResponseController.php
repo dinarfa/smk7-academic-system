@@ -7,17 +7,17 @@ use App\Http\Requests\Student\SaveExamResponseRequest;
 use App\Models\AnswerOption;
 use App\Models\ExamResponse;
 use App\Models\Question;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 
 class ExamResponseController extends Controller
 {
     /**
      * Save (or autosave) a student's response for a question.
      */
-    public function store(SaveExamResponseRequest $request, $exam, $attempt): JsonResponse
+    public function store(SaveExamResponseRequest $request, \App\Models\Exam $exam, \App\Models\ExamAttempt $attempt): RedirectResponse
     {
         $data = $request->validated();
-        $attemptModel = $request->route('attempt');
+        $attemptModel = $attempt;
 
         $question = Question::findOrFail($data['question_id']);
 
@@ -47,6 +47,6 @@ class ExamResponseController extends Controller
             $payload
         );
 
-        return response()->json(['response' => $response], 200);
+        return back()->with('success', 'Jawaban tersimpan.');
     }
 }

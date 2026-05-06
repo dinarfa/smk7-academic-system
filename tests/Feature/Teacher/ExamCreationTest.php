@@ -186,3 +186,32 @@ test('teacher can list their own exams', function () {
     // The response should not contain other teacher's exam
     $response->assertDontSee($otherTeacherExam->title);
 });
+
+test('teacher can publish and unpublish an exam', function () {
+    $teacher = User::factory()->create(['role' => UserRole::Teacher]);
+    $schoolClass = SchoolClass::factory()->create();
+    $subject = Subject::factory()->create(['school_class_id' => $schoolClass->id, 'teacher_id' => $teacher->id]);
+
+    $exam = Exam::factory()->create([
+        'created_by' => $teacher->id,
+        'subject_id' => $subject->id,
+        'class_id' => $schoolClass->id,
+        'status' => 'draft',
+    ]);
+
+    $this->actingAs($teacher)
+        ->patch(route('teacher.exams.publish', $exam))
+        ->assertRedirect();
+
+    $exam->refresh();
+
+    expect($exam->status)->toBe('active');
+
+    $this->actingAs($teacher)
+        ->patch(route('teacher.exams.unpublish', $exam))
+        ->assertRedirect();
+
+    $exam->refresh();
+
+    expect($exam->status)->toBe('draft');
+});
