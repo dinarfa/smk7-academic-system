@@ -1,6 +1,7 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import type { FormEvent } from 'react';
 import { useEffect, useRef, useState } from 'react';
+import QrScanner from 'qr-scanner';
 import AttendanceController from '@/actions/App/Http/Controllers/Student/AttendanceController';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,17 +32,12 @@ export default function StudentDashboard({ summary, recentRecords }: Props) {
     const [scannerActive, setScannerActive] = useState(false);
     const [scannerError, setScannerError] = useState<string | null>(null);
     const videoRef = useRef<HTMLVideoElement | null>(null);
-    const streamRef = useRef<MediaStream | null>(null);
-    const intervalRef = useRef<number | null>(null);
+    const scannerRef = useRef<QrScanner | null>(null);
 
     useEffect(() => {
         return () => {
-            if (intervalRef.current) {
-                window.clearInterval(intervalRef.current);
-            }
-
-            if (streamRef.current) {
-                streamRef.current.getTracks().forEach((track) => track.stop());
+            if (scannerRef.current) {
+                scannerRef.current.destroy();
             }
         };
     }, []);
@@ -49,71 +45,59 @@ export default function StudentDashboard({ summary, recentRecords }: Props) {
     async function startScanner(): Promise<void> {
         setScannerError(null);
 
+        if (!videoRef.current) {
+            setScannerError('Tidak bisa inisialisasi video element.');
+            return;
+        }
+
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'environment' },
-            });
+            const scanner = new QrScanner(
+                videoRef.current,
+                (result) => {
+                    const qrToken = result.data;
+                    setData('qr_token', qrToken);
+                    stopScanner();
+                    router.post(AttendanceController.scan.url(), {
+                        qr_token: qrToken,
+                    }, {
+                        onSuccess: () => reset('qr_token'),
+                    });
+                },
+                {
+                    onDecodeError: () => {},
+                    preferredCamera: 'environment',
+                    maxScansPerSecond: 5,
+                    highlightCodeOutline: true,
+                }
+            );
 
-            streamRef.current = stream;
+            scannerRef.current = scanner;
+            
+            await scanner.start();
             setScannerActive(true);
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'unknown';
+            console.error('[QR Scanner] Error:', errorMessage);
 
-            if (videoRef.current) {
-                videoRef.current.srcObject = stream;
-                await videoRef.current.play();
+            if (errorMessage.includes('NotAllowedError') || errorMessage.includes('Permission denied')) {
+                setScannerError('Izin akses kamera ditolak. Buka pengaturan browser > Izin > Kamera dan aktifkan untuk situs ini.');
+            } else if (errorMessage.includes('NotFoundError')) {
+                setScannerError('Kamera tidak ditemukan. Gunakan input token manual.');
+            } else if (errorMessage.includes('NotReadableError') || errorMessage.includes('already in use')) {
+                setScannerError('Kamera sedang digunakan aplikasi lain. Tutup aplikasi lain dan coba lagi.');
+            } else {
+                setScannerError(` Error: ${errorMessage}. Gunakan input token manual.`);
             }
-
-            const BarcodeDetectorApi = (window as unknown as {
-                BarcodeDetector?: {
-                    new (options?: { formats?: string[] }): {
-                        detect: (source: HTMLVideoElement) => Promise<Array<{ rawValue?: string }>>;
-                    };
-                };
-            }).BarcodeDetector;
-
-            if (!BarcodeDetectorApi) {
-                setScannerError('Browser ini belum mendukung scan otomatis. Masukkan token manual.');
-
-                return;
-            }
-
-            const detector = new BarcodeDetectorApi({ formats: ['qr_code'] });
-
-            intervalRef.current = window.setInterval(async () => {
-                if (!videoRef.current) {
-                    return;
-                }
-
-                const results = await detector.detect(videoRef.current);
-                const rawValue = results[0]?.rawValue;
-
-                if (!rawValue) {
-                    return;
-                }
-
-                setData('qr_token', rawValue);
-                stopScanner();
-                router.post(AttendanceController.scan.url(), {
-                    qr_token: rawValue,
-                }, {
-                    onSuccess: () => reset('qr_token'),
-                });
-            }, 800);
-        } catch {
-            setScannerError('Akses kamera gagal. Gunakan input token manual.');
         }
     }
 
     function stopScanner(): void {
         setScannerActive(false);
 
-        if (intervalRef.current) {
-            window.clearInterval(intervalRef.current);
-            intervalRef.current = null;
-        }
-
-        if (streamRef.current) {
-            streamRef.current.getTracks().forEach((track) => track.stop());
-            streamRef.current = null;
+        if (scannerRef.current) {
+            scannerRef.current.stop();
+            scannerRef.current.destroy();
+            scannerRef.current = null;
         }
     }
 
@@ -150,7 +134,12 @@ export default function StudentDashboard({ summary, recentRecords }: Props) {
                     <CardHeader>
                         <CardTitle>Scan QR Absensi</CardTitle>
                         <CardDescription>
-                            Scan QR dari guru, atau paste token QR jika kamera tidak tersedia.
+                            Scan QR dari guru menggunakan kamera. Jika kamera tidak bisa diakses dari device lain, paste token QR secara manual.
+                            {!window.location.protocol.startsWith('https') && !['localhost', '127.0.0.1'].includes(window.location.hostname) && (
+                                <div className="mt-2 rounded bg-blue-50 p-2 text-xs text-blue-700">
+                                    💡 Akses dari IP address: Browser memerlukan HTTPS untuk kamera. Gunakan token manual atau setup HTTPS dengan ngrok.
+                                </div>
+                            )}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -178,6 +167,7 @@ export default function StudentDashboard({ summary, recentRecords }: Props) {
                         <video
                             ref={videoRef}
                             className="max-h-72 w-full rounded-lg border bg-black"
+                            autoPlay
                             playsInline
                             muted
                         />
