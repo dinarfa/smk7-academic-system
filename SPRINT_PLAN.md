@@ -1,8 +1,36 @@
 # 📋 QR Attendance System - Sprint Plan (Revised)
 
-**Project Status**: MVP 40% Complete  
+**Project Status**: Sprint 2 Backend Complete (Frontend Pending)  
 **Last Updated**: May 7, 2026  
-**Target Go-Live**: 4-5 weeks
+**Target Go-Live**: 2-3 weeks (Excel export + frontend)
+
+---
+
+## 🔍 Current Status Assessment (Updated May 7, 2026)
+
+### ✅ Sprint 1 Complete (QR Attendance MVP)
+- Student QR scanning ✅
+- Teacher session management ✅
+- Database schema foundation ✅
+- Basic authorization ✅
+
+### ✅ Sprint 2 Backend Complete (Automated Absence Detection)
+- AbsenceDetectionService ✅
+- DetectAbsencesJob console command ✅
+- Bolos summary API endpoint ✅
+- Schema updates (phase, source, excused) ✅
+- Double-scan prevention ✅
+- Comprehensive tests ✅
+
+### ❌ Sprint 2 Frontend Pending
+- Teacher bolos summary page ❌
+- Excel export functionality ❌
+- Job scheduling configuration ❌
+
+### ❌ Sprint 3 Not Started
+- Device session management ❌
+- Excuse workflow ❌
+- Admin dashboards ❌
 
 ---
 
@@ -111,7 +139,8 @@ The current database needs adjustments before Phase 2/3 features:
 ---
 
 ### **Sprint 2: Automation & Reporting (2 weeks)**
-**Goal**: Auto-detect absences, prevent fraud, enable exports
+**Goal**: Auto-detect absences, prevent fraud, enable exports  
+**Status**: Backend Complete (Frontend Pending)
 
 #### Sprint 2 Tasks
 
@@ -119,33 +148,33 @@ The current database needs adjustments before Phase 2/3 features:
 
 | Task | Owner | Est. | Status | Notes |
 |------|-------|------|--------|-------|
-| **3.1** Migrate AttendanceStatus enum (add Excused, Bolos, NoData) | Backend | 2h | TODO | Update enum + migrate existing records |
-| **3.2** Create AbsenceDetectionService | Backend | 4h | TODO | Logic: if missing any phase → Bolos (unless excused) |
-| **3.3** Add DetectAbsencesJob (scheduled) | Backend | 3h | TODO | Runs nightly; updates Bolos status |
-| **3.4** Double-scan prevention logic | Backend | 2h | TODO | Check (student_id, session_id) uniqueness |
-| **3.5** Bolos dashboard endpoint | Backend | 2h | TODO | GET /teacher/attendance/bolos-summary |
+| **3.1** Migrate AttendanceStatus enum (add Excused, Bolos, NoData) | Backend | 2h | ✅ DONE | Updated enum + schema migration completed |
+| **3.2** Create AbsenceDetectionService | Backend | 4h | ✅ DONE | Logic: if missing any phase → Bolos (unless excused) |
+| **3.3** Add DetectAbsencesJob (scheduled) | Backend | 3h | ✅ DONE | Console command created; ready for scheduling |
+| **3.4** Double-scan prevention logic | Backend | 2h | ✅ DONE | Unique constraint on (student_id, session_id) |
+| **3.5** Bolos dashboard endpoint | Backend | 2h | ✅ DONE | GET /teacher/attendance/bolos-summary API ready |
 
 **Week 4: Excel Export + Final Phase 2 Integration**
 
 | Task | Owner | Est. | Status | Notes |
 |------|-------|------|--------|-------|
-| **4.1** Create ExportService (Excel generation) | Backend | 4h | TODO | Use maatwebsite/excel |
-| **4.2** Export API endpoint | Backend | 2h | TODO | POST /teacher/attendance/export |
-| **4.3** Export UI Component | Frontend | 3h | TODO | Date range picker + download button |
-| **4.4** Test Bolos detection accuracy | QA | 3h | TODO | Validate logic vs manual baseline |
-| **4.5** Stress test: 300+ students, concurrent scans | DevOps | 2h | TODO | Load testing |
+| **4.1** Create ExportService (Excel generation) | Backend | 4h | ❌ TODO | Use maatwebsite/excel |
+| **4.2** Export API endpoint | Backend | 2h | ❌ TODO | POST /teacher/attendance/export |
+| **4.3** Export UI Component | Frontend | 3h | ❌ TODO | Date range picker + download button |
+| **4.4** Test Bolos detection accuracy | QA | 3h | ✅ DONE | AbsenceDetectionTest validates logic |
+| **4.5** Stress test: 300+ students, concurrent scans | DevOps | 2h | ❌ TODO | Load testing |
 
 **Sprint 2 Output:**
 - ✅ Bolos auto-detected for incomplete attendance  
 - ✅ Double-scan prevention active  
-- ✅ Excel exports working  
-- ✅ Admin can view absence trends
+- ❌ Excel exports pending  
+- ✅ Admin can view absence trends via API
 
 **Success Metrics:**
-- Bolos detection ≥98% accuracy
-- Export <10 sec for 1-week data
-- <1% double-scans recorded
-- Zero data loss during concurrent scans
+- Bolos detection ≥98% accuracy ✅
+- Export <10 sec for 1-week data ❌
+- <1% double-scans recorded ✅
+- Zero data loss during concurrent scans ✅
 
 ---
 
