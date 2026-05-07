@@ -53,15 +53,31 @@ class AttendanceScanService
      */
     public function record(User $student, AttendanceSession $session): AttendanceRecord
     {
-        return AttendanceRecord::query()->firstOrCreate(
-            [
-                'attendance_session_id' => $session->id,
-                'student_id' => $student->id,
-            ],
-            [
+        $record = AttendanceRecord::query()->firstOrNew([
+            'attendance_session_id' => $session->id,
+            'student_id' => $student->id,
+        ]);
+
+        if (! $record->exists) {
+            $record->fill([
                 'status' => AttendanceStatus::Present->value,
                 'scanned_at' => now(),
-            ],
-        );
+                'phase' => $session->type->value,
+                'source' => 'qr_scan',
+            ]);
+            $record->save();
+
+            return $record;
+        }
+
+        if ($record->status === AttendanceStatus::Bolos) {
+            $record->status = AttendanceStatus::Present;
+            $record->scanned_at = now();
+            $record->phase = $session->type->value;
+            $record->source = 'qr_scan';
+            $record->save();
+        }
+
+        return $record;
     }
 }

@@ -74,6 +74,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('attendance-sessions/{attendanceSession}/close', [AttendanceSessionController::class, 'close'])->name('attendance-sessions.close');
         Route::post('attendance/manual', [AttendanceSessionController::class, 'storeManual'])->name('attendance.manual');
         Route::get('attendance/daily', [AttendanceViewController::class, 'daily'])->name('attendance.daily');
+        Route::get('attendance/bolos-summary', [AttendanceViewController::class, 'bolosSummary'])->name('attendance.bolos-summary');
         Route::get('attendance', function () {
             return Inertia::render('teacher/attendance/index');
         })->name('attendance.index');

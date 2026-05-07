@@ -39,6 +39,8 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::policy(AttendanceSession::class, AttendanceSessionPolicy::class);
         Gate::policy(User::class, UserPolicy::class);
+
+        Gate::define('viewDaily', fn (User $user): bool => $user->isTeacher());
     }
 
     /**
