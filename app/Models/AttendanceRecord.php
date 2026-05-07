@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AttendanceQrType;
 use App\Enums\AttendanceStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -19,6 +20,9 @@ class AttendanceRecord extends Model
         'student_id',
         'status',
         'scanned_at',
+        'phase',
+        'source',
+        'excused',
     ];
 
     /**
@@ -29,6 +33,8 @@ class AttendanceRecord extends Model
         return [
             'status' => AttendanceStatus::class,
             'scanned_at' => 'datetime',
+            'phase' => AttendanceQrType::class,
+            'excused' => 'boolean',
         ];
     }
 

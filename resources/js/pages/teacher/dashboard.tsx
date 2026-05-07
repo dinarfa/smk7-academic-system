@@ -1,4 +1,4 @@
-import { Head, Form } from '@inertiajs/react';
+import { Head, Form, Link } from '@inertiajs/react';
 import AttendanceSessionController from '@/actions/App/Http/Controllers/Teacher/AttendanceSessionController';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -79,6 +79,16 @@ export default function TeacherDashboard({
                             <CardTitle>{summary.today_records_count}</CardTitle>
                         </CardHeader>
                     </Card>
+                </div>
+
+                <div className="flex justify-between items-center">
+                    <h2 className="text-2xl font-bold">Attendance Management</h2>
+                    <Link
+                        href="/teacher/attendance"
+                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    >
+                        View Daily Attendance
+                    </Link>
                 </div>
 
                 <Card>

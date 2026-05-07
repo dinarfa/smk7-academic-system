@@ -12,12 +12,14 @@ use App\Http\Controllers\Student\ExamController as StudentExamController;
 use App\Http\Controllers\Student\ExamResponseController;
 use App\Http\Controllers\Student\ExamSubmissionController;
 use App\Http\Controllers\Teacher\AttendanceSessionController;
+use App\Http\Controllers\Teacher\AttendanceViewController;
 use App\Http\Controllers\Teacher\ExamController;
 use App\Http\Controllers\Teacher\QuestionController;
 use App\Http\Controllers\Teacher\SchoolClassController;
 use App\Http\Controllers\Teacher\StudentController;
 use App\Http\Controllers\Teacher\SubjectController;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 use Laravel\Fortify\Features;
 
 Route::inertia('/', 'welcome', [
@@ -70,6 +72,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::post('attendance-sessions', [AttendanceSessionController::class, 'store'])->name('attendance-sessions.store');
         Route::patch('attendance-sessions/{attendanceSession}/close', [AttendanceSessionController::class, 'close'])->name('attendance-sessions.close');
+        Route::post('attendance/manual', [AttendanceSessionController::class, 'storeManual'])->name('attendance.manual');
+        Route::get('attendance/daily', [AttendanceViewController::class, 'daily'])->name('attendance.daily');
+        Route::get('attendance', function () {
+            return Inertia::render('teacher/attendance/index');
+        })->name('attendance.index');
 
         // Exam management
         Route::get('exams', [ExamController::class, 'index'])->name('exams.index');

@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ManualAttendanceRequest;
 use App\Http\Requests\Teacher\OpenAttendanceSessionRequest;
+use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
 use App\Services\Attendance\AttendanceSessionLifecycleService;
 use Illuminate\Http\RedirectResponse;
@@ -40,6 +42,34 @@ class AttendanceSessionController extends Controller
         $attendanceSessionLifecycleService->close($attendanceSession);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Sesi QR ditutup.')]);
+
+        return back();
+    }
+
+    /**
+     * Store manual attendance records.
+     */
+    public function storeManual(ManualAttendanceRequest $request): RedirectResponse
+    {
+        $validated = $request->validated();
+
+        $count = 0;
+        foreach ($validated['students'] as $student) {
+            AttendanceRecord::create([
+                'attendance_session_id' => $validated['session_id'],
+                'student_id' => $student['student_id'],
+                'status' => $student['status'],
+                'phase' => $validated['phase'],
+                'source' => 'manual',
+                'scanned_at' => now(),
+            ]);
+            $count++;
+        }
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => __('Presensi manual berhasil disimpan untuk :count siswa.', ['count' => $count]),
+        ]);
 
         return back();
     }
