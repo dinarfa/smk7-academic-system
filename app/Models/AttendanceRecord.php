@@ -7,6 +7,7 @@ use App\Enums\AttendanceStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class AttendanceRecord extends Model
 {
@@ -52,5 +53,13 @@ class AttendanceRecord extends Model
     public function student(): BelongsTo
     {
         return $this->belongsTo(User::class, 'student_id');
+    }
+
+    /**
+     * Excuse for this attendance record if applicable.
+     */
+    public function excuse(): HasOne
+    {
+        return $this->hasOne(Excuse::class);
     }
 }
