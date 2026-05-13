@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('attendance_records', function (Blueprint $table) {
-            $table->enum('phase', ['morning', 'subject', 'dismissal'])->nullable()->after('status');
+            $table->enum('phase', ['morning', 'class', 'dismissal'])->nullable()->after('status');
             $table->enum('source', ['qr_scan', 'manual', 'system'])->nullable()->after('phase');
             $table->boolean('excused')->default(false)->after('source');
         });

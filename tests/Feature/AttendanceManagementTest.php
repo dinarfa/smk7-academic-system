@@ -8,6 +8,7 @@ use App\Models\AttendanceSession;
 use App\Models\SchoolClass;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
 
@@ -169,6 +170,33 @@ test('student can scan active qr token and record attendance', function () {
         'student_id' => $student->id,
         'status' => 'present',
     ]);
+});
+
+test('student can open the dedicated attendance scanner page', function () {
+    $student = User::factory()->student()->create();
+
+    $this->actingAs($student)
+        ->get(route('student.attendance.scan.page'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component('student/attendance/scan'));
+});
+
+test('teacher can open the dedicated qr attendance page', function () {
+    $teacher = User::factory()->teacher()->create();
+
+    $this->actingAs($teacher)
+        ->get(route('teacher.attendance.qr'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component('teacher/attendance/qr'));
+});
+
+test('teacher can open the dedicated daily attendance page', function () {
+    $teacher = User::factory()->teacher()->create();
+
+    $this->actingAs($teacher)
+        ->get(route('teacher.attendance.daily'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component('teacher/attendance/daily'));
 });
 
 test('duplicate scans do not create duplicate attendance records', function () {

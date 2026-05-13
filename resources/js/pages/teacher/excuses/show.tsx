@@ -5,7 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { dashboard, teacher } from '@/routes';
+import { dashboard } from '@/routes';
+import teacher from '@/routes/teacher';
 
 interface Excuse {
     id: number;

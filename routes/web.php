@@ -74,6 +74,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('attendance-sessions', [AttendanceSessionController::class, 'store'])->name('attendance-sessions.store');
         Route::patch('attendance-sessions/{attendanceSession}/close', [AttendanceSessionController::class, 'close'])->name('attendance-sessions.close');
         Route::post('attendance/manual', [AttendanceSessionController::class, 'storeManual'])->name('attendance.manual');
+        Route::get('attendance/qr', [AttendanceViewController::class, 'qr'])->name('attendance.qr');
         Route::get('attendance/daily', [AttendanceViewController::class, 'daily'])->name('attendance.daily');
         Route::get('attendance/bolos-summary', [AttendanceViewController::class, 'bolosSummary'])->name('attendance.bolos-summary');
         Route::get('class-students', [AttendanceViewController::class, 'classStudents'])->name('class-students');
@@ -110,6 +111,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware('role:student')->prefix('student')->name('student.')->group(function () {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
         Route::get('attendance', [StudentAttendanceController::class, 'index'])->name('attendance.index');
+        Route::get('attendance/scan', [StudentAttendanceController::class, 'scanPage'])->name('attendance.scan.page');
         Route::post('attendance/scan', [StudentAttendanceController::class, 'scan'])->name('attendance.scan');
         Route::get('exams', [StudentExamController::class, 'index'])->name('exams.index');
         // Student exam attempts

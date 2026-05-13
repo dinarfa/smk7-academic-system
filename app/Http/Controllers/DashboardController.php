@@ -25,6 +25,20 @@ class DashboardController extends Controller
             $totalStudents = User::where('role', UserRole::Student)->count();
             $totalSessions = AttendanceSession::count();
             $todayRecords = AttendanceRecord::whereDate('scanned_at', now()->toDateString())->count();
+            $activeSessions = AttendanceSession::where('is_active', true)->count();
+            
+            $recentActivities = AttendanceRecord::query()
+                ->with(['student:id,name', 'session:id,type,subject'])
+                ->latest('scanned_at')
+                ->take(8)
+                ->get()
+                ->map(fn (AttendanceRecord $record): array => [
+                    'id' => $record->id,
+                    'student_name' => $record->student?->name,
+                    'session_type' => $record->session?->type?->value,
+                    'subject' => $record->session?->subject,
+                    'scanned_at' => $record->scanned_at?->toIso8601String(),
+                ])->values();
 
             return Inertia::render('admin/dashboard', [
                 'summary' => [
@@ -33,7 +47,9 @@ class DashboardController extends Controller
                     'total_students' => $totalStudents,
                     'total_sessions' => $totalSessions,
                     'today_records' => $todayRecords,
+                    'active_sessions' => $activeSessions,
                 ],
+                'recentActivities' => $recentActivities,
             ]);
         }
 

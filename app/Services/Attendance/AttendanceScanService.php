@@ -9,6 +9,12 @@ use App\Models\User;
 
 class AttendanceScanService
 {
+    private const PHASE_MAP = [
+        'morning' => 'morning',
+        'subject' => 'class',
+        'dismissal' => 'dismissal',
+    ];
+
     /**
      * Resolve a QR token from a raw scanned payload.
      */
@@ -62,7 +68,7 @@ class AttendanceScanService
             $record->fill([
                 'status' => AttendanceStatus::Present->value,
                 'scanned_at' => now(),
-                'phase' => $session->type->value,
+                'phase' => $this->attendancePhase($session),
                 'source' => 'qr_scan',
             ]);
             $record->save();
@@ -73,11 +79,16 @@ class AttendanceScanService
         if ($record->status === AttendanceStatus::Bolos) {
             $record->status = AttendanceStatus::Present;
             $record->scanned_at = now();
-            $record->phase = $session->type->value;
+            $record->phase = $this->attendancePhase($session);
             $record->source = 'qr_scan';
             $record->save();
         }
 
         return $record;
+    }
+
+    private function attendancePhase(AttendanceSession $session): string
+    {
+        return self::PHASE_MAP[$session->type->value] ?? $session->type->value;
     }
 }

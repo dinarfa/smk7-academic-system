@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { dashboard, student } from '@/routes';
+import { dashboard } from '@/routes';
+import student from '@/routes/student';
 
 interface Excuse {
     id: number;

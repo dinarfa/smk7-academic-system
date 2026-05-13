@@ -11,6 +11,12 @@ use Carbon\Carbon;
 
 class AbsenceDetectionService
 {
+    private const PHASE_MAP = [
+        'morning' => 'morning',
+        'subject' => 'class',
+        'dismissal' => 'dismissal',
+    ];
+
     /**
      * Detect and persist missing attendance records for all teachers on a date.
      *
@@ -58,7 +64,7 @@ class AbsenceDetectionService
                 'student_id' => $missing['student_id'],
             ], [
                 'status' => AttendanceStatus::Bolos->value,
-                'phase' => $missing['session_type'],
+                'phase' => self::PHASE_MAP[$missing['session_type']] ?? $missing['session_type'],
                 'scanned_at' => now(),
                 'source' => 'system',
             ]);

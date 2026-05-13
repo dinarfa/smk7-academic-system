@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Teacher\ExportAttendanceRequest;
+use App\Models\AttendanceSession;
 use App\Services\Attendance\AbsenceDetectionService;
 use App\Services\Attendance\AttendanceReportService;
 use App\Services\Attendance\DailyAttendanceViewService;
@@ -30,8 +31,22 @@ class AttendanceViewController extends Controller
 
         return Inertia::render('teacher/attendance/index', [
             'attendance' => $attendance,
-            'active_session' => $activeSession,
+            'active_session' => $this->mapSession($activeSession),
             'date' => $date,
+        ]);
+    }
+
+    /**
+     * Show the dedicated QR display page for the current attendance session.
+     */
+    public function qr(DailyAttendanceViewService $service): InertiaResponse
+    {
+        Gate::authorize('viewDaily');
+
+        $session = $service->getActiveSession(auth()->id());
+
+        return Inertia::render('teacher/attendance/qr', [
+            'active_session' => $this->mapSession($session),
         ]);
     }
 
@@ -63,7 +78,7 @@ class AttendanceViewController extends Controller
     /**
      * Get daily attendance data for teacher.
      */
-    public function daily(DailyAttendanceViewService $service): JsonResponse
+    public function daily(DailyAttendanceViewService $service): JsonResponse|InertiaResponse
     {
         Gate::authorize('viewDaily');
 
@@ -71,11 +86,41 @@ class AttendanceViewController extends Controller
         $attendance = $service->getByDate($date, auth()->id());
         $activeSession = $service->getActiveSession(auth()->id());
 
+        if (! request()->expectsJson()) {
+            return Inertia::render('teacher/attendance/daily', [
+                'attendance' => $attendance,
+                'active_session' => $this->mapSession($activeSession),
+                'date' => $date,
+            ]);
+        }
+
         return response()->json([
             'attendance' => $attendance,
-            'active_session' => $activeSession,
+            'active_session' => $this->mapSession($activeSession),
             'date' => $date,
         ]);
+    }
+
+    /**
+     * Normalize an attendance session into page-friendly props.
+     */
+    private function mapSession(?AttendanceSession $session): ?array
+    {
+        if ($session === null) {
+            return null;
+        }
+
+        return [
+            'id' => $session->id,
+            'type' => $session->type?->value,
+            'subject' => $session->subject,
+            'starts_at' => $session->starts_at?->toIso8601String(),
+            'ends_at' => $session->ends_at?->toIso8601String(),
+            'is_active' => $session->is_active,
+            'records_count' => $session->records()->count(),
+            'qr_payload' => $session->qrPayload(),
+            'qr_svg' => $session->qrSvg(),
+        ];
     }
 
     public function bolosSummary(AbsenceDetectionService $service): JsonResponse
