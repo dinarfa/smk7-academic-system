@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Enums\AttendanceQrType;
+use App\Models\User;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -42,6 +43,41 @@ class ManualAttendanceRequest extends FormRequest
             'students.required' => 'At least one student must be selected.',
             'students.*.student_id.exists' => 'Selected student does not exist.',
             'students.*.status.in' => 'Status must be present, late, or absent.',
+        ];
+    }
+
+    /**
+     * Get the "after" validation callables for the request.
+     *
+     * @return array<int, callable>
+     */
+    public function after(): array
+    {
+        return [
+            function ($validator) {
+                // Get teacher's assigned classes
+                $teacher = auth()->user();
+                $classIds = $teacher->homeroomClasses()->pluck('id')->toArray();
+
+                // If teacher has no assigned homeroom classes, skip class membership checks
+                if (empty($classIds)) {
+                    return;
+                }
+
+                // Check if all students belong to teacher's classes
+                foreach ($this->input('students', []) as $index => $student) {
+                    $studentId = $student['student_id'] ?? null;
+                    if ($studentId) {
+                        $studentClass = User::find($studentId)?->school_class_id;
+                        if (! $studentClass || ! in_array($studentClass, $classIds)) {
+                            $validator->errors()->add(
+                                "students.{$index}.student_id",
+                                "Student ID {$studentId} is not in your assigned class."
+                            );
+                        }
+                    }
+                }
+            },
         ];
     }
 }

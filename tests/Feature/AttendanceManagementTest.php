@@ -249,3 +249,120 @@ test('role middleware prevents cross-role area access', function () {
         ->get(route('student.attendance.index'))
         ->assertForbidden();
 });
+
+test('teacher can save manual attendance for students in their class', function () {
+    $teacher = User::factory()->teacher()->create();
+    $class = SchoolClass::factory()->create(['homeroom_teacher_id' => $teacher->id]);
+    $student1 = User::factory()->student()->create(['school_class_id' => $class->id]);
+    $student2 = User::factory()->student()->create(['school_class_id' => $class->id]);
+
+    $session = AttendanceSession::query()->create([
+        'opened_by' => $teacher->id,
+        'type' => 'morning',
+        'qr_token' => 'MANUAL-SESSION-001',
+        'starts_at' => now(),
+        'ends_at' => now()->addMinutes(30),
+        'is_active' => true,
+    ]);
+
+    $response = $this->actingAs($teacher)->post(route('teacher.attendance.manual'), [
+        'session_id' => $session->id,
+        'phase' => 'morning',
+        'students' => [
+            ['student_id' => $student1->id, 'status' => 'present'],
+            ['student_id' => $student2->id, 'status' => 'late'],
+        ],
+    ]);
+
+    $response->assertRedirect();
+    $this->assertDatabaseHas('attendance_records', [
+        'attendance_session_id' => $session->id,
+        'student_id' => $student1->id,
+        'status' => 'present',
+        'source' => 'manual',
+    ]);
+    $this->assertDatabaseHas('attendance_records', [
+        'attendance_session_id' => $session->id,
+        'student_id' => $student2->id,
+        'status' => 'late',
+        'source' => 'manual',
+    ]);
+});
+
+test('teacher cannot save manual attendance for students not in their class', function () {
+    $teacher = User::factory()->teacher()->create();
+    $otherTeacher = User::factory()->teacher()->create();
+    $class = SchoolClass::factory()->create(['homeroom_teacher_id' => $teacher->id]);
+    $otherClass = SchoolClass::factory()->create(['homeroom_teacher_id' => $otherTeacher->id]);
+    $studentInClass = User::factory()->student()->create(['school_class_id' => $class->id]);
+    $studentNotInClass = User::factory()->student()->create(['school_class_id' => $otherClass->id]);
+
+    $session = AttendanceSession::query()->create([
+        'opened_by' => $teacher->id,
+        'type' => 'morning',
+        'qr_token' => 'MANUAL-SESSION-002',
+        'starts_at' => now(),
+        'ends_at' => now()->addMinutes(30),
+        'is_active' => true,
+    ]);
+
+    $response = $this->actingAs($teacher)->post(route('teacher.attendance.manual'), [
+        'session_id' => $session->id,
+        'phase' => 'morning',
+        'students' => [
+            ['student_id' => $studentInClass->id, 'status' => 'present'],
+            ['student_id' => $studentNotInClass->id, 'status' => 'absent'],
+        ],
+    ]);
+
+    $response->assertSessionHasErrors();
+    $this->assertDatabaseMissing('attendance_records', [
+        'attendance_session_id' => $session->id,
+        'student_id' => $studentNotInClass->id,
+    ]);
+});
+
+test('teacher can fetch class students for manual attendance', function () {
+    $teacher = User::factory()->teacher()->create();
+    $class = SchoolClass::factory()->create(['homeroom_teacher_id' => $teacher->id]);
+    $student1 = User::factory()->student()->create(['school_class_id' => $class->id, 'name' => 'Alice']);
+    $student2 = User::factory()->student()->create(['school_class_id' => $class->id, 'name' => 'Bob']);
+
+    $response = $this->actingAs($teacher)->get(route('teacher.class-students'));
+
+    $response->assertStatus(200);
+    $data = $response->json();
+    expect($data['students'])->toHaveCount(2);
+    expect($data['students'][0])->toHaveKeys(['id', 'name']);
+});
+
+test('teacher without assigned classes can save manual attendance', function () {
+    $teacher = User::factory()->teacher()->create();
+
+    $session = AttendanceSession::query()->create([
+        'opened_by' => $teacher->id,
+        'type' => 'morning',
+        'qr_token' => 'MANUAL-SESSION-003',
+        'starts_at' => now(),
+        'ends_at' => now()->addMinutes(30),
+        'is_active' => true,
+    ]);
+
+    $student = User::factory()->student()->create();
+
+    $response = $this->actingAs($teacher)->post(route('teacher.attendance.manual'), [
+        'session_id' => $session->id,
+        'phase' => 'morning',
+        'students' => [
+            ['student_id' => $student->id, 'status' => 'present'],
+        ],
+    ]);
+
+    $response->assertRedirect();
+    $this->assertDatabaseHas('attendance_records', [
+        'attendance_session_id' => $session->id,
+        'student_id' => $student->id,
+        'status' => 'present',
+        'source' => 'manual',
+    ]);
+});

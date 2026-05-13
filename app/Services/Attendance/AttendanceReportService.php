@@ -5,6 +5,7 @@ namespace App\Services\Attendance;
 use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
@@ -183,5 +184,110 @@ class AttendanceReportService
         }
 
         return $csv;
+    }
+
+    /**
+     * Build the CSV contents for a teacher attendance export within a date range.
+     */
+    public function exportCsvForTeacher(int $teacherId, string $startDate, string $endDate): string
+    {
+        $records = AttendanceRecord::query()
+            ->with(['student:id,name,email', 'session:id,type,subject,opened_by'])
+            ->whereHas('session', function ($query) use ($teacherId): void {
+                $query->where('opened_by', $teacherId);
+            })
+            ->whereBetween('scanned_at', [
+                Carbon::parse($startDate)->startOfDay(),
+                Carbon::parse($endDate)->endOfDay(),
+            ])
+            ->orderBy('scanned_at')
+            ->get();
+
+        $stream = fopen('php://temp', 'r+');
+
+        fputcsv($stream, [
+            'Student Name',
+            'Email',
+            'Session Type',
+            'Subject',
+            'Phase',
+            'Source',
+            'Status',
+            'Excused',
+            'Scanned At',
+        ]);
+
+        foreach ($records as $record) {
+            fputcsv($stream, [
+                $record->student?->name,
+                $record->student?->email,
+                $record->session?->type?->value,
+                $record->session?->subject,
+                $record->phase?->value ?? $record->phase,
+                $record->source,
+                $record->status?->value,
+                $record->excused ? 'yes' : 'no',
+                $record->scanned_at?->toIso8601String(),
+            ]);
+        }
+
+        rewind($stream);
+
+        $csv = stream_get_contents($stream) ?: '';
+
+        fclose($stream);
+
+        return $csv;
+    }
+
+    /**
+     * Build an array of rows for attendance export for a teacher.
+     * First row is the header, following rows are data arrays.
+     *
+     * @return array<int, array<int, mixed>>
+     */
+    public function exportArrayForTeacher(int $teacherId, string $startDate, string $endDate): array
+    {
+        $records = AttendanceRecord::query()
+            ->with(['student:id,name,email', 'session:id,type,subject,opened_by'])
+            ->whereHas('session', function ($query) use ($teacherId): void {
+                $query->where('opened_by', $teacherId);
+            })
+            ->whereBetween('scanned_at', [
+                Carbon::parse($startDate)->startOfDay(),
+                Carbon::parse($endDate)->endOfDay(),
+            ])
+            ->orderBy('scanned_at')
+            ->get();
+
+        $rows = [];
+
+        $rows[] = [
+            'Student Name',
+            'Email',
+            'Session Type',
+            'Subject',
+            'Phase',
+            'Source',
+            'Status',
+            'Excused',
+            'Scanned At',
+        ];
+
+        foreach ($records as $record) {
+            $rows[] = [
+                $record->student?->name,
+                $record->student?->email,
+                $record->session?->type?->value,
+                $record->session?->subject,
+                $record->phase?->value ?? $record->phase,
+                $record->source,
+                $record->status?->value,
+                $record->excused ? 'yes' : 'no',
+                $record->scanned_at?->toIso8601String(),
+            ];
+        }
+
+        return $rows;
     }
 }

@@ -131,4 +131,28 @@ class User extends Authenticatable
     {
         return $this->hasMany(AuditLog::class, 'target_user_id');
     }
+
+    /**
+     * Excuses submitted by this student.
+     */
+    public function submittedExcuses(): HasMany
+    {
+        return $this->hasMany(Excuse::class, 'submitted_by');
+    }
+
+    /**
+     * Excuses for this student (absences).
+     */
+    public function excuses(): HasMany
+    {
+        return $this->hasMany(Excuse::class, 'student_id');
+    }
+
+    /**
+     * Excuses reviewed by this teacher/admin.
+     */
+    public function reviewedExcuses(): HasMany
+    {
+        return $this->hasMany(Excuse::class, 'reviewed_by');
+    }
 }

@@ -11,15 +11,16 @@ use App\Http\Controllers\Student\ExamAttemptController;
 use App\Http\Controllers\Student\ExamController as StudentExamController;
 use App\Http\Controllers\Student\ExamResponseController;
 use App\Http\Controllers\Student\ExamSubmissionController;
+use App\Http\Controllers\Student\ExcuseController as StudentExcuseController;
 use App\Http\Controllers\Teacher\AttendanceSessionController;
 use App\Http\Controllers\Teacher\AttendanceViewController;
 use App\Http\Controllers\Teacher\ExamController;
+use App\Http\Controllers\Teacher\ExcuseController as TeacherExcuseController;
 use App\Http\Controllers\Teacher\QuestionController;
 use App\Http\Controllers\Teacher\SchoolClassController;
 use App\Http\Controllers\Teacher\StudentController;
 use App\Http\Controllers\Teacher\SubjectController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 use Laravel\Fortify\Features;
 
 Route::inertia('/', 'welcome', [
@@ -75,9 +76,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('attendance/manual', [AttendanceSessionController::class, 'storeManual'])->name('attendance.manual');
         Route::get('attendance/daily', [AttendanceViewController::class, 'daily'])->name('attendance.daily');
         Route::get('attendance/bolos-summary', [AttendanceViewController::class, 'bolosSummary'])->name('attendance.bolos-summary');
-        Route::get('attendance', function () {
-            return Inertia::render('teacher/attendance/index');
-        })->name('attendance.index');
+        Route::get('class-students', [AttendanceViewController::class, 'classStudents'])->name('class-students');
+        Route::post('attendance/export', [AttendanceViewController::class, 'export'])->name('attendance.export');
+        Route::get('attendance', [AttendanceViewController::class, 'index'])->name('attendance.index');
 
         // Exam management
         Route::get('exams', [ExamController::class, 'index'])->name('exams.index');
@@ -98,6 +99,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('exams/{exam}/questions/{question}/edit', [QuestionController::class, 'edit'])->name('exams.questions.edit');
         Route::put('exams/{exam}/questions/{question}', [QuestionController::class, 'update'])->name('exams.questions.update');
         Route::delete('exams/{exam}/questions/{question}', [QuestionController::class, 'destroy'])->name('exams.questions.destroy');
+
+        // Excuse management - teacher reviews
+        Route::get('excuses', [TeacherExcuseController::class, 'index'])->name('excuses.index');
+        Route::get('excuses/{excuse}', [TeacherExcuseController::class, 'show'])->name('excuses.show');
+        Route::patch('excuses/{excuse}/approve', [TeacherExcuseController::class, 'approve'])->name('excuses.approve');
+        Route::patch('excuses/{excuse}/reject', [TeacherExcuseController::class, 'reject'])->name('excuses.reject');
     });
 
     Route::middleware('role:student')->prefix('student')->name('student.')->group(function () {
@@ -114,6 +121,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Final submission of an attempt — locks further changes
         Route::post('exams/{exam}/attempts/{attempt}/submit', [ExamSubmissionController::class, 'store'])
             ->name('exams.attempts.submit');
+
+        // Excuse management - student submits
+        Route::get('excuses', [StudentExcuseController::class, 'index'])->name('excuses.index');
+        Route::get('excuses/create', [StudentExcuseController::class, 'create'])->name('excuses.create');
+        Route::post('excuses', [StudentExcuseController::class, 'store'])->name('excuses.store');
+        Route::get('excuses/{excuse}', [StudentExcuseController::class, 'show'])->name('excuses.show');
     });
 });
 
