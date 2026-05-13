@@ -160,6 +160,13 @@ export default function StudentDashboard({ summary, recentRecords }: Props) {
                             >
                                 Lihat Riwayat Kehadiran
                             </Link>
+
+                            <Link
+                                href="/student/attendance/scan"
+                                className="inline-flex h-9 items-center rounded-md border border-primary/20 bg-primary/5 px-3 text-sm text-primary"
+                            >
+                                Buka Scanner Penuh
+                            </Link>
                         </div>
 
                         {scannerError && <p className="text-sm text-amber-600">{scannerError}</p>}

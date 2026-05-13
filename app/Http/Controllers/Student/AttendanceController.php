@@ -13,6 +13,14 @@ use Inertia\Response;
 class AttendanceController extends Controller
 {
     /**
+     * Show the dedicated QR attendance scanner page.
+     */
+    public function scanPage(): Response
+    {
+        return Inertia::render('student/attendance/scan');
+    }
+
+    /**
      * Show attendance history for the authenticated student.
      */
     public function index(): Response

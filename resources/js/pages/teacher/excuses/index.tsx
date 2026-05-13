@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { dashboard, teacher } from '@/routes';
+import { dashboard } from '@/routes';
+import teacher from '@/routes/teacher';
 
 interface Excuse {
     id: number;

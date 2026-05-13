@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { dashboard, student } from '@/routes';
+import { dashboard } from '@/routes';
+import student from '@/routes/student';
 
 interface PendingAbsence {
     id: number;
