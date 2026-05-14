@@ -57,13 +57,19 @@ class DashboardController extends Controller
             $activeSessions = AttendanceSession::query()
                 ->withCount('records')
                 ->where('is_active', true)
+                ->where('ends_at', '>', now())
                 ->latest('starts_at')
                 ->take(3)
                 ->get();
 
+            $homeroomClassIds = $user->homeroomClasses()->pluck('school_classes.id');
+
             return Inertia::render('teacher/dashboard', [
                 'summary' => [
-                    'students_count' => User::query()->where('role', UserRole::Student)->count(),
+                    'students_count' => User::query()
+                        ->where('role', UserRole::Student)
+                        ->whereIn('school_class_id', $homeroomClassIds)
+                        ->count(),
                     'active_sessions_count' => AttendanceSession::query()->where('is_active', true)->count(),
                     'today_records_count' => AttendanceRecord::query()->whereDate('scanned_at', now()->toDateString())->count(),
                 ],

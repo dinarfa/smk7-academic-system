@@ -34,18 +34,18 @@ export default function AdminResetPassword({ user }: Props) {
             <div className="space-y-6">
                 <div>
                     <h1 className="text-3xl font-semibold text-foreground">Reset Password</h1>
-                    <p className="mt-2 text-muted-foreground">Reset password for {user.name}</p>
+                    <p className="text-muted-foreground">Reset password untuk {user.name}</p>
                 </div>
 
                 <Card className="max-w-md">
                     <CardHeader>
-                        <CardTitle>User Credentials</CardTitle>
-                        <CardDescription>Set a new password for this account.</CardDescription>
+                        <CardTitle>Kredensial Pengguna</CardTitle>
+                        <CardDescription>Atur password baru untuk akun ini.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div>
-                                <Label>User</Label>
+                                <Label>Pengguna</Label>
                                 <div className="mt-2 rounded-lg border border-border bg-muted/40 p-3">
                                     <p className="font-medium text-foreground">{user.name}</p>
                                     <p className="text-sm text-muted-foreground">{user.email}</p>
@@ -54,7 +54,7 @@ export default function AdminResetPassword({ user }: Props) {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="password">New Password</Label>
+                                <Label htmlFor="password">Password Baru</Label>
                                 <Input
                                     id="password"
                                     type="password"
@@ -70,7 +70,7 @@ export default function AdminResetPassword({ user }: Props) {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="password_confirmation">Confirm Password</Label>
+                                <Label htmlFor="password_confirmation">Konfirmasi Password</Label>
                                 <Input
                                     id="password_confirmation"
                                     type="password"
@@ -87,10 +87,10 @@ export default function AdminResetPassword({ user }: Props) {
 
                             <div className="flex flex-wrap gap-4">
                                 <Button type="submit" disabled={processing} className="flex-1">
-                                    {processing ? 'Resetting...' : 'Reset Password'}
+                                    {processing ? 'Mereset...' : 'Reset Password'}
                                 </Button>
                                 <Button asChild variant="outline" className="flex-1">
-                                    <Link href={admin.users.index.url()}>Cancel</Link>
+                                    <Link href={admin.users.index.url()}>Batal</Link>
                                 </Button>
                             </div>
                         </form>

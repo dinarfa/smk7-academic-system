@@ -24,43 +24,64 @@ type SchoolClass = {
 };
 
 type Props = {
-    schoolClass: SchoolClass | null;
+    schoolClasses: SchoolClass[];
     students: {
         data: Student[];
     };
 };
 
-export default function TeacherStudents({ schoolClass, students }: Props) {
+export default function TeacherStudents({ schoolClasses, students }: Props) {
+    const totalStudents = schoolClasses.reduce((sum, c) => sum + c.students_count, 0);
+
     return (
         <>
             <Head title="Data Siswa" />
 
             <div className="space-y-6 p-4">
+                <div>
+                    <h1 className="text-3xl font-semibold text-foreground">Data Siswa</h1>
+                    <p className="text-muted-foreground">Kelola data siswa di kelas perwalian Anda.</p>
+                </div>
+
                 <Card>
                     <CardHeader>
                         <CardTitle>Kelas Wali</CardTitle>
                         <CardDescription>Kelola kelas yang menjadi tanggung jawab Anda.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {schoolClass ? (
-                            <div className="grid gap-2 rounded-lg border p-4 md:grid-cols-4">
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Nama Kelas</p>
-                                    <p className="font-medium">{schoolClass.name}</p>
+                        {schoolClasses.length > 0 ? (
+                            <>
+                                <div className="grid gap-2 rounded-lg border p-4 md:grid-cols-2">
+                                    <div>
+                                        <p className="text-sm text-muted-foreground">Jumlah Kelas Perwalian</p>
+                                        <p className="font-medium">{schoolClasses.length}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-muted-foreground">Total Siswa</p>
+                                        <p className="font-medium">{totalStudents}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Kode</p>
-                                    <p className="font-medium">{schoolClass.code ?? '-'}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Tahun Ajaran</p>
-                                    <p className="font-medium">{schoolClass.academic_year ?? '-'}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Jumlah Siswa</p>
-                                    <p className="font-medium">{schoolClass.students_count}</p>
-                                </div>
-                            </div>
+                                {schoolClasses.map((sc) => (
+                                    <div key={sc.id} className="grid gap-2 rounded-lg border p-4 md:grid-cols-4">
+                                        <div>
+                                            <p className="text-sm text-muted-foreground">Nama Kelas</p>
+                                            <p className="font-medium">{sc.name}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-muted-foreground">Kode</p>
+                                            <p className="font-medium">{sc.code ?? '-'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-muted-foreground">Tahun Ajaran</p>
+                                            <p className="font-medium">{sc.academic_year ?? '-'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-muted-foreground">Jumlah Siswa</p>
+                                            <p className="font-medium">{sc.students_count}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </>
                         ) : (
                             <div className="space-y-3 rounded-lg border border-dashed p-4">
                                 <p className="text-sm text-muted-foreground">
@@ -82,7 +103,7 @@ export default function TeacherStudents({ schoolClass, students }: Props) {
                         <CardDescription>Buat akun siswa baru.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        {!schoolClass ? (
+                        {schoolClasses.length === 0 ? (
                             <p className="text-sm text-muted-foreground">
                                 Form siswa akan aktif setelah kelas wali dibuat.
                             </p>
@@ -119,6 +140,24 @@ export default function TeacherStudents({ schoolClass, students }: Props) {
                                             required
                                         />
                                     </div>
+
+                                    {schoolClasses.length > 1 && (
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="school_class_id">Kelas</Label>
+                                            <select
+                                                id="school_class_id"
+                                                name="school_class_id"
+                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                                defaultValue={schoolClasses[0]?.id}
+                                            >
+                                                {schoolClasses.map((sc) => (
+                                                    <option key={sc.id} value={sc.id}>
+                                                        {sc.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
 
                                     <div className="md:col-span-2">
                                         <Button disabled={processing}>Simpan Siswa</Button>
@@ -165,7 +204,7 @@ export default function TeacherStudents({ schoolClass, students }: Props) {
                                                     required
                                                 />
                                                 <div className="md:col-span-2 rounded-md bg-muted p-3 text-sm text-muted-foreground">
-                                                    Kelas: {student.school_class_name ?? schoolClass?.name ?? '-'}
+                                                    Kelas: {student.school_class_name ?? '-'}
                                                 </div>
                                                 <Input
                                                     name="password"

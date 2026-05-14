@@ -21,11 +21,8 @@ use App\Http\Controllers\Teacher\SchoolClassController;
 use App\Http\Controllers\Teacher\StudentController;
 use App\Http\Controllers\Teacher\SubjectController;
 use Illuminate\Support\Facades\Route;
-use Laravel\Fortify\Features;
 
-Route::inertia('/', 'welcome', [
-    'canRegister' => Features::enabled(Features::registration()),
-])->name('home');
+Route::redirect('/', '/login')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
@@ -74,6 +71,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('attendance-sessions', [AttendanceSessionController::class, 'store'])->name('attendance-sessions.store');
         Route::patch('attendance-sessions/{attendanceSession}/close', [AttendanceSessionController::class, 'close'])->name('attendance-sessions.close');
         Route::post('attendance/manual', [AttendanceSessionController::class, 'storeManual'])->name('attendance.manual');
+        Route::get('attendance/manual', [AttendanceViewController::class, 'manual'])->name('attendance.manual.page');
         Route::get('attendance/qr', [AttendanceViewController::class, 'qr'])->name('attendance.qr');
         Route::get('attendance/daily', [AttendanceViewController::class, 'daily'])->name('attendance.daily');
         Route::get('attendance/bolos-summary', [AttendanceViewController::class, 'bolosSummary'])->name('attendance.bolos-summary');
@@ -132,4 +130,4 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 });
 
-require __DIR__.'/settings.php';
+require __DIR__ . '/settings.php';

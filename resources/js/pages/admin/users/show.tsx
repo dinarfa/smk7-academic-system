@@ -28,23 +28,23 @@ type Props = {
 
 export default function AdminUserShow({ user, auditLogs }: Props) {
     return (
-        <AdminLayout title="User Details">
+        <AdminLayout title="Detail Pengguna">
             <div className="space-y-6">
                 <div>
                     <h1 className="text-3xl font-semibold text-foreground">{user.name}</h1>
-                    <p className="mt-2 text-muted-foreground">User profile and activity</p>
+                    <p className="text-muted-foreground">Profil pengguna dan aktivitas</p>
                 </div>
 
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                     <div className="lg:col-span-1">
                         <Card>
                             <CardHeader>
-                                <CardTitle>User Information</CardTitle>
-                                <CardDescription>Key account details and role.</CardDescription>
+                                <CardTitle>Informasi Pengguna</CardTitle>
+                                <CardDescription>Detail akun dan role.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div>
-                                    <p className="text-sm text-muted-foreground">Name</p>
+                                    <p className="text-sm text-muted-foreground">Nama</p>
                                     <p className="text-lg font-medium text-foreground">{user.name}</p>
                                 </div>
                                 <div>
@@ -58,9 +58,9 @@ export default function AdminUserShow({ user, auditLogs }: Props) {
                                     </Badge>
                                 </div>
                                 <div>
-                                    <p className="text-sm text-muted-foreground">Created At</p>
+                                    <p className="text-sm text-muted-foreground">Dibuat</p>
                                     <p className="text-lg font-medium text-foreground">
-                                        {new Date(user.created_at).toLocaleDateString()}
+                                        {new Date(user.created_at).toLocaleDateString('id-ID')}
                                     </p>
                                 </div>
 
@@ -69,7 +69,7 @@ export default function AdminUserShow({ user, auditLogs }: Props) {
                                         <Link href={admin.users.resetPassword.url({ user: user.id })}>Reset Password</Link>
                                     </Button>
                                     <Button asChild variant="outline" className="w-full">
-                                        <Link href={admin.users.index.url()}>Back to Users</Link>
+                                        <Link href={admin.users.index.url()}>Kembali</Link>
                                     </Button>
                                 </div>
                             </CardContent>
@@ -79,12 +79,12 @@ export default function AdminUserShow({ user, auditLogs }: Props) {
                     <div className="lg:col-span-2">
                         <Card>
                             <CardHeader>
-                                <CardTitle>Activity Log</CardTitle>
-                                <CardDescription>Recent actions tied to this user.</CardDescription>
+                                <CardTitle>Log Aktivitas</CardTitle>
+                                <CardDescription>Aksi terkait pengguna ini.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 {auditLogs.length === 0 ? (
-                                    <p className="py-8 text-center text-sm text-muted-foreground">No activity recorded</p>
+                                    <p className="py-8 text-center text-sm text-muted-foreground">Belum ada aktivitas tercatat</p>
                                 ) : (
                                     auditLogs.map((log) => (
                                         <div key={log.id} className="border-l-4 border-primary/60 pl-4 py-2">
@@ -95,11 +95,11 @@ export default function AdminUserShow({ user, auditLogs }: Props) {
                                                     </p>
                                                     <p className="text-sm text-muted-foreground">{log.description}</p>
                                                     <p className="mt-1 text-xs text-muted-foreground">
-                                                        By: {log.admin_name}
+                                                        Oleh: {log.admin_name}
                                                     </p>
                                                 </div>
                                                 <p className="text-sm text-muted-foreground">
-                                                    {new Date(log.created_at).toLocaleDateString()}
+                                                    {new Date(log.created_at).toLocaleDateString('id-ID')}
                                                 </p>
                                             </div>
                                         </div>

@@ -19,14 +19,11 @@ class StudentController extends Controller
      */
     public function index(Request $request): Response
     {
-        $schoolClass = $request->user()
-            ->homeroomClasses()
-            ->withCount('students')
-            ->first();
+        $homeroomClassIds = $request->user()->homeroomClasses()->pluck('school_classes.id');
 
         $students = User::query()
             ->where('role', UserRole::Student)
-            ->when($schoolClass, fn ($query) => $query->where('school_class_id', $schoolClass->id), fn ($query) => $query->whereRaw('1 = 0'))
+            ->when($homeroomClassIds->isNotEmpty(), fn ($query) => $query->whereIn('school_class_id', $homeroomClassIds), fn ($query) => $query->whereRaw('1 = 0'))
             ->latest()
             ->paginate(10)
             ->through(fn (User $student): array => [
@@ -37,14 +34,20 @@ class StudentController extends Controller
                 'created_at' => $student->created_at?->toIso8601String(),
             ]);
 
+        $schoolClasses = $request->user()
+            ->homeroomClasses()
+            ->withCount('students')
+            ->get()
+            ->map(fn ($c) => [
+                'id' => $c->id,
+                'name' => $c->name,
+                'code' => $c->code,
+                'academic_year' => $c->academic_year,
+                'students_count' => $c->students_count,
+            ])->values();
+
         return Inertia::render('teacher/students', [
-            'schoolClass' => $schoolClass ? [
-                'id' => $schoolClass->id,
-                'name' => $schoolClass->name,
-                'code' => $schoolClass->code,
-                'academic_year' => $schoolClass->academic_year,
-                'students_count' => $schoolClass->students_count,
-            ] : null,
+            'schoolClasses' => $schoolClasses,
             'students' => $students,
         ]);
     }
@@ -54,12 +57,17 @@ class StudentController extends Controller
      */
     public function store(StoreStudentRequest $request): RedirectResponse
     {
-        $schoolClass = $request->user()->homeroomClasses()->firstOrFail();
+        $homeroomClassIds = $request->user()->homeroomClasses()->pluck('school_classes.id');
+        $classId = $request->validated('school_class_id') ?? $homeroomClassIds->first();
+
+        if (! $homeroomClassIds->contains($classId)) {
+            abort(403);
+        }
 
         User::query()->create([
             ...$request->validated(),
             'role' => UserRole::Student,
-            'school_class_id' => $schoolClass->id,
+            'school_class_id' => $classId,
             'email_verified_at' => now(),
         ]);
 
@@ -77,9 +85,9 @@ class StudentController extends Controller
             abort(404);
         }
 
-        $schoolClass = $request->user()->homeroomClasses()->firstOrFail();
+        $homeroomClassIds = $request->user()->homeroomClasses()->pluck('school_classes.id');
 
-        if ($student->school_class_id !== $schoolClass->id) {
+        if (! $homeroomClassIds->contains($student->school_class_id)) {
             abort(403);
         }
 
@@ -105,7 +113,9 @@ class StudentController extends Controller
             abort(404);
         }
 
-        if ($student->school_class_id !== $request->user()->homeroomClasses()->value('id')) {
+        $homeroomClassIds = $request->user()->homeroomClasses()->pluck('school_classes.id');
+
+        if (! $homeroomClassIds->contains($student->school_class_id)) {
             abort(403);
         }
 

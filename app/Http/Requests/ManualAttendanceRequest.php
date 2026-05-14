@@ -26,7 +26,7 @@ class ManualAttendanceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'session_id' => ['required', 'integer', 'exists:attendance_sessions,id'],
+            'session_id' => ['sometimes', 'nullable', 'integer', 'exists:attendance_sessions,id'],
             'phase' => ['required', Rule::enum(AttendanceQrType::class)],
             'students' => ['required', 'array', 'min:1'],
             'students.*.student_id' => ['required', 'integer', 'exists:users,id'],

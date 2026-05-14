@@ -53,15 +53,15 @@ type Props = {
 
 export default function AdminReportsBySession({ sessions }: Props) {
     return (
-        <AdminLayout title="Attendance by Session">
+        <AdminLayout title="Kehadiran Per Sesi">
             <div className="space-y-6">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-semibold text-foreground">Attendance by Session</h1>
-                        <p className="mt-2 text-muted-foreground">View attendance records grouped by class/session</p>
+                        <h1 className="text-3xl font-semibold text-foreground">Kehadiran Per Sesi</h1>
+                        <p className="text-muted-foreground">Lihat catatan kehadiran berdasarkan kelas/sesi</p>
                     </div>
                     <Button asChild variant="secondary">
-                        <Link href={admin.reports.overview.url()}>Back to Overview</Link>
+                        <Link href={admin.reports.overview.url()}>Kembali</Link>
                     </Button>
                 </div>
 
@@ -72,29 +72,29 @@ export default function AdminReportsBySession({ sessions }: Props) {
                                 <div className="space-y-1">
                                     <CardTitle>{session.subject}</CardTitle>
                                     <CardDescription>
-                                        Type: {session.type} · Opened by: {session.opened_by}
+                                        Tipe: {session.type} · Dibuka oleh: {session.opened_by}
                                     </CardDescription>
                                     <p className="text-sm text-muted-foreground">
-                                        {new Date(session.created_at).toLocaleDateString()}
+                                        {new Date(session.created_at).toLocaleDateString('id-ID')}
                                     </p>
                                 </div>
                                 <div className="text-right">
                                     <p className="text-2xl font-semibold text-foreground">{session.records_count}</p>
-                                    <p className="text-sm text-muted-foreground">attendees</p>
+                                    <p className="text-sm text-muted-foreground">peserta</p>
                                     <Badge className={`mt-2 ${sessionStatusClasses(session.is_active)}`}>
-                                        {session.is_active ? 'Active' : 'Closed'}
+                                        {session.is_active ? 'Aktif' : 'Ditutup'}
                                     </Badge>
                                 </div>
                             </CardHeader>
                             <CardContent>
                                 <div className="border-t border-border pt-4">
-                                    <h4 className="text-sm font-semibold text-foreground">Attendance Records</h4>
+                                    <h4 className="text-sm font-semibold text-foreground">Catatan Kehadiran</h4>
                                     <div className="mt-3 overflow-x-auto">
                                         <table className="min-w-full divide-y divide-border">
                                             <thead className="bg-muted/50">
                                                 <tr>
                                                     <th scope="col" className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
-                                                        Student
+                                                        Siswa
                                                     </th>
                                                     <th scope="col" className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
                                                         Email
@@ -103,7 +103,7 @@ export default function AdminReportsBySession({ sessions }: Props) {
                                                         Status
                                                     </th>
                                                     <th scope="col" className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
-                                                        Scanned At
+                                                        Waktu Scan
                                                     </th>
                                                 </tr>
                                             </thead>
@@ -111,7 +111,7 @@ export default function AdminReportsBySession({ sessions }: Props) {
                                                 {session.records.length === 0 ? (
                                                     <tr>
                                                         <td colSpan={4} className="px-4 py-3 text-center text-sm text-muted-foreground">
-                                                            No attendance records
+                                                            Belum ada catatan kehadiran
                                                         </td>
                                                     </tr>
                                                 ) : (
@@ -129,7 +129,7 @@ export default function AdminReportsBySession({ sessions }: Props) {
                                                                 </Badge>
                                                             </td>
                                                             <td className="px-4 py-2 text-sm text-muted-foreground">
-                                                                {new Date(record.scanned_at).toLocaleString()}
+                                                                {new Date(record.scanned_at).toLocaleString('id-ID')}
                                                             </td>
                                                         </tr>
                                                     ))
@@ -148,18 +148,18 @@ export default function AdminReportsBySession({ sessions }: Props) {
                         <div className="flex flex-1 justify-between sm:hidden">
                             {sessions.prev_page_url && (
                                 <Button asChild variant="outline" size="sm">
-                                    <Link href={sessions.prev_page_url}>Previous</Link>
+                                    <Link href={sessions.prev_page_url}>Sebelumnya</Link>
                                 </Button>
                             )}
                             {sessions.next_page_url && (
                                 <Button asChild variant="outline" size="sm" className="ml-3">
-                                    <Link href={sessions.next_page_url}>Next</Link>
+                                    <Link href={sessions.next_page_url}>Selanjutnya</Link>
                                 </Button>
                             )}
                         </div>
                         <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
                             <p className="text-sm text-muted-foreground">
-                                Page <span className="font-medium text-foreground">{sessions.current_page}</span> of{' '}
+                                Halaman <span className="font-medium text-foreground">{sessions.current_page}</span> dari{' '}
                                 <span className="font-medium text-foreground">{sessions.last_page}</span>
                             </p>
                         </div>

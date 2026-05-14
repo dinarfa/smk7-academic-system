@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface QRDisplayProps {
     qrSvg: string;
@@ -9,8 +9,11 @@ interface QRDisplayProps {
 
 export default function QRDisplay({ qrSvg, endTime, sessionType, onExpire }: QRDisplayProps) {
     const [timeRemaining, setTimeRemaining] = useState('');
+    const expiredRef = useRef(false);
 
     useEffect(() => {
+        expiredRef.current = false;
+
         const updateTimer = () => {
             const now = new Date();
             const end = new Date(endTime);
@@ -18,7 +21,12 @@ export default function QRDisplay({ qrSvg, endTime, sessionType, onExpire }: QRD
 
             if (diff <= 0) {
                 setTimeRemaining('EXPIRED');
-                onExpire?.();
+
+                if (!expiredRef.current) {
+                    expiredRef.current = true;
+                    onExpire?.();
+                }
+
                 return;
             }
 

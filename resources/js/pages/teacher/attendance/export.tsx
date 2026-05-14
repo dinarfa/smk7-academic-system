@@ -1,6 +1,13 @@
-import React, { useState } from 'react';
+import { Head } from '@inertiajs/react';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { dashboard } from '@/routes';
+import { Download, FileSpreadsheet, FileText } from 'lucide-react';
 
-const ExportAttendance = () => {
+export default function ExportAttendance() {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [processing, setProcessing] = useState(false);
@@ -8,83 +15,114 @@ const ExportAttendance = () => {
     const getCsrfToken = () =>
         document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
 
-    const handleExport = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleExport = async (format: 'csv' | 'xlsx') => {
         setProcessing(true);
-
         try {
             const response = await fetch('/teacher/attendance/export', {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'text/csv',
+                    'Accept': '*/*',
                     'X-Requested-With': 'XMLHttpRequest',
                     ...(getCsrfToken() ? { 'X-CSRF-TOKEN': getCsrfToken() } : {}),
                 },
-                body: JSON.stringify({ startDate, endDate }),
+                body: JSON.stringify({ startDate, endDate, format }),
             });
 
             if (!response.ok) {
-                const message = await response.text();
-                throw new Error(message || 'Export failed');
+                alert('Gagal mengekspor data');
+                return;
             }
 
             const blob = await response.blob();
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `teacher-attendance-${startDate || 'start'}-to-${endDate || 'end'}.csv`;
+            const ts = new Date().toISOString().replace(/[:.]/g, '-');
+            link.download = `absensi-${startDate || 'mulai'}-sampai-${endDate || 'akhir'}.${format}`;
             document.body.appendChild(link);
             link.click();
             link.remove();
             URL.revokeObjectURL(url);
-        } catch (error) {
-            console.error(error);
-            alert('Export failed');
+        } catch {
+            alert('Kesalahan saat mengekspor');
         } finally {
             setProcessing(false);
         }
     };
 
     return (
-        <div className="p-4">
-            <h1 className="text-xl font-bold mb-4">Export Attendance Records</h1>
-            <form onSubmit={handleExport} className="space-y-4">
-                <div>
-                    <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">
-                        Start Date
-                    </label>
-                    <input
-                        type="date"
-                        id="startDate"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    />
-                </div>
-                <div>
-                    <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">
-                        End Date
-                    </label>
-                    <input
-                        type="date"
-                        id="endDate"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    />
-                </div>
-                <button
-                    type="submit"
-                    disabled={processing}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                    {processing ? 'Exporting...' : 'Export'}
-                </button>
-            </form>
-        </div>
-    );
-};
+        <>
+            <Head title="Ekspor Absensi" />
 
-export default ExportAttendance;
+            <div className="space-y-6 p-4">
+                <div>
+                    <h1 className="text-3xl font-semibold text-foreground">Ekspor Absensi</h1>
+                    <p className="text-muted-foreground">Unduh data absensi dalam format CSV atau XLSX</p>
+                </div>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Download className="h-5 w-5" />
+                            Rentang Tanggal
+                        </CardTitle>
+                        <CardDescription>
+                            Pilih tanggal awal dan akhir untuk mengekspor data absensi
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            <div className="space-y-2">
+                                <Label htmlFor="startDate">Tanggal Mulai</Label>
+                                <Input
+                                    id="startDate"
+                                    type="date"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="endDate">Tanggal Akhir</Label>
+                                <Input
+                                    id="endDate"
+                                    type="date"
+                                    value={endDate}
+                                    onChange={(e) => setEndDate(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="mt-6 flex flex-wrap gap-3">
+                            <Button
+                                onClick={() => handleExport('csv')}
+                                disabled={processing}
+                                className="gap-2"
+                            >
+                                <FileText className="h-4 w-4" />
+                                {processing ? 'Mengekspor...' : 'Ekspor CSV'}
+                            </Button>
+                            <Button
+                                variant="secondary"
+                                onClick={() => handleExport('xlsx')}
+                                disabled={processing}
+                                className="gap-2"
+                            >
+                                <FileSpreadsheet className="h-4 w-4" />
+                                {processing ? 'Mengekspor...' : 'Ekspor XLSX'}
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        </>
+    );
+}
+
+ExportAttendance.layout = {
+    breadcrumbs: [
+        { title: 'Dashboard Guru', href: dashboard() },
+        { title: 'Ekspor Absensi', href: '#' },
+    ],
+};

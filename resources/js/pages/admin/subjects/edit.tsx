@@ -53,27 +53,27 @@ export default function AdminSubjectEdit({ subject, classes, teachers }: Props) 
     }
 
     return (
-        <AdminLayout title="Edit Subject">
+        <AdminLayout title="Edit Mata Pelajaran">
             <div className="mx-auto max-w-2xl space-y-6">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-semibold text-foreground">Edit Subject</h1>
-                        <p className="mt-2 text-muted-foreground">Update subject code and name.</p>
+                        <h1 className="text-3xl font-semibold text-foreground">Edit Mata Pelajaran</h1>
+                        <p className="text-muted-foreground">Perbarui kode dan nama mata pelajaran.</p>
                     </div>
                     <Button asChild variant="secondary">
-                        <Link href={admin.subjects.index.url()}>Back</Link>
+                        <Link href={admin.subjects.index.url()}>Kembali</Link>
                     </Button>
                 </div>
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Subject Details</CardTitle>
-                        <CardDescription>Make updates to the subject information.</CardDescription>
+                        <CardTitle>Detail Mata Pelajaran</CardTitle>
+                        <CardDescription>Perbarui informasi mata pelajaran.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="space-y-2">
-                                <Label htmlFor="code">Subject Code</Label>
+                                <Label htmlFor="code">Kode Mapel</Label>
                                 <Input
                                     id="code"
                                     name="code"
@@ -85,13 +85,13 @@ export default function AdminSubjectEdit({ subject, classes, teachers }: Props) 
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="school_class_id">Class</Label>
+                                <Label htmlFor="school_class_id">Kelas</Label>
                                 <Select
                                     value={data.school_class_id}
                                     onValueChange={(value) => setData('school_class_id', value)}
                                 >
                                     <SelectTrigger className="w-full" id="school_class_id">
-                                        <SelectValue placeholder="Select Class" />
+                                        <SelectValue placeholder="Pilih Kelas" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {classes.map((schoolClass) => (
@@ -107,13 +107,13 @@ export default function AdminSubjectEdit({ subject, classes, teachers }: Props) 
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="teacher_id">Teacher</Label>
+                                <Label htmlFor="teacher_id">Guru</Label>
                                 <Select
                                     value={data.teacher_id}
                                     onValueChange={(value) => setData('teacher_id', value)}
                                 >
                                     <SelectTrigger className="w-full" id="teacher_id">
-                                        <SelectValue placeholder="Select Teacher" />
+                                        <SelectValue placeholder="Pilih Guru" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {teachers.map((teacher) => (
@@ -129,7 +129,7 @@ export default function AdminSubjectEdit({ subject, classes, teachers }: Props) 
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="name">Subject Name</Label>
+                                <Label htmlFor="name">Nama Mata Pelajaran</Label>
                                 <Input
                                     id="name"
                                     name="name"
@@ -142,10 +142,10 @@ export default function AdminSubjectEdit({ subject, classes, teachers }: Props) 
 
                             <div className="flex flex-wrap gap-3">
                                 <Button type="submit" disabled={processing}>
-                                    {processing ? 'Saving...' : 'Save Changes'}
+                                    {processing ? 'Menyimpan...' : 'Simpan Perubahan'}
                                 </Button>
                                 <Button asChild variant="outline">
-                                    <Link href={admin.subjects.index.url()}>Cancel</Link>
+                                    <Link href={admin.subjects.index.url()}>Batal</Link>
                                 </Button>
                             </div>
                         </form>

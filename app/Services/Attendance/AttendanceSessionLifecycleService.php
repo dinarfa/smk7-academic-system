@@ -39,6 +39,24 @@ class AttendanceSessionLifecycleService
     }
 
     /**
+     * Close all active sessions that have already expired.
+     */
+    public function closeExpiredSessions(): int
+    {
+        $expiredSessions = AttendanceSession::query()
+            ->where('is_active', true)
+            ->whereNotNull('ends_at')
+            ->where('ends_at', '<=', now())
+            ->get();
+
+        $expiredSessions->each(function (AttendanceSession $attendanceSession): void {
+            $this->close($attendanceSession);
+        });
+
+        return $expiredSessions->count();
+    }
+
+    /**
      * Close active sessions for the given teacher and type.
      */
     public function closeActiveSessions(int $teacherId, string $type): Collection

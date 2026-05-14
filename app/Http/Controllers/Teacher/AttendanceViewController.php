@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Teacher\ExportAttendanceRequest;
+use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
 use App\Services\Attendance\AbsenceDetectionService;
 use App\Services\Attendance\AttendanceReportService;
@@ -58,20 +59,77 @@ class AttendanceViewController extends Controller
         Gate::authorize('viewDaily');
 
         $teacher = auth()->user();
-        $students = $teacher
+        $classes = $teacher
             ->homeroomClasses()
             ->with('students')
-            ->get()
-            ->flatMap(fn ($class) => $class->students)
-            ->map(fn ($student) => [
+            ->get();
+
+        $students = $classes
+            ->flatMap(fn ($class) => $class->students->map(fn ($student) => [
                 'id' => $student->id,
                 'name' => $student->name,
-            ])
+                'class_id' => $class->id,
+                'class_name' => $class->name,
+            ]))
             ->values()
             ->toArray();
 
         return response()->json([
             'students' => $students,
+            'classes' => $classes->map(fn ($class) => [
+                'id' => $class->id,
+                'name' => $class->name,
+            ])->values()->toArray(),
+        ]);
+    }
+
+    /**
+     * Show dedicated manual attendance page.
+     */
+    public function manual(DailyAttendanceViewService $service): InertiaResponse
+    {
+        Gate::authorize('viewDaily');
+
+        $teacher = auth()->user();
+        $date = today()->format('Y-m-d');
+
+        $classes = $teacher
+            ->homeroomClasses()
+            ->with('students')
+            ->get();
+
+        $students = $classes
+            ->flatMap(fn ($class) => $class->students->map(fn ($student) => [
+                'id' => $student->id,
+                'name' => $student->name,
+                'class_id' => $class->id,
+                'class_name' => $class->name,
+            ]))
+            ->values();
+
+        $existingRecords = AttendanceRecord::query()
+            ->whereHas('session', fn ($q) => $q->where('opened_by', $teacher->id))
+            ->whereDate('scanned_at', $date)
+            ->get()
+            ->mapWithKeys(fn ($record) => [
+                $record->student_id => [
+                    'status' => $record->status->value ?? $record->status,
+                    'phase' => $record->phase?->value ?? $record->phase,
+                    'source' => $record->source,
+                ],
+            ]);
+
+        $activeSession = $service->getActiveSession($teacher->id);
+
+        return Inertia::render('teacher/attendance/manual', [
+            'students' => $students,
+            'classes' => $classes->map(fn ($class) => [
+                'id' => $class->id,
+                'name' => $class->name,
+            ])->values(),
+            'existingRecords' => $existingRecords,
+            'activeSession' => $this->mapSession($activeSession),
+            'date' => $date,
         ]);
     }
 

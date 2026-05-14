@@ -44,10 +44,10 @@ export default function TeacherExamsCreate({ subjects, classes }: Props) {
 
             <div className="space-y-6 p-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">
+                    <h1 className="text-3xl font-semibold text-foreground">
                         Buat Ujian Baru
                     </h1>
-                    <p className="mt-2 text-gray-600">
+                    <p className="text-muted-foreground">
                         Isi formulir di bawah untuk membuat ujian baru.
                     </p>
                 </div>

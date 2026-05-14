@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { dashboard } from '@/routes';
 
 export default function StudentAttendanceScan() {
     const { data, setData, processing, errors, reset } = useForm({
@@ -138,3 +139,10 @@ export default function StudentAttendanceScan() {
         </>
     );
 }
+
+StudentAttendanceScan.layout = {
+    breadcrumbs: [
+        { title: 'Dashboard Siswa', href: dashboard() },
+        { title: 'Scan Kehadiran', href: '#' },
+    ],
+};

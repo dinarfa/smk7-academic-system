@@ -1,7 +1,9 @@
 import { Head, Link } from '@inertiajs/react'
 import QuestionController from '@/actions/App/Http/Controllers/Teacher/QuestionController'
+import ExamController from '@/actions/App/Http/Controllers/Teacher/ExamController'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { dashboard } from '@/routes'
 
 type Exam = {
   id: number
@@ -129,4 +131,12 @@ export default function Index({ exam, questions }: Props) {
       </div>
     </>
   )
+}
+
+Index.layout = {
+    breadcrumbs: [
+        { title: 'Dashboard Guru', href: dashboard() },
+        { title: 'Ujian', href: ExamController.index.url() },
+        { title: 'Soal', href: '#' },
+    ],
 }

@@ -1,15 +1,10 @@
-import { Head } from '@inertiajs/react';
+import { Head, router, Link } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import QRScanner from '@/components/QRScanner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Checkbox } from '@/components/ui/checkbox';
 import { dashboard } from '@/routes';
 
 interface AttendanceRecord {
@@ -32,11 +27,6 @@ interface ActiveSession {
     ends_at: string;
 }
 
-interface ClassStudent {
-    id: number;
-    name: string;
-}
-
 interface DailyAttendanceData {
     attendance: Record<string, AttendanceRecord[]>;
     active_session: ActiveSession | null;
@@ -46,14 +36,7 @@ interface DailyAttendanceData {
 export default function Index({ attendance, active_session: activeSession, date }: DailyAttendanceData) {
     const [currentTime, setCurrentTime] = useState(new Date());
     const [showScanner, setShowScanner] = useState(false);
-    const [showManual, setShowManual] = useState(false);
-    const [manualSessionId, setManualSessionId] = useState('');
-    const [manualPhase, setManualPhase] = useState('morning');
-    const [manualProcessing, setManualProcessing] = useState(false);
     const [exportProcessing, setExportProcessing] = useState(false);
-    const [classStudents, setClassStudents] = useState<ClassStudent[]>([]);
-    const [selectedStudents, setSelectedStudents] = useState<Map<number, string>>(new Map());
-    const [loadingStudents, setLoadingStudents] = useState(false);
 
     const getCsrfToken = () =>
         document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
@@ -104,52 +87,26 @@ export default function Index({ attendance, active_session: activeSession, date 
         }
     };
 
-    const fetchClassStudents = async () => {
-        setLoadingStudents(true);
-        try {
-            const res = await fetch('/teacher/class-students', {
-                headers: {
-                    'Accept': 'application/json',
-                    ...(getCsrfToken() ? { 'X-CSRF-TOKEN': getCsrfToken() } : {}),
-                },
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setClassStudents(data.students || []);
-            }
-        } catch (err) {
-            console.error('Failed to fetch class students', err);
-        } finally {
-            setLoadingStudents(false);
-        }
-    };
-
-    const handleOpenManual = () => {
-        setShowManual(true);
-        setSelectedStudents(new Map());
-        fetchClassStudents();
-    };
-
-    const handleCloseManual = () => {
-        setShowManual(false);
-        setSelectedStudents(new Map());
-        setClassStudents([]);
-    };
-
-    const toggleStudentStatus = (studentId: number, status: string) => {
-        const newSelected = new Map(selectedStudents);
-        if (newSelected.has(studentId) && newSelected.get(studentId) === status) {
-            newSelected.delete(studentId);
-        } else {
-            newSelected.set(studentId, status);
-        }
-        setSelectedStudents(newSelected);
-    };
-
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(new Date()), 1000);
         return () => clearInterval(timer);
     }, []);
+
+    // When the active session expires, reload the page data so the UI
+    // reflects the server-side state (getActiveSession filters ends_at > now()).
+    // Retries each tick until server confirms expiry (handles clock skew).
+    useEffect(() => {
+        if (!activeSession) {
+            return;
+        }
+
+        const end = new Date(activeSession.ends_at);
+        const remaining = end.getTime() - currentTime.getTime();
+
+        if (remaining <= 0) {
+            router.reload({ only: ['attendance', 'active_session'] });
+        }
+    }, [currentTime, activeSession]);
 
     const getTimeRemaining = (endTime: string) => {
         const end = new Date(endTime);
@@ -184,7 +141,7 @@ export default function Index({ attendance, active_session: activeSession, date 
                 </div>
 
                 {/* Active Session Section */}
-                {activeSession && (
+                {activeSession && getTimeRemaining(activeSession.ends_at) !== 'Expired' && (
                     <Card>
                         <CardHeader className="flex flex-row items-start justify-between gap-4 md:flex-row md:items-center md:justify-between">
                             <div>
@@ -367,157 +324,13 @@ export default function Index({ attendance, active_session: activeSession, date 
                     </CardHeader>
 
                     <CardContent>
-                        <Button onClick={handleOpenManual} className="w-full">
-                            Buka Checklist Manual
+                        <Button asChild className="w-full">
+                            <Link href="/teacher/attendance/manual">
+                                Buka Absensi Manual
+                            </Link>
                         </Button>
                     </CardContent>
                 </Card>
-
-                {/* Manual Attendance Dialog */}
-                <Dialog open={showManual} onOpenChange={(open) => !open && handleCloseManual()}>
-                    <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-                        <DialogHeader>
-                            <DialogTitle>Checklist Absensi Manual</DialogTitle>
-                            <DialogDescription>
-                                Pilih siswa dan atur status kehadiran mereka. Hanya siswa dari kelas Anda yang ditampilkan.
-                            </DialogDescription>
-                        </DialogHeader>
-
-                        <div className="space-y-4">
-                            <div className="grid gap-4 md:grid-cols-2">
-                                <div>
-                                    <Label htmlFor="session-id">ID Sesi</Label>
-                                    <Input
-                                        id="session-id"
-                                        value={manualSessionId}
-                                        onChange={(e) => setManualSessionId(e.target.value)}
-                                        placeholder="Masukkan ID sesi"
-                                    />
-                                </div>
-                                <div>
-                                    <Label htmlFor="phase">Fase</Label>
-                                    <Select value={manualPhase} onValueChange={setManualPhase}>
-                                        <SelectTrigger id="phase">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="morning">Pagi</SelectItem>
-                                            <SelectItem value="class">Kelas</SelectItem>
-                                            <SelectItem value="dismissal">Pulang</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-
-                            {/* Students List */}
-                            <div>
-                                <Label>Siswa ({selectedStudents.size} dipilih)</Label>
-                                {loadingStudents ? (
-                                    <div className="py-4 text-center text-muted-foreground">
-                                        Memuat daftar siswa...
-                                    </div>
-                                ) : classStudents.length > 0 ? (
-                                    <div className="mt-2 space-y-2 border rounded-md p-3 max-h-[300px] overflow-y-auto">
-                                        {classStudents.map(student => (
-                                            <div
-                                                key={student.id}
-                                                className="flex items-center gap-3 p-2 rounded hover:bg-muted/50 transition-colors"
-                                            >
-                                                <div className="flex gap-2 flex-1">
-                                                    {['present', 'late', 'absent'].map(status => (
-                                                        <button
-                                                            key={status}
-                                                            onClick={() => toggleStudentStatus(student.id, status)}
-                                                            className={`flex-1 px-2 py-1 rounded text-sm font-medium transition-colors ${
-                                                                selectedStudents.get(student.id) === status
-                                                                    ? status === 'present'
-                                                                        ? 'bg-green-500 text-white'
-                                                                        : status === 'late'
-                                                                            ? 'bg-yellow-500 text-white'
-                                                                            : 'bg-red-500 text-white'
-                                                                    : 'bg-muted text-muted-foreground hover:bg-muted'
-                                                            }`}
-                                                        >
-                                                            {status === 'present' ? 'H' : status === 'late' ? 'T' : 'A'}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                                <span className="text-sm flex-grow text-foreground">
-                                                    {student.name}
-                                                </span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="py-4 text-center text-muted-foreground text-sm">
-                                        Tidak ada siswa di kelas Anda
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <DialogFooter>
-                            <Button
-                                variant="outline"
-                                onClick={handleCloseManual}
-                            >
-                                Batal
-                            </Button>
-                            <Button
-                                onClick={async () => {
-                                    setManualProcessing(true);
-                                    try {
-                                        const students = Array.from(selectedStudents).map(([studentId, status]) => ({
-                                            student_id: studentId,
-                                            status,
-                                        }));
-
-                                        if (students.length === 0) {
-                                            alert('Pilih minimal satu siswa');
-                                            setManualProcessing(false);
-                                            return;
-                                        }
-
-                                        const payload = {
-                                            session_id: parseInt(manualSessionId, 10),
-                                            phase: manualPhase,
-                                            students,
-                                        };
-
-                                        const res = await fetch('/teacher/attendance/manual', {
-                                            method: 'POST',
-                                            credentials: 'same-origin',
-                                            headers: {
-                                                'Content-Type': 'application/json',
-                                                'X-Requested-With': 'XMLHttpRequest',
-                                                'Accept': 'application/json',
-                                                ...(getCsrfToken() ? { 'X-CSRF-TOKEN': getCsrfToken() } : {}),
-                                            },
-                                            body: JSON.stringify(payload),
-                                        });
-
-                                        if (!res.ok) {
-                                            const data = await res.json();
-                                            console.error('Manual save failed', data);
-                                            alert(data.message || 'Penyimpanan absensi manual gagal. Periksa bahwa siswa yang dipilih berada di kelas Anda.');
-                                        } else {
-                                            handleCloseManual();
-                                            window.location.reload();
-                                        }
-                                    } catch (err) {
-                                        console.error(err);
-                                        alert('Kesalahan saat menyimpan absensi manual');
-                                    } finally {
-                                        setManualProcessing(false);
-                                    }
-                                }}
-                                disabled={manualProcessing}
-                            >
-                                {manualProcessing ? 'Menyimpan...' : 'Simpan Absensi Manual'}
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
             </div>
         </>
     );
