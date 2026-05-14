@@ -18,12 +18,12 @@ Proyek ini dikembangkan sebagai solusi digitalisasi administrasi akademik di SMK
 ## 👥 Tim Pengembang (Kelompok 23)
 | Nama Anggota | NIM | Peran |
 | :--- | :--- | :--- |
-| **Dinar Fauziah** | F52123078 | Project Manager & QA |
-| **Arya Yudhistira Syafrul** | F52123079 | Back-End Developer |
-| **Muh. Zulhajir AR** | F55123052 | Back-End Developer |
+| **Rafika Nur Indriani** | F52123097 | Project Manager |
+| **Dinar Fauziahl** | F52123078 | QA |
+| **Arya Yudhistira Syafrul** | F55123079 | Back-End Developer |
 | **Dwi Candra Andika** | F55123028 | Front-End Developer |
 | **Moh. Faathir Ash Shaff** | F55123040 | Front-End Developer |
-| **Rafika Nur Indriani** | F52123097 | UI/UX Designer |
+| **Muh. Zulhajir AR** | F55123052 | UI/UX Designer |
 
 ## 🛠️ Arsitektur Teknologi
 - **Frontend:** React / Next.js (Tailwind CSS)
