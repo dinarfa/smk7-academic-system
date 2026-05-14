@@ -82,7 +82,7 @@ export default function StudentAttendance({ records }: Props) {
             </Head>
 
             {/* Animated gradient background wrapper */}
-            <div className="relative min-h-full overflow-hidden" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+            <div className="relative min-h-full" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                 {/* Animated gradient */}
                 <div className="pointer-events-none fixed inset-0 -z-10 bg-[linear-gradient(135deg,_#f8fafc_0%,_#eef2ff_25%,_#f0f9ff_50%,_#f8fafc_75%,_#eef2ff_100%)] bg-[length:400%_400%] animate-[gradient-shift_15s_ease_infinite] dark:bg-[linear-gradient(135deg,_#020617_0%,_#0f172a_25%,_#0c1222_50%,_#020617_75%,_#0f172a_100%)]" />
 
