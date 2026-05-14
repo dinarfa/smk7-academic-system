@@ -39,10 +39,10 @@ export default function TeacherExamsIndex({ exams }: Props) {
             <div className="space-y-6 p-4">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900">
+                        <h1 className="text-3xl font-semibold text-foreground">
                             Daftar Ujian
                         </h1>
-                        <p className="mt-2 text-gray-600">
+                        <p className="text-muted-foreground">
                             Kelola ujian yang Anda buat.
                         </p>
                     </div>
@@ -94,7 +94,7 @@ export default function TeacherExamsIndex({ exams }: Props) {
                                             </div>
                                             <div className="text-right">
                                                 <div className="flex justify-end gap-2">
-                                                    <span className={exam.status !== 'draft' ? 'inline-block rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800' : 'inline-block rounded-full bg-gray-200 px-3 py-1 text-sm font-medium text-gray-700'}>
+                                                    <span className={exam.status !== 'draft' ? 'inline-block rounded-full bg-emerald-100 px-3 py-1 text-sm font-medium text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300' : 'inline-block rounded-full bg-muted px-3 py-1 text-sm font-medium text-muted-foreground'}>
                                                         {exam.status !== 'draft' ? 'Published' : 'Draft'}
                                                     </span>
                                                 </div>

@@ -61,23 +61,23 @@ export default function AdminSubjectsIndex({ classes, teachers, subjects }: Prop
     }
 
     return (
-        <AdminLayout title="Subject Management">
+        <AdminLayout title="Mata Pelajaran">
             <div className="space-y-6">
             <div>
-                <h1 className="text-3xl font-semibold text-foreground">Subject Management</h1>
-                <p className="mt-2 text-muted-foreground">Create and manage academic subjects for CBT.</p>
+                <h1 className="text-3xl font-semibold text-foreground">Mata Pelajaran</h1>
+                <p className="text-muted-foreground">Buat dan kelola mata pelajaran untuk CBT.</p>
             </div>
 
             <div className="grid gap-6 lg:grid-cols-2">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Create Subject</CardTitle>
-                        <CardDescription>Add a new subject with a unique code.</CardDescription>
+                        <CardTitle>Buat Mata Pelajaran</CardTitle>
+                        <CardDescription>Tambah mata pelajaran baru dengan kode unik.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="space-y-2">
-                                <Label htmlFor="code">Subject Code</Label>
+                                <Label htmlFor="code">Kode Mapel</Label>
                                 <Input
                                     id="code"
                                     name="code"
@@ -90,13 +90,13 @@ export default function AdminSubjectsIndex({ classes, teachers, subjects }: Prop
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="school_class_id">Class</Label>
+                                <Label htmlFor="school_class_id">Kelas</Label>
                                 <Select
                                     value={data.school_class_id}
                                     onValueChange={(value) => setData('school_class_id', value)}
                                 >
                                     <SelectTrigger className="w-full" id="school_class_id">
-                                        <SelectValue placeholder="Select Class" />
+                                        <SelectValue placeholder="Pilih Kelas" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {classes.map((schoolClass) => (
@@ -112,13 +112,13 @@ export default function AdminSubjectsIndex({ classes, teachers, subjects }: Prop
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="teacher_id">Teacher</Label>
+                                <Label htmlFor="teacher_id">Guru</Label>
                                 <Select
                                     value={data.teacher_id}
                                     onValueChange={(value) => setData('teacher_id', value)}
                                 >
                                     <SelectTrigger className="w-full" id="teacher_id">
-                                        <SelectValue placeholder="Select Teacher" />
+                                        <SelectValue placeholder="Pilih Guru" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {teachers.map((teacher) => (
@@ -134,20 +134,20 @@ export default function AdminSubjectsIndex({ classes, teachers, subjects }: Prop
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="name">Subject Name</Label>
+                                <Label htmlFor="name">Nama Mata Pelajaran</Label>
                                 <Input
                                     id="name"
                                     name="name"
                                     value={data.name}
                                     onChange={(event) => setData('name', event.target.value)}
-                                    placeholder="Mathematics"
+                                    placeholder="Matematika"
                                     aria-invalid={Boolean(errors.name)}
                                 />
                                 {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
                             </div>
 
                             <Button type="submit" disabled={processing}>
-                                {processing ? 'Saving...' : 'Save Subject'}
+                                {processing ? 'Menyimpan...' : 'Simpan Mapel'}
                             </Button>
                         </form>
                     </CardContent>
@@ -155,18 +155,18 @@ export default function AdminSubjectsIndex({ classes, teachers, subjects }: Prop
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Existing Subjects</CardTitle>
-                        <CardDescription>Edit or delete subjects as needed.</CardDescription>
+                        <CardTitle>Mapel Terdaftar</CardTitle>
+                        <CardDescription>Edit atau hapus mata pelajaran sesuai kebutuhan.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">
                         {subjects.data.length === 0 ? (
-                            <p className="text-sm text-muted-foreground">No subjects created yet.</p>
+                            <p className="text-sm text-muted-foreground">Belum ada mata pelajaran dibuat.</p>
                         ) : (
                             subjects.data.map((subject) => (
                                 <div key={subject.id} className="flex items-center justify-between rounded-lg border border-border p-4">
                                     <div>
                                         <p className="font-medium text-foreground">{subject.name}</p>
-                                        <p className="text-sm text-muted-foreground">Code: {subject.code}</p>
+                                        <p className="text-sm text-muted-foreground">Kode: {subject.code}</p>
                                     </div>
 
                                     <div className="flex items-center gap-2">
@@ -179,7 +179,7 @@ export default function AdminSubjectsIndex({ classes, teachers, subjects }: Prop
                                                 method="delete"
                                                 as="button"
                                             >
-                                                Delete
+                                                Hapus
                                             </Link>
                                         </Button>
                                     </div>
@@ -189,17 +189,17 @@ export default function AdminSubjectsIndex({ classes, teachers, subjects }: Prop
 
                         <div className="mt-6 flex items-center justify-between text-sm text-muted-foreground">
                             <span>
-                                Page {subjects.current_page} of {subjects.last_page}
+                                Halaman {subjects.current_page} dari {subjects.last_page}
                             </span>
                             <div className="flex gap-3">
                                 {subjects.prev_page_url && (
                                     <Link href={subjects.prev_page_url} className="text-primary hover:underline">
-                                        Previous
+                                        Sebelumnya
                                     </Link>
                                 )}
                                 {subjects.next_page_url && (
                                     <Link href={subjects.next_page_url} className="text-primary hover:underline">
-                                        Next
+                                        Selanjutnya
                                     </Link>
                                 )}
                             </div>

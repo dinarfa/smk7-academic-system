@@ -1,4 +1,4 @@
-import { Head, Link, Form } from '@inertiajs/react';
+import { Head, Link, Form, router } from '@inertiajs/react';
 import AttendanceSessionController from '@/actions/App/Http/Controllers/Teacher/AttendanceSessionController';
 import QRDisplay from '@/components/QRDisplayV2';
 import { Button } from '@/components/ui/button';
@@ -47,7 +47,7 @@ export default function TeacherAttendanceQr({ active_session: activeSession }: P
             <div className="space-y-6 p-4">
                 <div className="space-y-2">
                     <p className="text-sm font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                        Attendance QR
+                        QR Absensi
                     </p>
                     <h1 className="text-3xl font-semibold text-foreground">QR Absensi Guru</h1>
                     <p className="max-w-2xl text-muted-foreground">
@@ -71,14 +71,10 @@ export default function TeacherAttendanceQr({ active_session: activeSession }: P
                                     endTime={activeSession.ends_at ?? ''}
                                     sessionType={typeLabel(activeSession.type)}
                                     onExpire={() => {
-                                        // let user know client-side when QR expires
-                                        // server-side session remains until teacher closes it
-                                        // we flash a small toast via Inertia if available
-                                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                                        // @ts-ignore
-                                        if (typeof window !== 'undefined' && window.__inertia) {
-                                            // no-op - Inertia server flash recommended
-                                        }
+                                        // Reload the page so the server re-queries getActiveSession()
+                                        // which filters ends_at > now(), returning null and showing
+                                        // the "no active session" empty state.
+                                        router.reload({ only: ['active_session'] });
                                     }}
                                 />
                             ) : (

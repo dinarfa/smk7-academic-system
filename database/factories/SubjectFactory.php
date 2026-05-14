@@ -22,7 +22,7 @@ class SubjectFactory extends Factory
     {
         return [
             'school_class_id' => SchoolClass::factory(),
-            'teacher_id' => User::factory()->create(['role' => UserRole::Teacher]),
+            'teacher_id' => User::factory()->state(['role' => UserRole::Teacher]),
             'name' => fake()->word().' '.fake()->word(),
             'is_active' => true,
         ];

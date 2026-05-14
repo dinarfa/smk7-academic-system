@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface QRDisplayProps {
     qrSvg: string;
@@ -11,8 +11,11 @@ interface QRDisplayProps {
 export default function QRDisplayV2({ qrSvg, startTime, endTime, sessionType, onExpire }: QRDisplayProps) {
     const [timeRemaining, setTimeRemaining] = useState('');
     const [percent, setPercent] = useState(100);
+    const expiredRef = useRef(false);
 
     useEffect(() => {
+        expiredRef.current = false;
+
         const updateTimer = () => {
             const now = new Date();
             const end = new Date(endTime);
@@ -23,7 +26,12 @@ export default function QRDisplayV2({ qrSvg, startTime, endTime, sessionType, on
             if (remaining <= 0) {
                 setTimeRemaining('KADALUARSA');
                 setPercent(0);
-                onExpire?.();
+
+                if (!expiredRef.current) {
+                    expiredRef.current = true;
+                    onExpire?.();
+                }
+
                 return;
             }
 

@@ -45,15 +45,15 @@ type Props = {
 
 export default function AdminReportsByStudent({ students }: Props) {
     return (
-        <AdminLayout title="Attendance by Student">
+        <AdminLayout title="Kehadiran Per Siswa">
             <div className="space-y-6">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-semibold text-foreground">Attendance by Student</h1>
-                        <p className="mt-2 text-muted-foreground">View each student's attendance history</p>
+                        <h1 className="text-3xl font-semibold text-foreground">Kehadiran Per Siswa</h1>
+                        <p className="text-muted-foreground">Lihat riwayat kehadiran setiap siswa</p>
                     </div>
                     <Button asChild variant="secondary">
-                        <Link href={admin.reports.overview.url()}>Back to Overview</Link>
+                        <Link href={admin.reports.overview.url()}>Kembali</Link>
                     </Button>
                 </div>
 
@@ -67,30 +67,30 @@ export default function AdminReportsByStudent({ students }: Props) {
                                 </div>
                                 <div className="text-right">
                                     <p className="text-2xl font-semibold text-foreground">{student.records_count}</p>
-                                    <p className="text-sm text-muted-foreground">total records</p>
+                                    <p className="text-sm text-muted-foreground">total catatan</p>
                                 </div>
                             </CardHeader>
                             <CardContent>
                                 <div className="border-t border-border pt-4">
-                                    <h4 className="text-sm font-semibold text-foreground">Attendance History</h4>
+                                    <h4 className="text-sm font-semibold text-foreground">Riwayat Kehadiran</h4>
                                     <div className="mt-3 overflow-x-auto">
                                         <table className="min-w-full divide-y divide-border">
                                             <thead className="bg-muted/50">
                                                 <tr>
                                                     <th scope="col" className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
-                                                        Session
+                                                        Sesi
                                                     </th>
                                                     <th scope="col" className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
-                                                        Type
+                                                        Tipe
                                                     </th>
                                                     <th scope="col" className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
-                                                        Subject
+                                                        Mapel
                                                     </th>
                                                     <th scope="col" className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
                                                         Status
                                                     </th>
                                                     <th scope="col" className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
-                                                        Date & Time
+                                                        Waktu
                                                     </th>
                                                 </tr>
                                             </thead>
@@ -98,7 +98,7 @@ export default function AdminReportsByStudent({ students }: Props) {
                                                 {student.records.length === 0 ? (
                                                     <tr>
                                                         <td colSpan={5} className="px-4 py-3 text-center text-sm text-muted-foreground">
-                                                            No attendance records
+                                                            Belum ada catatan kehadiran
                                                         </td>
                                                     </tr>
                                                 ) : (
@@ -119,7 +119,7 @@ export default function AdminReportsByStudent({ students }: Props) {
                                                                 </Badge>
                                                             </td>
                                                             <td className="px-4 py-2 text-sm text-muted-foreground">
-                                                                {new Date(record.scanned_at).toLocaleString()}
+                                                                {new Date(record.scanned_at).toLocaleString('id-ID')}
                                                             </td>
                                                         </tr>
                                                     ))
@@ -138,18 +138,18 @@ export default function AdminReportsByStudent({ students }: Props) {
                         <div className="flex flex-1 justify-between sm:hidden">
                             {students.prev_page_url && (
                                 <Button asChild variant="outline" size="sm">
-                                    <Link href={students.prev_page_url}>Previous</Link>
+                                    <Link href={students.prev_page_url}>Sebelumnya</Link>
                                 </Button>
                             )}
                             {students.next_page_url && (
                                 <Button asChild variant="outline" size="sm" className="ml-3">
-                                    <Link href={students.next_page_url}>Next</Link>
+                                    <Link href={students.next_page_url}>Selanjutnya</Link>
                                 </Button>
                             )}
                         </div>
                         <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
                             <p className="text-sm text-muted-foreground">
-                                Page <span className="font-medium text-foreground">{students.current_page}</span> of{' '}
+                                Halaman <span className="font-medium text-foreground">{students.current_page}</span> dari{' '}
                                 <span className="font-medium text-foreground">{students.last_page}</span>
                             </p>
                         </div>

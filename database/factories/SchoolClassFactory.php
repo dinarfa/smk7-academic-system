@@ -21,7 +21,7 @@ class SchoolClassFactory extends Factory
     {
         return [
             'homeroom_teacher_id' => User::factory()->state(['role' => UserRole::Teacher]),
-            'name' => fake()->unique()->randomElement(['X IPA 1', 'X IPA 2', 'XI IPA 1', 'XII IPS 1']),
+            'name' => fake()->randomElement(['X IPA 1', 'X IPA 2', 'XI IPA 1', 'XII IPS 1']),
             'code' => fake()->unique()->bothify('CL-###'),
             'academic_year' => fake()->randomElement(['2025/2026', '2026/2027']),
         ];

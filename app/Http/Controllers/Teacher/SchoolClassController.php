@@ -14,14 +14,14 @@ class SchoolClassController extends Controller
      */
     public function index(Request $request): Response
     {
-        $schoolClass = $request->user()
+        $classes = $request->user()
             ->homeroomClasses()
             ->with(['homeroomTeacher:id,name,email', 'students:id,name,email,school_class_id'])
             ->withCount('students')
-            ->first();
+            ->get();
 
         return Inertia::render('teacher/class', [
-            'schoolClass' => $schoolClass ? [
+            'schoolClasses' => $classes->map(fn ($schoolClass) => [
                 'id' => $schoolClass->id,
                 'name' => $schoolClass->name,
                 'code' => $schoolClass->code,
@@ -37,7 +37,7 @@ class SchoolClassController extends Controller
                     'name' => $student->name,
                     'email' => $student->email,
                 ])->values(),
-            ] : null,
+            ])->values(),
         ]);
     }
 }

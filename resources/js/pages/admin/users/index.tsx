@@ -25,22 +25,22 @@ type Props = {
 
 export default function AdminUsersIndex({ users }: Props) {
     return (
-        <AdminLayout title="User Management">
+        <AdminLayout title="Kelola Pengguna">
             <div className="space-y-6">
             <div>
-                <h1 className="text-3xl font-semibold text-foreground">User Management</h1>
-                <p className="mt-2 text-muted-foreground">Manage all users in the system</p>
+                <h1 className="text-3xl font-semibold text-foreground">Kelola Pengguna</h1>
+                <p className="text-muted-foreground">Kelola semua pengguna dalam sistem</p>
             </div>
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Users</CardTitle>
-                    <CardDescription>All registered users and quick actions.</CardDescription>
+                    <CardTitle>Pengguna</CardTitle>
+                    <CardDescription>Semua pengguna terdaftar dan aksi cepat.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="mb-4 flex justify-end">
                         <Button asChild>
-                            <Link href={admin.reports.overview.url()}>View Reports</Link>
+                            <Link href={admin.reports.overview.url()}>Lihat Laporan</Link>
                         </Button>
                     </div>
 
@@ -49,7 +49,7 @@ export default function AdminUsersIndex({ users }: Props) {
                             <thead className="bg-muted/50">
                                 <tr>
                                     <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                                        Name
+                                        Nama
                                     </th>
                                     <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         Email
@@ -58,10 +58,10 @@ export default function AdminUsersIndex({ users }: Props) {
                                         Role
                                     </th>
                                     <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                                        Created At
+                                        Dibuat
                                     </th>
                                     <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                                        Actions
+                                        Aksi
                                     </th>
                                 </tr>
                             </thead>
@@ -80,11 +80,11 @@ export default function AdminUsersIndex({ users }: Props) {
                                             </Badge>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                                            {new Date(user.created_at).toLocaleDateString()}
+                                            {new Date(user.created_at).toLocaleDateString('id-ID')}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
                                             <Button asChild variant="link" className="h-auto p-0">
-                                                <Link href={admin.users.show.url({ user: user.id })}>View</Link>
+                                                <Link href={admin.users.show.url({ user: user.id })}>Detail</Link>
                                             </Button>
                                             <Button asChild variant="link" className="h-auto p-0 text-emerald-600 dark:text-emerald-400">
                                                 <Link href={admin.users.resetPassword.url({ user: user.id })}>Reset Password</Link>
@@ -98,10 +98,10 @@ export default function AdminUsersIndex({ users }: Props) {
 
                     {/* Pagination */}
                     <div className="mt-4 flex items-center justify-between">
-                        <p className="text-sm text-muted-foreground">Page <span className="font-medium text-foreground">{users.current_page}</span> of <span className="font-medium text-foreground">{users.last_page}</span></p>
+                        <p className="text-sm text-muted-foreground">Halaman <span className="font-medium text-foreground">{users.current_page}</span> dari <span className="font-medium text-foreground">{users.last_page}</span></p>
                         <div className="flex gap-3">
-                            {users.prev_page_url && <Link href={users.prev_page_url} className="text-primary hover:underline">Previous</Link>}
-                            {users.next_page_url && <Link href={users.next_page_url} className="text-primary hover:underline">Next</Link>}
+                            {users.prev_page_url && <Link href={users.prev_page_url} className="text-primary hover:underline">Sebelumnya</Link>}
+                            {users.next_page_url && <Link href={users.next_page_url} className="text-primary hover:underline">Selanjutnya</Link>}
                         </div>
                     </div>
                 </CardContent>

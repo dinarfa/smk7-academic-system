@@ -146,6 +146,41 @@ test('teacher opening a session only closes their own active sessions', function
     ]);
 });
 
+test('attendance session closing command deactivates expired sessions', function () {
+    $teacher = User::factory()->teacher()->create();
+
+    $expiredSession = AttendanceSession::query()->create([
+        'opened_by' => $teacher->id,
+        'type' => 'morning',
+        'qr_token' => 'EXPIRED-SESSION-001',
+        'starts_at' => now()->subMinutes(10),
+        'ends_at' => now()->subMinute(),
+        'is_active' => true,
+    ]);
+
+    $activeSession = AttendanceSession::query()->create([
+        'opened_by' => $teacher->id,
+        'type' => 'morning',
+        'qr_token' => 'ACTIVE-SESSION-001',
+        'starts_at' => now()->subMinutes(2),
+        'ends_at' => now()->addMinutes(5),
+        'is_active' => true,
+    ]);
+
+    $this->artisan('attendance:close-expired-sessions')
+        ->assertExitCode(0);
+
+    $this->assertDatabaseHas('attendance_sessions', [
+        'id' => $expiredSession->id,
+        'is_active' => 0,
+    ]);
+
+    $this->assertDatabaseHas('attendance_sessions', [
+        'id' => $activeSession->id,
+        'is_active' => 1,
+    ]);
+});
+
 test('student can scan active qr token and record attendance', function () {
     $teacher = User::factory()->teacher()->create();
     $student = User::factory()->student()->create();

@@ -24,40 +24,56 @@ type SchoolClass = {
 };
 
 type Props = {
-    schoolClass: SchoolClass | null;
+    schoolClasses: SchoolClass[];
 };
 
-export default function TeacherClass({ schoolClass }: Props) {
+export default function TeacherClass({ schoolClasses }: Props) {
+    const totalStudents = schoolClasses.reduce((sum, c) => sum + c.students_count, 0);
+
     return (
         <>
             <Head title="Kelas Wali" />
 
             <div className="space-y-6 p-4">
+                <div>
+                    <h1 className="text-3xl font-semibold text-foreground">Kelas Wali</h1>
+                    <p className="text-muted-foreground">Kelas yang ditetapkan ke Anda sebagai wali kelas.</p>
+                </div>
+
                 <Card>
                     <CardHeader>
                         <CardTitle>Kelas Wali</CardTitle>
-                        <CardDescription>Kelas ini dibuat oleh admin dan ditetapkan ke Anda sebagai wali kelas.</CardDescription>
+                        <CardDescription>
+                            Kelas yang ditetapkan ke Anda sebagai wali kelas.
+                        </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        {schoolClass ? (
-                            <div className="grid gap-4 md:grid-cols-4">
-                                <div className="rounded-lg border p-4">
-                                    <p className="text-sm text-muted-foreground">Nama Kelas</p>
-                                    <p className="text-lg font-medium">{schoolClass.name}</p>
+                        {schoolClasses.length > 0 ? (
+                            <>
+                                <div className="mb-4 rounded-lg border p-4">
+                                    <p className="text-sm text-muted-foreground">Total Siswa di Semua Kelas Perwalian</p>
+                                    <p className="text-lg font-medium">{totalStudents}</p>
                                 </div>
-                                <div className="rounded-lg border p-4">
-                                    <p className="text-sm text-muted-foreground">Kode</p>
-                                    <p className="text-lg font-medium">{schoolClass.code ?? '-'}</p>
-                                </div>
-                                <div className="rounded-lg border p-4">
-                                    <p className="text-sm text-muted-foreground">Tahun Ajaran</p>
-                                    <p className="text-lg font-medium">{schoolClass.academic_year ?? '-'}</p>
-                                </div>
-                                <div className="rounded-lg border p-4">
-                                    <p className="text-sm text-muted-foreground">Jumlah Siswa</p>
-                                    <p className="text-lg font-medium">{schoolClass.students_count}</p>
-                                </div>
-                            </div>
+                                {schoolClasses.map((schoolClass) => (
+                                    <div key={schoolClass.id} className="mb-6">
+                                        <h3 className="mb-3 text-lg font-semibold">{schoolClass.name}</h3>
+                                        <div className="grid gap-4 md:grid-cols-3">
+                                            <div className="rounded-lg border p-4">
+                                                <p className="text-sm text-muted-foreground">Kode</p>
+                                                <p className="text-lg font-medium">{schoolClass.code ?? '-'}</p>
+                                            </div>
+                                            <div className="rounded-lg border p-4">
+                                                <p className="text-sm text-muted-foreground">Tahun Ajaran</p>
+                                                <p className="text-lg font-medium">{schoolClass.academic_year ?? '-'}</p>
+                                            </div>
+                                            <div className="rounded-lg border p-4">
+                                                <p className="text-sm text-muted-foreground">Jumlah Siswa</p>
+                                                <p className="text-lg font-medium">{schoolClass.students_count}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </>
                         ) : (
                             <p className="text-sm text-muted-foreground">
                                 Kelas belum digenerate oleh admin.
@@ -66,10 +82,10 @@ export default function TeacherClass({ schoolClass }: Props) {
                     </CardContent>
                 </Card>
 
-                {schoolClass && (
-                    <Card>
+                {schoolClasses.map((schoolClass) => (
+                    <Card key={schoolClass.id}>
                         <CardHeader>
-                            <CardTitle>Daftar Siswa</CardTitle>
+                            <CardTitle>Daftar Siswa - {schoolClass.name}</CardTitle>
                             <CardDescription>{schoolClass.students_count} siswa terdaftar di kelas ini.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-3">
@@ -85,7 +101,7 @@ export default function TeacherClass({ schoolClass }: Props) {
                             )}
                         </CardContent>
                     </Card>
-                )}
+                ))}
             </div>
         </>
     );

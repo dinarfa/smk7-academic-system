@@ -114,6 +114,11 @@ export default function StudentDashboard({ summary, recentRecords }: Props) {
             <Head title="Dashboard Siswa" />
 
             <div className="space-y-6 p-4">
+                <div>
+                    <h1 className="text-3xl font-semibold text-foreground">Dashboard Siswa</h1>
+                    <p className="text-muted-foreground">Ringkasan kehadiran dan pemindaian QR.</p>
+                </div>
+
                 <div className="grid gap-4 md:grid-cols-2">
                     <Card>
                         <CardHeader>

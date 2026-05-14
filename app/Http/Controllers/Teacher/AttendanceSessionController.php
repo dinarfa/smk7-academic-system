@@ -49,20 +49,36 @@ class AttendanceSessionController extends Controller
     /**
      * Store manual attendance records.
      */
-    public function storeManual(ManualAttendanceRequest $request): RedirectResponse
-    {
+    public function storeManual(
+        ManualAttendanceRequest $request,
+        AttendanceSessionLifecycleService $lifecycleService,
+    ): RedirectResponse {
         $validated = $request->validated();
+
+        $sessionId = $validated['session_id'] ?? null;
+
+        if (! $sessionId) {
+            $session = $lifecycleService->open($request->user()->id, [
+                'type' => $validated['phase'],
+                'duration_minutes' => 480,
+            ]);
+            $sessionId = $session->id;
+        }
 
         $count = 0;
         foreach ($validated['students'] as $student) {
-            AttendanceRecord::create([
-                'attendance_session_id' => $validated['session_id'],
-                'student_id' => $student['student_id'],
-                'status' => $student['status'],
-                'phase' => $validated['phase'],
-                'source' => 'manual',
-                'scanned_at' => now(),
-            ]);
+            AttendanceRecord::updateOrCreate(
+                [
+                    'attendance_session_id' => $sessionId,
+                    'student_id' => $student['student_id'],
+                ],
+                [
+                    'status' => $student['status'],
+                    'phase' => $validated['phase'],
+                    'source' => 'manual',
+                    'scanned_at' => now(),
+                ],
+            );
             $count++;
         }
 

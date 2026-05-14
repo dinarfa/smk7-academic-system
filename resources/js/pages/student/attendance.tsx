@@ -1,7 +1,8 @@
 import { Head } from '@inertiajs/react';
 import AttendanceController from '@/actions/App/Http/Controllers/Student/AttendanceController';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { dashboard } from '@/routes';
+import { ClipboardList, CheckCircle2, Clock, XCircle, ShieldQuestion } from 'lucide-react';
 
 type AttendanceRecord = {
     id: number;
@@ -27,9 +28,18 @@ export default function StudentAttendance({ records }: Props) {
             <Head title="Kehadiran Saya" />
 
             <div className="space-y-6 p-4">
+                <div>
+                    <h1 className="text-3xl font-semibold text-foreground">Kehadiran Saya</h1>
+                    <p className="text-muted-foreground">Riwayat kehadiran Anda.</p>
+                </div>
+
                 <Card>
                     <CardHeader>
-                        <CardTitle>Riwayat Kehadiran</CardTitle>
+                        <CardTitle className="flex items-center gap-2">
+                            <ClipboardList className="h-5 w-5" />
+                            Riwayat Kehadiran
+                        </CardTitle>
+                        <CardDescription>Daftar kehadiran yang sudah tercatat.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="overflow-x-auto">

@@ -55,51 +55,49 @@ export default function AdminSchoolClassesIndex({ classes, teachers }: Props) {
     };
 
     return (
-        <AdminLayout title="Class Management">
+        <AdminLayout title="Kelola Kelas">
             <div className="space-y-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-semibold text-foreground">Generate Kelas</h1>
-                    <p className="mt-2 text-muted-foreground">Admin membuat kelas dan menetapkan wali kelasnya.</p>
+                    <p className="text-muted-foreground">Admin membuat kelas dan menetapkan wali kelasnya.</p>
                 </div>
                 <Button asChild variant="secondary">
-                    <Link href={admin.dashboard.url()}>Back to Dashboard</Link>
+                    <Link href={admin.dashboard.url()}>Kembali</Link>
                 </Button>
             </div>
-
-
 
 
 
             <div className="grid gap-6 lg:grid-cols-2">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Create Class</CardTitle>
-                        <CardDescription>Add a new class and assign a homeroom teacher.</CardDescription>
+                        <CardTitle>Buat Kelas</CardTitle>
+                        <CardDescription>Tambah kelas baru dan tetapkan wali kelas.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="space-y-2">
-                                <Label htmlFor="name">Class Name</Label>
+                                <Label htmlFor="name">Nama Kelas</Label>
                                 <Input
                                     id="name"
                                     name="name"
                                     value={data.name}
                                     onChange={(event) => setData('name', event.target.value)}
-                                    placeholder="Grade 10A"
+                                    placeholder="Kelas 10A"
                                     aria-invalid={Boolean(errors.name)}
                                 />
                                 {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="teacher_id">Homeroom Teacher</Label>
+                                <Label htmlFor="teacher_id">Wali Kelas</Label>
                                 <Select
                                     value={data.teacher_id}
                                     onValueChange={(value) => setData('teacher_id', value)}
                                 >
                                     <SelectTrigger className="w-full" id="teacher_id">
-                                        <SelectValue placeholder="Select Teacher" />
+                                        <SelectValue placeholder="Pilih Guru" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {teachers.map((teacher) => (
@@ -115,7 +113,7 @@ export default function AdminSchoolClassesIndex({ classes, teachers }: Props) {
                             </div>
 
                             <Button type="submit" disabled={processing}>
-                                {processing ? 'Saving...' : 'Save Class'}
+                                {processing ? 'Menyimpan...' : 'Simpan Kelas'}
                             </Button>
                         </form>
                     </CardContent>
@@ -123,19 +121,19 @@ export default function AdminSchoolClassesIndex({ classes, teachers }: Props) {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Existing Classes</CardTitle>
-                        <CardDescription>Edit or delete classes as needed.</CardDescription>
+                        <CardTitle>Kelas Terdaftar</CardTitle>
+                        <CardDescription>Edit atau hapus kelas sesuai kebutuhan.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">
                         {classes.data.length === 0 ? (
-                            <p className="text-sm text-muted-foreground">No classes created yet.</p>
+                            <p className="text-sm text-muted-foreground">Belum ada kelas dibuat.</p>
                         ) : (
                             classes.data.map((schoolClass) => (
                                 <div key={schoolClass.id} className="flex items-center justify-between rounded-lg border border-border p-4">
                                     <div>
                                         <p className="font-medium text-foreground">{schoolClass.name}</p>
                                         <p className="text-sm text-muted-foreground">
-                                            Teacher: {schoolClass.homeroom_teacher?.name ?? '-'}
+                                            Wali Kelas: {schoolClass.homeroom_teacher?.name ?? '-'}
                                         </p>
                                     </div>
 
@@ -145,7 +143,7 @@ export default function AdminSchoolClassesIndex({ classes, teachers }: Props) {
                                         </Button>
                                         <Button asChild variant="link" className="h-auto p-0 text-destructive">
                                             <Link href={`/admin/classes/${schoolClass.id}`} method="delete" as="button">
-                                                Delete
+                                                Hapus
                                             </Link>
                                         </Button>
                                     </div>
