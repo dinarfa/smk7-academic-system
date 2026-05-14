@@ -1,11 +1,14 @@
 import { Head, Link, Form, router } from '@inertiajs/react';
+import { useState, useEffect, useRef } from 'react';
 import AttendanceSessionController from '@/actions/App/Http/Controllers/Teacher/AttendanceSessionController';
 import QRDisplay from '@/components/QRDisplayV2';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { dashboard } from '@/routes';
+import { Maximize2, Minimize2, X } from 'lucide-react';
 
 type ActiveSession = {
     id: number;
@@ -40,6 +43,49 @@ function typeLabel(type: ActiveSession['type']): string {
 }
 
 export default function TeacherAttendanceQr({ active_session: activeSession }: Props) {
+    const [showQrPopup, setShowQrPopup] = useState(false);
+    const [popupTimeRemaining, setPopupTimeRemaining] = useState('');
+    const [popupPercent, setPopupPercent] = useState(100);
+    const popupExpiredRef = useRef(false);
+
+    useEffect(() => {
+        if (!showQrPopup || !activeSession?.ends_at) return;
+
+        popupExpiredRef.current = false;
+
+        const updateTimer = () => {
+            const now = new Date();
+            const end = new Date(activeSession.ends_at!);
+            const start = activeSession.starts_at ? new Date(activeSession.starts_at) : new Date(now.getTime() - 5 * 60000);
+            const total = Math.max(1, end.getTime() - start.getTime());
+            const remaining = end.getTime() - now.getTime();
+
+            if (remaining <= 0) {
+                setPopupTimeRemaining('KADALUARSA');
+                setPopupPercent(0);
+                if (!popupExpiredRef.current) {
+                    popupExpiredRef.current = true;
+                }
+                return;
+            }
+
+            const minutes = Math.floor(remaining / 60000);
+            const seconds = Math.floor((remaining % 60000) / 1000);
+            setPopupTimeRemaining(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+            const p = Math.max(0, Math.min(100, Math.round((remaining / total) * 100)));
+            setPopupPercent(p);
+        };
+
+        updateTimer();
+        const interval = setInterval(updateTimer, 500);
+        return () => clearInterval(interval);
+    }, [showQrPopup, activeSession?.ends_at, activeSession?.starts_at]);
+
+    const popupRadius = 50;
+    const popupCircumference = 2 * Math.PI * popupRadius;
+    const popupStrokeDashoffset = popupCircumference * (1 - popupPercent / 100);
+    const popupIsExpired = popupTimeRemaining === 'KADALUARSA';
+
     return (
         <>
             <Head title="QR Absensi Guru" />
@@ -65,18 +111,26 @@ export default function TeacherAttendanceQr({ active_session: activeSession }: P
                         </CardHeader>
                         <CardContent>
                             {activeSession ? (
-                                <QRDisplay
-                                    qrSvg={activeSession.qr_svg}
-                                    startTime={activeSession.starts_at ?? ''}
-                                    endTime={activeSession.ends_at ?? ''}
-                                    sessionType={typeLabel(activeSession.type)}
-                                    onExpire={() => {
-                                        // Reload the page so the server re-queries getActiveSession()
-                                        // which filters ends_at > now(), returning null and showing
-                                        // the "no active session" empty state.
-                                        router.reload({ only: ['active_session'] });
-                                    }}
-                                />
+                                <>
+                                    <QRDisplay
+                                        qrSvg={activeSession.qr_svg}
+                                        startTime={activeSession.starts_at ?? ''}
+                                        endTime={activeSession.ends_at ?? ''}
+                                        sessionType={typeLabel(activeSession.type)}
+                                        onExpire={() => {
+                                            router.reload({ only: ['active_session'] });
+                                        }}
+                                    />
+                                    <div className="mt-4 flex justify-center">
+                                        <Button
+                                            onClick={() => setShowQrPopup(true)}
+                                            className="gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 font-semibold text-white shadow-lg shadow-blue-500/25 transition-all duration-200 hover:from-blue-700 hover:to-blue-600 hover:shadow-xl hover:shadow-blue-500/30"
+                                        >
+                                            <Maximize2 className="h-4 w-4" />
+                                            Tampilkan QR Besar
+                                        </Button>
+                                    </div>
+                                </>
                             ) : (
                                 <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-8 text-center">
                                     <p className="text-sm text-muted-foreground">
@@ -152,6 +206,101 @@ export default function TeacherAttendanceQr({ active_session: activeSession }: P
                     </div>
                 </div>
             </div>
+
+            {/* QR Popup Dialog */}
+            {activeSession && (
+                <Dialog open={showQrPopup} onOpenChange={setShowQrPopup}>
+                    <DialogContent className="max-w-2xl border-0 bg-gradient-to-br from-slate-900 to-slate-800 p-0 text-white shadow-2xl sm:rounded-2xl [&>button]:hidden">
+                        <div className="relative p-6 sm:p-8">
+                            {/* Close button */}
+                            <button
+                                onClick={() => setShowQrPopup(false)}
+                                className="absolute right-3 top-3 rounded-lg bg-white/10 p-2 transition-colors hover:bg-white/20"
+                            >
+                                <Minimize2 className="h-4 w-4" />
+                            </button>
+
+                            <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
+                                {/* Left: QR Code */}
+                                <div className="flex shrink-0 flex-col items-center gap-4">
+                                    <div className="rounded-2xl bg-white p-5 shadow-2xl shadow-black/20">
+                                        <div
+                                            className="[&_svg]:h-full [&_svg]:w-full"
+                                            style={{ width: 220, height: 220 }}
+                                            dangerouslySetInnerHTML={{ __html: activeSession.qr_svg }}
+                                        />
+                                    </div>
+                                    <div className="text-center">
+                                        <h2 className="text-lg font-extrabold tracking-tight">
+                                            {typeLabel(activeSession.type)}
+                                        </h2>
+                                        <p className="mt-0.5 text-xs text-slate-400">
+                                            {activeSession.subject ?? 'Tanpa mata pelajaran'}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Right: Timer + Info */}
+                                <div className="flex flex-1 flex-col items-center gap-4 sm:items-stretch">
+                                    {/* Timer */}
+                                    <div className="flex flex-col items-center gap-2">
+                                        <div className="relative">
+                                            <svg className="h-24 w-24" viewBox="0 0 120 120">
+                                                <g transform="translate(60,60)">
+                                                    <circle r={popupRadius} fill="transparent" stroke="rgba(255,255,255,0.1)" strokeWidth="8" />
+                                                    <circle
+                                                        r={popupRadius}
+                                                        fill="transparent"
+                                                        stroke={popupIsExpired ? '#ef4444' : '#3b82f6'}
+                                                        strokeWidth="8"
+                                                        strokeLinecap="round"
+                                                        strokeDasharray={popupCircumference}
+                                                        strokeDashoffset={popupStrokeDashoffset}
+                                                        style={{ transition: 'stroke-dashoffset 0.35s linear' }}
+                                                        transform="rotate(-90)"
+                                                    />
+                                                </g>
+                                            </svg>
+                                            <div className="absolute inset-0 flex items-center justify-center">
+                                                <span className={`text-xl font-extrabold tabular-nums ${popupIsExpired ? 'text-red-400' : 'text-white'}`}>
+                                                    {popupIsExpired ? '0:00' : popupTimeRemaining}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        {popupIsExpired ? (
+                                            <div className="rounded-lg bg-red-500/20 px-3 py-1.5 text-xs font-medium text-red-300">
+                                                QR sudah kadaluarsa. Buka sesi baru.
+                                            </div>
+                                        ) : (
+                                            <p className="text-xs text-slate-400">Sisa waktu sesi absensi</p>
+                                        )}
+                                    </div>
+
+                                    {/* Stats */}
+                                    <div className="flex gap-3">
+                                        <div className="flex-1 rounded-xl bg-white/10 px-4 py-2.5 text-center backdrop-blur-sm">
+                                            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Tercatat</p>
+                                            <p className="mt-0.5 text-lg font-bold">{activeSession.records_count}</p>
+                                        </div>
+                                        <div className="flex-1 rounded-xl bg-white/10 px-4 py-2.5 text-center backdrop-blur-sm">
+                                            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Status</p>
+                                            <p className="mt-0.5 text-lg font-bold text-emerald-400">Aktif</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Token */}
+                                    <div className="rounded-xl bg-white/10 px-4 py-2.5 text-center backdrop-blur-sm">
+                                        <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Token QR</p>
+                                        <p className="mt-0.5 break-all font-mono text-xs font-medium text-white/90">
+                                            {activeSession.qr_payload}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            )}
         </>
     );
 }

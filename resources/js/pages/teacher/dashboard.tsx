@@ -341,9 +341,13 @@ export default function TeacherDashboard({
                                             </div>
                                         </div>
                                         <div className="space-y-4 px-6 pb-6">
-                                            <div className="flex items-center justify-center rounded-xl border border-slate-200/60 bg-white/80 p-4 backdrop-blur-sm dark:border-white/10 dark:bg-slate-900/50"
-                                                dangerouslySetInnerHTML={{ __html: session.qr_svg }}
-                                            />
+                                            <div className="flex items-center justify-center rounded-2xl border border-slate-200/60 bg-white/80 p-4 backdrop-blur-sm dark:border-white/10 dark:bg-slate-900/50">
+                                                <div
+                                                    className="[&_svg]:h-full [&_svg]:w-full"
+                                                    style={{ width: 180, height: 180 }}
+                                                    dangerouslySetInnerHTML={{ __html: session.qr_svg }}
+                                                />
+                                            </div>
 
                                             <div className="space-y-2.5">
                                                 <div className="flex items-center justify-between rounded-xl bg-slate-50/80 px-4 py-2.5 backdrop-blur-sm dark:bg-white/5">
