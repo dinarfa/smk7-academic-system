@@ -26,10 +26,10 @@ interface Props {
     excuse: Excuse;
 }
 
-const getStatusVariant = (status: string): 'default' | 'success' | 'destructive' | 'outline' | 'secondary' => {
+const getStatusVariant = (status: string): 'default' | 'destructive' | 'outline' | 'secondary' => {
     switch (status) {
         case 'approved':
-            return 'success';
+            return 'default';
         case 'rejected':
             return 'destructive';
         case 'pending':
@@ -59,12 +59,12 @@ export default function Show({ excuse }: Props) {
 
     const handleApprove = (e: React.FormEvent) => {
         e.preventDefault();
-        patch(teacher.excuses.approve(excuse.id));
+        patch(teacher.excuses.approve.url(excuse.id));
     };
 
     const handleReject = (e: React.FormEvent) => {
         e.preventDefault();
-        patch(teacher.excuses.reject(excuse.id));
+        patch(teacher.excuses.reject.url(excuse.id));
     };
 
     return (

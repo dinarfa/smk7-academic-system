@@ -40,6 +40,36 @@ class DailyAttendanceViewService
     }
 
     /**
+     * Get attendance recap grouped by date for a date range.
+     *
+     * @param  string  $startDate  Date in Y-m-d format
+     * @param  string  $endDate  Date in Y-m-d format
+     * @param  int  $teacherId  Teacher ID to filter sessions
+     */
+    public function getRecap(string $startDate, string $endDate, int $teacherId): array
+    {
+        $start = Carbon::parse($startDate)->startOfDay();
+        $end = Carbon::parse($endDate)->endOfDay();
+
+        $sessions = AttendanceSession::where('opened_by', $teacherId)
+            ->whereBetween('starts_at', [$start, $end])
+            ->pluck('id');
+
+        if ($sessions->isEmpty()) {
+            return [];
+        }
+
+        $records = AttendanceRecord::with(['student', 'session'])
+            ->whereIn('attendance_session_id', $sessions)
+            ->orderBy('student_id')
+            ->orderBy('scanned_at')
+            ->get()
+            ->groupBy(fn ($r) => $r->scanned_at->format('Y-m-d'));
+
+        return $records->toArray();
+    }
+
+    /**
      * Get active session for teacher (if any).
      */
     public function getActiveSession(int $teacherId): ?AttendanceSession

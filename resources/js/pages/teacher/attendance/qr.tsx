@@ -171,6 +171,18 @@ export default function TeacherAttendanceQr({ active_session: activeSession }: P
                                         Lihat Absensi Harian
                                     </Link>
                                 </Button>
+
+                                <Button asChild variant="outline" className="w-full">
+                                    <Link href="/teacher/attendance/export">
+                                        Ekspor Absensi
+                                    </Link>
+                                </Button>
+
+                                <Button asChild variant="outline" className="w-full">
+                                    <Link href="/teacher/attendance/recap">
+                                        Rekap Absensi
+                                    </Link>
+                                </Button>
                             </CardContent>
                         </Card>
 

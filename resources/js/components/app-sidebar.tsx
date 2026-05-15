@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpenCheck, ClipboardList, LayoutGrid, QrCode, School, Users } from 'lucide-react';
+import { BookOpenCheck, CalendarDays, ClipboardList, LayoutGrid, QrCode, School, Users } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -41,6 +41,11 @@ export function AppSidebar() {
                 title: 'Kelas Wali',
                 href: teacher.class.index.url(),
                 icon: School,
+            },
+            {
+                title: 'Rekap Absensi',
+                href: teacher.attendance.recap.url(),
+                icon: CalendarDays,
             },
             {
                 title: 'Data Siswa',

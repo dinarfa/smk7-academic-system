@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { dashboard } from '@/routes';
-import { QrCode, Clock, Users, Zap } from 'lucide-react';
+import { QrCode, Clock, Users, Zap, Download, ClipboardList } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 type ActiveSession = {
@@ -287,6 +287,24 @@ export default function TeacherDashboard({
                                         <Clock className="h-4 w-4" />
                                     </div>
                                     Grid Absensi
+                                </Link>
+                                <Link
+                                    href="/teacher/attendance/recap"
+                                    className="group flex items-center gap-3 rounded-xl border border-slate-200/60 bg-white/60 px-4 py-3 text-sm font-medium text-slate-700 shadow-sm backdrop-blur-sm transition-all duration-200 hover:-translate-y-px hover:border-indigo-300/50 hover:bg-indigo-50/50 hover:text-indigo-700 hover:shadow-md dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:border-indigo-500/30 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-300"
+                                >
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 transition-colors group-hover:bg-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-400 dark:group-hover:bg-indigo-500/25">
+                                        <ClipboardList className="h-4 w-4" />
+                                    </div>
+                                    Rekap Absensi
+                                </Link>
+                                <Link
+                                    href="/teacher/attendance/export"
+                                    className="group flex items-center gap-3 rounded-xl border border-slate-200/60 bg-white/60 px-4 py-3 text-sm font-medium text-slate-700 shadow-sm backdrop-blur-sm transition-all duration-200 hover:-translate-y-px hover:border-violet-300/50 hover:bg-violet-50/50 hover:text-violet-700 hover:shadow-md dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:border-violet-500/30 dark:hover:bg-violet-500/10 dark:hover:text-violet-300"
+                                >
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-100 text-violet-600 transition-colors group-hover:bg-violet-200 dark:bg-violet-500/15 dark:text-violet-400 dark:group-hover:bg-violet-500/25">
+                                        <Download className="h-4 w-4" />
+                                    </div>
+                                    Ekspor Absensi
                                 </Link>
                                 <Link
                                     href="/teacher/students"
