@@ -24,10 +24,10 @@ interface Props {
     excuse: Excuse;
 }
 
-const getStatusVariant = (status: string): 'default' | 'success' | 'destructive' | 'outline' | 'secondary' => {
+const getStatusVariant = (status: string): 'default' | 'destructive' | 'outline' | 'secondary' => {
     switch (status) {
         case 'approved':
-            return 'success';
+            return 'default';
         case 'rejected':
             return 'destructive';
         case 'pending':

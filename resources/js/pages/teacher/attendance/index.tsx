@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { dashboard } from '@/routes';
+import { Download } from 'lucide-react';
 
 interface AttendanceRecord {
     id: number;
@@ -119,9 +120,9 @@ export default function Index({ attendance, active_session: activeSession, date 
         return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     };
 
-    const getStatusVariant = (status: string): 'default' | 'success' | 'destructive' | 'outline' | 'secondary' => {
+    const getStatusVariant = (status: string): 'default' | 'destructive' | 'outline' | 'secondary' => {
         switch (status) {
-            case 'present': return 'success';
+            case 'present': return 'default';
             case 'late': return 'secondary';
             case 'absent': return 'destructive';
             default: return 'outline';
@@ -314,23 +315,62 @@ export default function Index({ attendance, active_session: activeSession, date 
                     ))}
                 </div>
 
-                {/* Manual Attendance Section */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Absensi Manual</CardTitle>
-                        <CardDescription>
-                            Gunakan ketika pemindaian QR tidak tersedia atau untuk pembaruan massal.
-                        </CardDescription>
-                    </CardHeader>
+                {/* Quick Actions */}
+                <div className="grid gap-4 sm:grid-cols-3">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Absensi Manual</CardTitle>
+                            <CardDescription>
+                                Gunakan ketika pemindaian QR tidak tersedia atau untuk pembaruan massal.
+                            </CardDescription>
+                        </CardHeader>
 
-                    <CardContent>
-                        <Button asChild className="w-full">
-                            <Link href="/teacher/attendance/manual">
-                                Buka Absensi Manual
-                            </Link>
-                        </Button>
-                    </CardContent>
-                </Card>
+                        <CardContent>
+                            <Button asChild className="w-full">
+                                <Link href="/teacher/attendance/manual">
+                                    Buka Absensi Manual
+                                </Link>
+                            </Button>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Download className="h-5 w-5" />
+                                Ekspor Data
+                            </CardTitle>
+                            <CardDescription>
+                                Unduh data absensi dalam format CSV atau XLSX.
+                            </CardDescription>
+                        </CardHeader>
+
+                        <CardContent>
+                            <Button asChild variant="outline" className="w-full">
+                                <Link href="/teacher/attendance/export">
+                                    Buka Halaman Ekspor
+                                </Link>
+                            </Button>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Rekap Absensi</CardTitle>
+                            <CardDescription>
+                                Lihat rekap kehadiran siswa berdasarkan rentang tanggal.
+                            </CardDescription>
+                        </CardHeader>
+
+                        <CardContent>
+                            <Button asChild variant="outline" className="w-full">
+                                <Link href="/teacher/attendance/recap">
+                                    Lihat Rekap
+                                </Link>
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         </>
     );

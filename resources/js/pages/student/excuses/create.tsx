@@ -31,7 +31,7 @@ export default function Create({ pendingAbsences }: Props) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(student.excuses.store());
+        post(student.excuses.store.url());
     };
 
     return (

@@ -76,6 +76,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('attendance/daily', [AttendanceViewController::class, 'daily'])->name('attendance.daily');
         Route::get('attendance/bolos-summary', [AttendanceViewController::class, 'bolosSummary'])->name('attendance.bolos-summary');
         Route::get('class-students', [AttendanceViewController::class, 'classStudents'])->name('class-students');
+        Route::get('attendance/recap', [AttendanceViewController::class, 'recap'])->name('attendance.recap');
+        Route::get('attendance/export', [AttendanceViewController::class, 'exportPage'])->name('attendance.export.page');
         Route::post('attendance/export', [AttendanceViewController::class, 'export'])->name('attendance.export');
         Route::get('attendance', [AttendanceViewController::class, 'index'])->name('attendance.index');
 

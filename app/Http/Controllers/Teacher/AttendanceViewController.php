@@ -10,6 +10,7 @@ use App\Services\Attendance\AbsenceDetectionService;
 use App\Services\Attendance\AttendanceReportService;
 use App\Services\Attendance\DailyAttendanceViewService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use OpenSpout\Common\Entity\Row;
 use OpenSpout\Writer\XLSX\Writer;
@@ -192,6 +193,36 @@ class AttendanceViewController extends Controller
             'summary' => $summary,
             'date' => $date,
         ]);
+    }
+
+    /**
+     * Show attendance recap page with date range filter.
+     */
+    public function recap(DailyAttendanceViewService $service, Request $request): InertiaResponse
+    {
+        Gate::authorize('viewDaily');
+
+        $startDate = $request->query('start_date', now()->toDateString());
+        $endDate = $request->query('end_date', now()->toDateString());
+        $teacherId = auth()->id();
+
+        $records = $service->getRecap($startDate, $endDate, $teacherId);
+
+        return Inertia::render('teacher/attendance/recap', [
+            'records' => $records,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+        ]);
+    }
+
+    /**
+     * Show the export attendance page.
+     */
+    public function exportPage(): InertiaResponse
+    {
+        Gate::authorize('viewDaily');
+
+        return Inertia::render('teacher/attendance/export');
     }
 
     /**
