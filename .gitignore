@@ -28,3 +28,6 @@ yarn-error.log
 /.zed
 AGENTS.md
 .codex
+.agents
+*.md
+skills-lock.json
