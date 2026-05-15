@@ -22,10 +22,10 @@
 - Double-scan prevention ✅
 - Comprehensive tests ✅
 
-### ❌ Sprint 2 Frontend Pending
-- Teacher bolos summary page ❌
-- Excel export functionality ❌
-- Job scheduling configuration ❌
+### ✅ Sprint 2 Frontend Pending
+- Teacher bolos summary page ✅
+- Excel export functionality ✅
+- Job scheduling configuration ✅
 
 ### ❌ Sprint 3 Not Started
 - Device session management ❌
