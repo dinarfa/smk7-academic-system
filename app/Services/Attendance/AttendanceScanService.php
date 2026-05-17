@@ -55,6 +55,32 @@ class AttendanceScanService
     }
 
     /**
+     * Check if the student belongs to the homeroom class of the teacher who opened the session.
+     */
+    public function isStudentAllowed(User $student, AttendanceSession $session): bool
+    {
+        if (! $student->school_class_id) {
+            return false;
+        }
+
+        return $student->schoolClass
+            && $student->schoolClass->homeroom_teacher_id === $session->opened_by;
+    }
+
+    /**
+     * Determine attendance status based on scan time vs session start + grace period.
+     */
+    public function resolveStatus(AttendanceSession $session): AttendanceStatus
+    {
+        $graceMinutes = (int) config('attendance.grace_period_minutes', 10);
+        $lateThreshold = $session->starts_at->addMinutes($graceMinutes);
+
+        return now()->isAfter($lateThreshold)
+            ? AttendanceStatus::Late
+            : AttendanceStatus::Present;
+    }
+
+    /**
      * Record attendance for the given student and session.
      */
     public function record(User $student, AttendanceSession $session): AttendanceRecord
@@ -66,7 +92,7 @@ class AttendanceScanService
 
         if (! $record->exists) {
             $record->fill([
-                'status' => AttendanceStatus::Present->value,
+                'status' => $this->resolveStatus($session)->value,
                 'scanned_at' => now(),
                 'phase' => $this->attendancePhase($session),
                 'source' => 'qr_scan',
@@ -76,8 +102,8 @@ class AttendanceScanService
             return $record;
         }
 
-        if ($record->status === AttendanceStatus::Bolos) {
-            $record->status = AttendanceStatus::Present;
+        if ($record->status === AttendanceStatus::Bolos || $record->status === AttendanceStatus::Absent) {
+            $record->status = $this->resolveStatus($session);
             $record->scanned_at = now();
             $record->phase = $this->attendancePhase($session);
             $record->source = 'qr_scan';

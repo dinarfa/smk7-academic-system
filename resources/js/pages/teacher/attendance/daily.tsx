@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import AttendanceGrid from '@/components/AttendanceGrid';
+import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,8 @@ import {
     Clock,
     Users,
     ArrowRight,
+    BookOpen,
+    Download,
 } from 'lucide-react';
 
 type AttendanceRecord = {
@@ -26,6 +28,13 @@ type AttendanceRecord = {
         id: number;
         name: string;
     };
+    session?: {
+        id: number;
+        type: string;
+        subject: string | null;
+        subject_id: number | null;
+        subject_name: string | null;
+    };
 };
 
 type ActiveSession = {
@@ -34,6 +43,8 @@ type ActiveSession = {
     type: string;
     ends_at: string;
     subject: string | null;
+    subject_id: number | null;
+    subject_name: string | null;
 };
 
 type Props = {
@@ -55,6 +66,21 @@ export default function TeacherAttendanceDaily({ attendance, active_session: act
         subject: 'Absen Mapel',
         dismissal: 'Absen Pulang',
     };
+
+    // Group records within each phase by subject
+    const groupedAttendance = useMemo(() => {
+        const result: Record<string, Record<string, AttendanceRecord[]>> = {};
+        Object.entries(attendance).forEach(([phase, records]) => {
+            const bySubject: Record<string, AttendanceRecord[]> = {};
+            records.forEach((r) => {
+                const subject = r.session?.subject_name ?? 'Umum';
+                if (!bySubject[subject]) bySubject[subject] = [];
+                bySubject[subject].push(r);
+            });
+            result[phase] = bySubject;
+        });
+        return result;
+    }, [attendance]);
 
     return (
         <>
@@ -163,7 +189,7 @@ export default function TeacherAttendanceDaily({ attendance, active_session: act
                                             Sesi Aktif: {sessionTypeLabels[activeSession.type] ?? activeSession.type}
                                         </p>
                                         <p className="text-xs text-emerald-600 dark:text-emerald-400">
-                                            {activeSession.subject ?? 'Tanpa mata pelajaran'} &middot; Berakhir {new Date(activeSession.ends_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                                            {activeSession.subject_name ?? 'Tanpa mata pelajaran'} &middot; Berakhir {new Date(activeSession.ends_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                                         </p>
                                     </div>
                                 </div>
@@ -177,23 +203,154 @@ export default function TeacherAttendanceDaily({ attendance, active_session: act
                     </Card>
                 )}
 
-                {/* Attendance Grid */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <LayoutGrid className="h-5 w-5" />
-                            Rekap Absensi Harian
-                        </CardTitle>
-                        <CardDescription>
-                            Status kehadiran siswa di setiap fase: Pagi, Kelas, dan Pulang
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <AttendanceGrid attendance={attendance} />
-                    </CardContent>
-                </Card>
+                {/* Attendance by Phase, grouped by Subject */}
+                <div className="space-y-6">
+                    {['morning', 'class', 'dismissal'].map((phase) => {
+                        const subjectMap = groupedAttendance[phase];
+                        const phaseRecords = attendance[phase] ?? [];
+                        const hasMultipleSubjects = subjectMap && Object.keys(subjectMap).length > 1;
+
+                        return (
+                            <Card key={phase}>
+                                <CardHeader>
+                                    <CardTitle className="capitalize">{sessionTypeLabels[phase] ?? phase} - Absensi</CardTitle>
+                                    <CardDescription>
+                                        {phaseRecords.length} siswa tercatat
+                                    </CardDescription>
+                                </CardHeader>
+
+                                <CardContent>
+                                    {phaseRecords.length > 0 ? (
+                                        hasMultipleSubjects ? (
+                                            <div className="space-y-4">
+                                                {Object.entries(subjectMap).map(([subject, recs]) => (
+                                                    <div key={subject}>
+                                                        <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+                                                            <BookOpen className="h-4 w-4" />
+                                                            <span>{subject}</span>
+                                                            <Badge variant="secondary" className="ml-1 text-xs">{recs.length}</Badge>
+                                                        </div>
+                                                        <Table records={recs} />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <Table records={phaseRecords} />
+                                        )
+                                    ) : (
+                                        <div className="text-center py-12">
+                                            <p className="text-muted-foreground">
+                                                Belum ada catatan absensi untuk fase ini
+                                            </p>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        );
+                    })}
+                </div>
+
+                {/* Quick Actions */}
+                <div className="grid gap-4 sm:grid-cols-3">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Absensi Manual</CardTitle>
+                            <CardDescription>
+                                Gunakan ketika pemindaian QR tidak tersedia atau untuk pembaruan massal.
+                            </CardDescription>
+                        </CardHeader>
+
+                        <CardContent>
+                            <Button asChild className="w-full">
+                                <Link href="/teacher/attendance/manual">
+                                    Buka Absensi Manual
+                                </Link>
+                            </Button>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Download className="h-5 w-5" />
+                                Ekspor Data
+                            </CardTitle>
+                            <CardDescription>
+                                Unduh data absensi dalam format CSV atau XLSX.
+                            </CardDescription>
+                        </CardHeader>
+
+                        <CardContent>
+                            <Button asChild variant="outline" className="w-full">
+                                <Link href="/teacher/attendance/export">
+                                    Buka Halaman Ekspor
+                                </Link>
+                            </Button>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Rekap Absensi</CardTitle>
+                            <CardDescription>
+                                Lihat rekap kehadiran siswa berdasarkan rentang tanggal.
+                            </CardDescription>
+                        </CardHeader>
+
+                        <CardContent>
+                            <Button asChild variant="outline" className="w-full">
+                                <Link href="/teacher/attendance/recap">
+                                    Lihat Rekap
+                                </Link>
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         </>
+    );
+}
+
+// Inline table component for attendance records
+function Table({ records }: { records: AttendanceRecord[] }) {
+    const getStatusVariant = (status: string): 'default' | 'destructive' | 'outline' | 'secondary' => {
+        switch (status) {
+            case 'present': return 'default';
+            case 'late': return 'secondary';
+            case 'absent': return 'destructive';
+            default: return 'outline';
+        }
+    };
+
+    return (
+        <div className="overflow-hidden rounded-lg border">
+            <table className="w-full text-sm">
+                <thead>
+                    <tr className="border-b bg-muted/50">
+                        <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Siswa</th>
+                        <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
+                        <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Waktu</th>
+                        <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sumber</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y">
+                    {records.map((record) => (
+                        <tr key={record.id} className="transition-colors hover:bg-muted/30">
+                            <td className="px-4 py-2.5 font-medium">{record.student.name}</td>
+                            <td className="px-4 py-2.5">
+                                <Badge variant={getStatusVariant(record.status)} className="capitalize">
+                                    {record.status}
+                                </Badge>
+                            </td>
+                            <td className="px-4 py-2.5 text-sm text-muted-foreground">
+                                {new Date(record.scanned_at).toLocaleTimeString('id-ID')}
+                            </td>
+                            <td className="px-4 py-2.5 text-sm text-muted-foreground">{record.source}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
     );
 }
 

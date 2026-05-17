@@ -173,6 +173,8 @@ class AttendanceViewController extends Controller
             'id' => $session->id,
             'type' => $session->type?->value,
             'subject' => $session->subject,
+            'subject_id' => $session->subject_id,
+            'subject_name' => $session->subject_name,
             'starts_at' => $session->starts_at?->toIso8601String(),
             'ends_at' => $session->ends_at?->toIso8601String(),
             'is_active' => $session->is_active,

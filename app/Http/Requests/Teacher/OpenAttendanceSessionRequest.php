@@ -26,7 +26,8 @@ class OpenAttendanceSessionRequest extends FormRequest
     {
         return [
             'type' => ['required', Rule::enum(AttendanceQrType::class)],
-            'subject' => ['nullable', 'string', 'max:100', 'required_if:type,'.AttendanceQrType::Subject->value],
+            'subject' => ['nullable', 'string', 'max:100'],
+            'subject_id' => ['nullable', 'integer', 'exists:subjects,id', 'required_if:type,'.AttendanceQrType::Subject->value],
             'duration_minutes' => ['nullable', 'integer', 'min:1', 'max:480'],
         ];
     }

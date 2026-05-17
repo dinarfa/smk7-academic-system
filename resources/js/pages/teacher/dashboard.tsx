@@ -27,7 +27,14 @@ type RecentRecord = {
     scanned_at: string | null;
 };
 
+type Subject = {
+    id: number;
+    name: string;
+    code: string;
+};
+
 type Props = {
+    subjects: Subject[];
     summary: {
         students_count: number;
         active_sessions_count: number;
@@ -50,11 +57,12 @@ function typeLabel(type: ActiveSession['type']): string {
 }
 
 export default function TeacherDashboard({
+    subjects,
     summary,
     activeSessions,
-    recentRecords,
 }: Props) {
     const [currentTime, setCurrentTime] = useState(new Date());
+    const [selectedType, setSelectedType] = useState<string>('morning');
 
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -212,6 +220,7 @@ export default function TeacherDashboard({
                                                     name="type"
                                                     className="flex h-10 w-full rounded-xl border border-slate-200/80 bg-white/80 px-3 py-1 text-sm font-medium text-slate-700 shadow-sm backdrop-blur-sm transition-colors placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:focus:border-blue-500/50"
                                                     defaultValue="morning"
+                                                    onChange={(e) => setSelectedType(e.target.value)}
                                                 >
                                                     <option value="morning">Pagi</option>
                                                     <option value="subject">Mapel</option>
@@ -222,18 +231,39 @@ export default function TeacherDashboard({
                                                 )}
                                             </div>
 
-                                            <div className="grid gap-2">
-                                                <Label htmlFor="subject" className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">Mata Pelajaran</Label>
-                                                <Input
-                                                    id="subject"
-                                                    name="subject"
-                                                    placeholder="Opsional"
-                                                    className="h-10 rounded-xl border-slate-200/80 bg-white/80 font-medium backdrop-blur-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:border-white/10 dark:bg-white/5"
-                                                />
-                                                {errors.subject && (
-                                                    <p className="text-xs font-medium text-red-500">{errors.subject}</p>
-                                                )}
-                                            </div>
+                                            {selectedType === 'subject' ? (
+                                                <div className="grid gap-2">
+                                                    <Label htmlFor="subject_id" className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">Mata Pelajaran</Label>
+                                                    <select
+                                                        id="subject_id"
+                                                        name="subject_id"
+                                                        className="flex h-10 w-full rounded-xl border border-slate-200/80 bg-white/80 px-3 py-1 text-sm font-medium text-slate-700 shadow-sm backdrop-blur-sm transition-colors placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:focus:border-blue-500/50"
+                                                    >
+                                                        <option value="">Pilih Mata Pelajaran</option>
+                                                        {subjects.map((s) => (
+                                                            <option key={s.id} value={s.id}>
+                                                                {s.code} — {s.name}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                    {errors.subject_id && (
+                                                        <p className="text-xs font-medium text-red-500">{errors.subject_id}</p>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <div className="grid gap-2">
+                                                    <Label htmlFor="subject" className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">Mata Pelajaran</Label>
+                                                    <Input
+                                                        id="subject"
+                                                        name="subject"
+                                                        placeholder="Opsional"
+                                                        className="h-10 rounded-xl border-slate-200/80 bg-white/80 font-medium backdrop-blur-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:border-white/10 dark:bg-white/5"
+                                                    />
+                                                    {errors.subject && (
+                                                        <p className="text-xs font-medium text-red-500">{errors.subject}</p>
+                                                    )}
+                                                </div>
+                                            )}
 
                                             <div className="grid gap-2">
                                                 <Label htmlFor="duration_minutes" className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">Durasi</Label>
@@ -406,48 +436,16 @@ export default function TeacherDashboard({
                     )}
 
                     {/* Recent Records */}
-                    {recentRecords.length > 0 && (
-                        <div className="overflow-hidden rounded-2xl border border-white/60 bg-white/70 shadow-lg shadow-slate-900/5 backdrop-blur-xl dark:border-white/10 dark:bg-white/5">
-                            <div className="px-6 pt-6 pb-2">
-                                <h2 className="text-base font-bold tracking-tight text-slate-900 dark:text-white">
-                                    Absensi Terbaru
-                                </h2>
-                                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                                    10 scan terbaru dari siswa
-                                </p>
-                            </div>
-                            <div className="space-y-1.5 px-6 pb-6 pt-3">
-                                {recentRecords.map((record) => (
-                                    <div
-                                        key={record.id}
-                                        className="group flex items-center justify-between rounded-xl border border-transparent px-4 py-3 transition-all duration-200 hover:border-slate-200/60 hover:bg-slate-50/80 hover:backdrop-blur-sm dark:hover:border-white/10 dark:hover:bg-white/5"
-                                    >
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">
-                                                {record.student_name}
-                                            </p>
-                                            <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
-                                                {record.subject} <span className="mx-1 opacity-40">&bull;</span> {record.session_type}
-                                            </p>
-                                        </div>
-                                        <p className="ml-4 shrink-0 text-xs font-medium tabular-nums text-slate-400 dark:text-slate-500">
-                                            {record.scanned_at ? new Date(record.scanned_at).toLocaleString('id-ID') : '-'}
-                                        </p>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
+                </div >
+            </div >
 
             {/* Keyframe for gradient animation */}
-            <style>{`
+            < style > {`
                 @keyframes gradient-shift {
                     0%, 100% { background-position: 0% 50%; }
                     50% { background-position: 100% 50%; }
                 }
-            `}</style>
+            `}</style >
         </>
     );
 }

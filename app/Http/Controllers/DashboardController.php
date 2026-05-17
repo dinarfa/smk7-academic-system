@@ -64,7 +64,13 @@ class DashboardController extends Controller
 
             $homeroomClassIds = $user->homeroomClasses()->pluck('school_classes.id');
 
+            $subjects = $user->subjects()
+                ->select('id', 'name', 'code')
+                ->orderBy('name')
+                ->get();
+
             return Inertia::render('teacher/dashboard', [
+                'subjects' => $subjects,
                 'summary' => [
                     'students_count' => User::query()
                         ->where('role', UserRole::Student)
