@@ -5,11 +5,10 @@ import {
     CardContent,
     CardHeader,
     CardTitle,
-    CardDescription,
 } from '@/components/ui/card';
 import AdminLayout from '@/layouts/AdminLayout';
 import admin from '@/routes/admin';
-import { Users, BookOpen, UserCheck, Zap, BarChart3, AlertCircle, Activity } from 'lucide-react';
+import { Users, BookOpen, UserCheck, Zap, BarChart3, Activity } from 'lucide-react';
 
 type Summary = {
     total_users: number;
@@ -33,18 +32,8 @@ type Props = {
     recentActivities: Activity[];
 }
 
-function formatTimeAgo(dateString: string): string {
-    const date = new Date(dateString);
-    const now = new Date();
-    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    if (seconds < 60) return 'baru saja';
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m lalu`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)}j lalu`;
-    return `${Math.floor(seconds / 86400)}h lalu`;
-}
-
-export default function AdminDashboard({ summary, recentActivities }: Props) {
+export default function AdminDashboard({ summary }: Props) {
     const statCards = [
         {
             key: 'total_users',
