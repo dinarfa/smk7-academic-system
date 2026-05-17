@@ -52,14 +52,14 @@ class AttendanceReportService
             ])->values();
 
         $recentSessions = AttendanceSession::query()
-            ->with('openedBy:id,name')
+            ->with(['openedBy:id,name', 'subjectModel:id,name'])
             ->latest('created_at')
             ->take(10)
             ->get()
             ->map(fn (AttendanceSession $session): array => [
                 'id' => $session->id,
                 'type' => $session->type?->value,
-                'subject' => $session->subject,
+                'subject' => $session->subject_name,
                 'opened_by' => $session->openedBy->name,
                 'created_at' => $session->created_at?->toIso8601String(),
                 'is_active' => $session->is_active,
@@ -89,13 +89,16 @@ class AttendanceReportService
         $query = AttendanceSession::query()
             ->with(['records' => function ($q): void {
                 $q->with('student:id,name,email');
-            }, 'openedBy:id,name'])
+            }, 'openedBy:id,name', 'subjectModel:id,name'])
             ->withCount('records');
 
         if ($search !== null && $search !== '') {
             $query->where(function ($innerQuery) use ($search): void {
                 $innerQuery->where('subject', 'like', "%{$search}%")
-                    ->orWhere('type', 'like', "%{$search}%");
+                    ->orWhere('type', 'like', "%{$search}%")
+                    ->orWhereHas('subjectModel', function ($q) use ($search): void {
+                        $q->where('name', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -105,7 +108,7 @@ class AttendanceReportService
             $sessions->getCollection()->map(fn (AttendanceSession $session): array => [
                 'id' => $session->id,
                 'type' => $session->type?->value,
-                'subject' => $session->subject,
+                'subject' => $session->subject_name,
                 'opened_by' => $session->openedBy->name,
                 'starts_at' => $session->starts_at?->toIso8601String(),
                 'ends_at' => $session->ends_at?->toIso8601String(),
@@ -134,8 +137,10 @@ class AttendanceReportService
         $students = User::query()
             ->where('role', 'student')
             ->with(['attendanceRecords' => function ($q): void {
-                $q->with('session:id,type,subject,opened_by')
-                    ->latest('scanned_at');
+                $q->with(['session' => function ($sq): void {
+                    $sq->select('id', 'type', 'subject', 'subject_id', 'opened_by')
+                        ->with('subjectModel:id,name');
+                }])->latest('scanned_at');
             }])
             ->withCount('attendanceRecords')
             ->paginate(10);
@@ -149,7 +154,7 @@ class AttendanceReportService
                 'records' => $student->attendanceRecords->map(fn (AttendanceRecord $record): array => [
                     'id' => $record->id,
                     'session_type' => $record->session->type?->value,
-                    'session_subject' => $record->session->subject,
+                    'session_subject' => $record->session?->subject_name,
                     'status' => $record->status?->value,
                     'scanned_at' => $record->scanned_at?->toIso8601String(),
                 ])->values(),
@@ -165,7 +170,7 @@ class AttendanceReportService
     public function exportCsv(): string
     {
         $records = AttendanceRecord::query()
-            ->with(['student:id,name,email', 'session:id,type,subject'])
+            ->with(['student:id,name,email', 'session', 'session.subjectModel:id,name'])
             ->get();
 
         $csv = "Student Name,Email,Session Type,Subject,Status,Scanned At\n";
@@ -176,7 +181,7 @@ class AttendanceReportService
                 $record->student->name,
                 $record->student->email,
                 $record->session->type?->value,
-                $record->session->subject,
+                $record->session->subject_name,
                 $record->status?->value,
                 $record->scanned_at,
                 "\n",
@@ -192,7 +197,7 @@ class AttendanceReportService
     public function exportCsvForTeacher(int $teacherId, string $startDate, string $endDate): string
     {
         $records = AttendanceRecord::query()
-            ->with(['student:id,name,email', 'session:id,type,subject,opened_by'])
+            ->with(['student:id,name,email', 'session', 'session.subjectModel:id,name'])
             ->whereHas('session', function ($query) use ($teacherId): void {
                 $query->where('opened_by', $teacherId);
             })
@@ -222,7 +227,7 @@ class AttendanceReportService
                 $record->student?->name,
                 $record->student?->email,
                 $record->session?->type?->value,
-                $record->session?->subject,
+                $record->session?->subject_name,
                 $record->phase?->value ?? $record->phase,
                 $record->source,
                 $record->status?->value,
@@ -249,7 +254,7 @@ class AttendanceReportService
     public function exportArrayForTeacher(int $teacherId, string $startDate, string $endDate): array
     {
         $records = AttendanceRecord::query()
-            ->with(['student:id,name,email', 'session:id,type,subject,opened_by'])
+            ->with(['student:id,name,email', 'session', 'session.subjectModel:id,name'])
             ->whereHas('session', function ($query) use ($teacherId): void {
                 $query->where('opened_by', $teacherId);
             })
@@ -279,7 +284,7 @@ class AttendanceReportService
                 $record->student?->name,
                 $record->student?->email,
                 $record->session?->type?->value,
-                $record->session?->subject,
+                $record->session?->subject_name,
                 $record->phase?->value ?? $record->phase,
                 $record->source,
                 $record->status?->value,

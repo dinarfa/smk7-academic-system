@@ -15,6 +15,7 @@ import {
     Download,
     Filter,
     CalendarDays,
+    BookOpen,
 } from 'lucide-react';
 
 type AttendanceRecord = {
@@ -27,8 +28,11 @@ type AttendanceRecord = {
     student: { id: number; name: string };
 };
 
+// Nested: date -> subject -> records[]
+type RecapData = Record<string, Record<string, AttendanceRecord[]>>;
+
 type Props = {
-    records: Record<string, AttendanceRecord[]>;
+    records: RecapData;
     startDate: string;
     endDate: string;
 };
@@ -46,6 +50,7 @@ const phaseLabels: Record<string, string> = { morning: 'Pagi', class: 'Kelas', s
 
 type DayRow = {
     date: string;
+    subject: string;
     student_id: number;
     student_name: string;
     morning?: string;
@@ -54,31 +59,36 @@ type DayRow = {
     [key: string]: string | number | undefined;
 };
 
-function buildRows(records: Record<string, AttendanceRecord[]>): DayRow[] {
+function buildRows(records: RecapData): DayRow[] {
     const rows: DayRow[] = [];
 
-    Object.entries(records).forEach(([date, recs]) => {
-        const studentMap = new Map<number, DayRow>();
+    Object.entries(records).forEach(([date, subjectMap]) => {
+        Object.entries(subjectMap).forEach(([subject, recs]) => {
+            const studentMap = new Map<number, DayRow>();
 
-        recs.forEach((r) => {
-            if (!studentMap.has(r.student_id)) {
-                studentMap.set(r.student_id, {
-                    date,
-                    student_id: r.student_id,
-                    student_name: r.student.name,
-                });
-            }
-            const row = studentMap.get(r.student_id)!;
-            const phaseKey = r.phase === 'subject' ? 'class' : r.phase;
-            row[phaseKey as keyof DayRow] = r.status;
+            recs.forEach((r) => {
+                if (!studentMap.has(r.student_id)) {
+                    studentMap.set(r.student_id, {
+                        date,
+                        subject,
+                        student_id: r.student_id,
+                        student_name: r.student.name,
+                    });
+                }
+                const row = studentMap.get(r.student_id)!;
+                const phaseKey = r.phase === 'subject' ? 'class' : r.phase;
+                row[phaseKey as keyof DayRow] = r.status;
+            });
+
+            rows.push(...Array.from(studentMap.values()));
         });
-
-        rows.push(...Array.from(studentMap.values()));
     });
 
     return rows.sort((a, b) => {
         const dateCmp = a.date.localeCompare(b.date);
         if (dateCmp !== 0) return dateCmp;
+        const subjCmp = a.subject.localeCompare(b.subject, 'id-ID');
+        if (subjCmp !== 0) return subjCmp;
         return a.student_name.localeCompare(b.student_name, 'id-ID');
     });
 }
@@ -115,19 +125,33 @@ export default function AttendanceRecap({ records, startDate, endDate }: Props) 
     const [search, setSearch] = useState('');
     const [filterStart, setFilterStart] = useState(startDate);
     const [filterEnd, setFilterEnd] = useState(endDate);
+    const [filterSubject, setFilterSubject] = useState('');
 
     const allRows = useMemo(() => buildRows(records), [records]);
 
+    // Extract unique subjects for filter dropdown
+    const subjects = useMemo(() => {
+        const set = new Set<string>();
+        allRows.forEach((r) => set.add(r.subject));
+        return Array.from(set).sort((a, b) => a.localeCompare(b, 'id-ID'));
+    }, [allRows]);
+
     const filteredRows = useMemo(() => {
-        if (!search) return allRows;
-        return allRows.filter((r) =>
-            r.student_name.toLowerCase().includes(search.toLowerCase()),
-        );
-    }, [allRows, search]);
+        let rows = allRows;
+        if (filterSubject) {
+            rows = rows.filter((r) => r.subject === filterSubject);
+        }
+        if (search) {
+            rows = rows.filter((r) =>
+                r.student_name.toLowerCase().includes(search.toLowerCase()),
+            );
+        }
+        return rows;
+    }, [allRows, search, filterSubject]);
 
     const stats = useMemo(() => {
         const counts = { total: 0, present: 0, late: 0, absent: 0, bolos: 0 };
-        allRows.forEach((row) => {
+        filteredRows.forEach((row) => {
             phases.forEach((phase) => {
                 const status = row[phase];
                 if (status) {
@@ -140,7 +164,7 @@ export default function AttendanceRecap({ records, startDate, endDate }: Props) 
             });
         });
         return counts;
-    }, [allRows]);
+    }, [filteredRows]);
 
     const handleFilter = () => {
         router.get('/teacher/attendance/recap', {
@@ -149,14 +173,18 @@ export default function AttendanceRecap({ records, startDate, endDate }: Props) 
         }, { preserveState: true });
     };
 
-    // Group rows by date for display
-    const dateGroups = useMemo(() => {
-        const groups = new Map<string, DayRow[]>();
+    // Group rows by date -> subject for display
+    const dateSubjectGroups = useMemo(() => {
+        const groups = new Map<string, Map<string, DayRow[]>>();
         filteredRows.forEach((row) => {
             if (!groups.has(row.date)) {
-                groups.set(row.date, []);
+                groups.set(row.date, new Map());
             }
-            groups.get(row.date)!.push(row);
+            const subjectMap = groups.get(row.date)!;
+            if (!subjectMap.has(row.subject)) {
+                subjectMap.set(row.subject, []);
+            }
+            subjectMap.get(row.subject)!.push(row);
         });
         return groups;
     }, [filteredRows]);
@@ -173,11 +201,11 @@ export default function AttendanceRecap({ records, startDate, endDate }: Props) 
                     </p>
                     <h1 className="text-3xl font-semibold text-foreground">Rekap Absensi</h1>
                     <p className="max-w-2xl text-muted-foreground">
-                        Lihat rekap kehadiran siswa berdasarkan rentang tanggal.
+                        Lihat rekap kehadiran siswa berdasarkan rentang tanggal dan mata pelajaran.
                     </p>
                 </div>
 
-                {/* Date Filter */}
+                {/* Date + Subject Filter */}
                 <div className="rounded-2xl border border-white/60 bg-white/70 p-5 shadow-lg shadow-slate-900/5 backdrop-blur-xl dark:border-white/10 dark:bg-white/5">
                     <div className="flex flex-wrap items-end gap-4">
                         <div className="grid gap-2">
@@ -204,6 +232,24 @@ export default function AttendanceRecap({ records, startDate, endDate }: Props) 
                                 className="h-10 w-44 rounded-xl border-slate-200/80 bg-white/80 font-medium backdrop-blur-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:border-white/10 dark:bg-white/5"
                             />
                         </div>
+                        {subjects.length > 0 && (
+                            <div className="grid gap-2">
+                                <Label htmlFor="subject_filter" className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                                    Mata Pelajaran
+                                </Label>
+                                <select
+                                    id="subject_filter"
+                                    value={filterSubject}
+                                    onChange={(e) => setFilterSubject(e.target.value)}
+                                    className="h-10 w-48 rounded-xl border border-slate-200/80 bg-white/80 px-3 font-medium text-sm backdrop-blur-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:border-white/10 dark:bg-white/5"
+                                >
+                                    <option value="">Semua Mapel</option>
+                                    {subjects.map((s) => (
+                                        <option key={s} value={s}>{s}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
                         <Button
                             onClick={handleFilter}
                             className="gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 font-semibold text-white shadow-lg shadow-blue-500/25 transition-all duration-200 hover:from-blue-700 hover:to-blue-600 hover:shadow-xl hover:shadow-blue-500/30"
@@ -254,50 +300,58 @@ export default function AttendanceRecap({ records, startDate, endDate }: Props) 
                     />
                 </div>
 
-                {/* Grid by date */}
-                {dateGroups.size > 0 ? (
-                    <div className="space-y-6">
-                        {Array.from(dateGroups.entries()).map(([date, rows]) => (
-                            <div key={date} className="space-y-3">
+                {/* Grid by date -> subject */}
+                {dateSubjectGroups.size > 0 ? (
+                    <div className="space-y-8">
+                        {Array.from(dateSubjectGroups.entries()).map(([date, subjectMap]) => (
+                            <div key={date} className="space-y-4">
                                 <h2 className="text-lg font-bold text-foreground">
                                     {formatDate(date)}
                                 </h2>
-                                <div className="overflow-hidden rounded-xl border">
-                                    <table className="w-full text-sm">
-                                        <thead>
-                                            <tr className="border-b bg-muted/50">
-                                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                                                    No
-                                                </th>
-                                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                                                    Nama Siswa
-                                                </th>
-                                                {phases.map((phase) => (
-                                                    <th key={phase} className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                                                        {phaseLabels[phase]}
-                                                    </th>
-                                                ))}
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y">
-                                            {rows.map((row, idx) => (
-                                                <tr key={`${date}-${row.student_id}`} className="transition-colors hover:bg-muted/30">
-                                                    <td className="px-4 py-2.5 text-sm text-muted-foreground">
-                                                        {idx + 1}
-                                                    </td>
-                                                    <td className="px-4 py-2.5 text-sm font-medium">
-                                                        {row.student_name}
-                                                    </td>
-                                                    {phases.map((phase) => (
-                                                        <td key={phase} className="px-4 py-2.5">
-                                                            {renderCell(row[phase])}
-                                                        </td>
+                                {Array.from(subjectMap.entries()).map(([subject, rows]) => (
+                                    <div key={`${date}-${subject}`} className="space-y-2">
+                                        <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+                                            <BookOpen className="h-4 w-4" />
+                                            <span>{subject}</span>
+                                        </div>
+                                        <div className="overflow-hidden rounded-xl border">
+                                            <table className="w-full text-sm">
+                                                <thead>
+                                                    <tr className="border-b bg-muted/50">
+                                                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                                            No
+                                                        </th>
+                                                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                                            Nama Siswa
+                                                        </th>
+                                                        {phases.map((phase) => (
+                                                            <th key={phase} className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                                                {phaseLabels[phase]}
+                                                            </th>
+                                                        ))}
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y">
+                                                    {rows.map((row, idx) => (
+                                                        <tr key={`${date}-${subject}-${row.student_id}`} className="transition-colors hover:bg-muted/30">
+                                                            <td className="px-4 py-2.5 text-sm text-muted-foreground">
+                                                                {idx + 1}
+                                                            </td>
+                                                            <td className="px-4 py-2.5 text-sm font-medium">
+                                                                {row.student_name}
+                                                            </td>
+                                                            {phases.map((phase) => (
+                                                                <td key={phase} className="px-4 py-2.5">
+                                                                    {renderCell(row[phase])}
+                                                                </td>
+                                                            ))}
+                                                        </tr>
                                                     ))}
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         ))}
                     </div>

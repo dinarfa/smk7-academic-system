@@ -9,7 +9,7 @@ use Carbon\Carbon;
 class DailyAttendanceViewService
 {
     /**
-     * Get daily attendance records grouped by phase.
+     * Get daily attendance records grouped by phase, with subject info.
      *
      * @param  string  $date  Date in Y-m-d format
      * @param  int  $teacherId  Teacher ID to filter sessions
@@ -19,7 +19,6 @@ class DailyAttendanceViewService
         $startOfDay = Carbon::parse($date)->startOfDay();
         $endOfDay = Carbon::parse($date)->endOfDay();
 
-        // Get all sessions for this teacher on this date
         $sessions = AttendanceSession::where('opened_by', $teacherId)
             ->whereBetween('starts_at', [$startOfDay, $endOfDay])
             ->pluck('id');
@@ -28,8 +27,7 @@ class DailyAttendanceViewService
             return [];
         }
 
-        // Get attendance records grouped by phase
-        $records = AttendanceRecord::with(['student', 'session'])
+        $records = AttendanceRecord::with(['student', 'session', 'session.subjectModel'])
             ->whereIn('attendance_session_id', $sessions)
             ->orderBy('student_id')
             ->orderBy('scanned_at')
@@ -40,7 +38,7 @@ class DailyAttendanceViewService
     }
 
     /**
-     * Get attendance recap grouped by date for a date range.
+     * Get attendance recap grouped by date, then by subject.
      *
      * @param  string  $startDate  Date in Y-m-d format
      * @param  string  $endDate  Date in Y-m-d format
@@ -59,14 +57,23 @@ class DailyAttendanceViewService
             return [];
         }
 
-        $records = AttendanceRecord::with(['student', 'session'])
+        $records = AttendanceRecord::with(['student', 'session', 'session.subjectModel'])
             ->whereIn('attendance_session_id', $sessions)
             ->orderBy('student_id')
             ->orderBy('scanned_at')
             ->get()
             ->groupBy(fn ($r) => $r->scanned_at->format('Y-m-d'));
 
-        return $records->toArray();
+        // Nested group: date -> subject_name -> records
+        $grouped = [];
+        foreach ($records as $date => $dayRecords) {
+            $bySubject = $dayRecords->groupBy(function ($r) {
+                return $r->session?->subject_name ?? 'Umum';
+            });
+            $grouped[$date] = $bySubject->toArray();
+        }
+
+        return $grouped;
     }
 
     /**

@@ -18,6 +18,7 @@ class AttendanceSessionLifecycleService
             'opened_by' => $teacherId,
             'type' => $validated['type'],
             'subject' => $validated['subject'] ?? null,
+            'subject_id' => $validated['subject_id'] ?? null,
             'qr_token' => (string) str()->ulid(),
             'starts_at' => now(),
             'ends_at' => now()->addMinutes((int) ($validated['duration_minutes'] ?? 30)),

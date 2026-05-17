@@ -63,7 +63,7 @@ class AbsenceDetectionService
                 'attendance_session_id' => $missing['session_id'],
                 'student_id' => $missing['student_id'],
             ], [
-                'status' => AttendanceStatus::Bolos->value,
+                'status' => AttendanceStatus::Absent->value,
                 'phase' => self::PHASE_MAP[$missing['session_type']] ?? $missing['session_type'],
                 'scanned_at' => now(),
                 'source' => 'system',

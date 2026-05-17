@@ -26,6 +26,9 @@ interface ActiveSession {
     qr_token: string;
     type: string;
     ends_at: string;
+    subject: string | null;
+    subject_id: number | null;
+    subject_name: string | null;
 }
 
 interface DailyAttendanceData {
@@ -147,7 +150,9 @@ export default function Index({ attendance, active_session: activeSession, date 
                         <CardHeader className="flex flex-row items-start justify-between gap-4 md:flex-row md:items-center md:justify-between">
                             <div>
                                 <CardTitle>Sesi Aktif</CardTitle>
-                                <CardDescription className="capitalize">{activeSession.type}</CardDescription>
+                                <CardDescription className="capitalize">
+                                    {activeSession.type}{activeSession.subject_name ? ` — ${activeSession.subject_name}` : ''}
+                                </CardDescription>
                             </div>
                             <div className="text-right">
                                 <div className="text-3xl font-bold text-primary">

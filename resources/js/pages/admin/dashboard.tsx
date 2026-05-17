@@ -181,31 +181,6 @@ export default function AdminDashboard({ summary, recentActivities }: Props) {
                         </CardContent>
                     </Card>
                 </div>
-
-                {/* Recent Activities */}
-                {recentActivities.length > 0 && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Aktivitas Absensi Terbaru</CardTitle>
-                            <CardDescription>Catatan pemindaian terakhir di seluruh sistem</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-3">
-                                {recentActivities.map((activity) => (
-                                    <div key={activity.id} className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50">
-                                        <div className="flex-1">
-                                            <p className="text-sm font-medium">{activity.student_name}</p>
-                                            <p className="text-xs text-muted-foreground">{activity.subject} · {activity.session_type || 'Sesi'}</p>
-                                        </div>
-                                        <p className="ml-4 whitespace-nowrap text-xs text-muted-foreground">
-                                            {formatTimeAgo(activity.scanned_at)}
-                                        </p>
-                                    </div>
-                                ))}
-                            </div>
-                        </CardContent>
-                    </Card>
-                )}
             </div>
         </AdminLayout>
     );

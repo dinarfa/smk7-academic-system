@@ -25,6 +25,7 @@ class AttendanceSession extends Model
         'opened_by',
         'type',
         'subject',
+        'subject_id',
         'qr_token',
         'starts_at',
         'ends_at',
@@ -50,6 +51,22 @@ class AttendanceSession extends Model
     public function openedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'opened_by');
+    }
+
+    /**
+     * Subject linked to this session (if type=subject).
+     */
+    public function subjectModel(): BelongsTo
+    {
+        return $this->belongsTo(Subject::class, 'subject_id');
+    }
+
+    /**
+     * Resolved subject name: from relationship or legacy text field.
+     */
+    public function getSubjectNameAttribute(): ?string
+    {
+        return $this->subjectModel?->name ?? $this->subject;
     }
 
     /**
