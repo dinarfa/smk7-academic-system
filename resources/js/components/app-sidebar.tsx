@@ -57,21 +57,21 @@ export function AppSidebar() {
                 href: teacher.subjects.index.url(),
                 icon: BookOpenCheck,
             },
-            {
-                title: 'Ujian',
-                href: teacher.exams.index.url(),
-                icon: ClipboardList,
-            },
+            // {
+            //     title: 'Ujian',
+            //     href: teacher.exams.index.url(),
+            //     icon: ClipboardList,
+            // },
         );
     }
 
     if (role === 'student') {
         mainNavItems.push(
-            {
-                title: 'Ujian',
-                href: student.exams.index.url(),
-                icon: ClipboardList,
-            },
+            // {
+            //     title: 'Ujian',
+            //     href: student.exams.index.url(),
+            //     icon: ClipboardList,
+            // },
             {
                 title: 'Kehadiran',
                 href: student.attendance.index.url(),
