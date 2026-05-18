@@ -1,18 +1,17 @@
 import { Head, Link } from '@inertiajs/react';
-import AttendanceController from '@/actions/App/Http/Controllers/Student/AttendanceController';
-import { Button } from '@/components/ui/button';
-import { dashboard } from '@/routes';
 import {
     CalendarDays,
     CheckCircle2,
     ClipboardList,
     Clock,
     QrCode,
-    TrendingUp,
     XCircle,
     ArrowRight,
 } from 'lucide-react';
 import { useMemo } from 'react';
+import AttendanceController from '@/actions/App/Http/Controllers/Student/AttendanceController';
+import { Button } from '@/components/ui/button';
+import { dashboard } from '@/routes';
 
 type AttendanceRecord = {
     id: number;
@@ -63,10 +62,15 @@ export default function StudentAttendance({ records }: Props) {
     const stats = useMemo(() => {
         const counts = { total: records.data.length, present: 0, late: 0, absent: 0 };
         records.data.forEach((r) => {
-            if (r.status === 'present') counts.present++;
-            else if (r.status === 'late') counts.late++;
-            else if (r.status === 'absent') counts.absent++;
+            if (r.status === 'present') {
+                counts.present++;
+            } else if (r.status === 'late') {
+                counts.late++;
+            } else if (r.status === 'absent') {
+                counts.absent++;
+            }
         });
+
         return counts;
     }, [records.data]);
 
@@ -297,6 +301,7 @@ export default function StudentAttendance({ records }: Props) {
                             </span>
                             {Object.entries(statusConfig).map(([status, cfg]) => {
                                 const Icon = cfg.icon;
+
                                 return (
                                     <div key={status} className="flex items-center gap-1.5">
                                         <div className={`flex h-5 w-5 items-center justify-center rounded-full ${cfg.bg}`}>

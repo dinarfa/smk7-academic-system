@@ -1,12 +1,12 @@
 import { Head } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { AlertTriangle, RefreshCw, Download, Users } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { dashboard } from '@/routes';
-import { AlertTriangle, RefreshCw, Download, Users } from 'lucide-react';
 
 type MissingEntry = {
     session_id: number;
@@ -28,14 +28,19 @@ export default function BolosSummary() {
     const getCsrfToken = () =>
         document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
 
-    const fetchSummary = async () => {
+    const fetchSummary = useCallback(async () => {
         setLoading(true);
+
         try {
             const res = await fetch(`/teacher/attendance/bolos-summary?date=${date}`, {
                 credentials: 'same-origin',
                 headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
             });
-            if (!res.ok) throw new Error('Failed to fetch');
+
+            if (!res.ok) {
+                throw new Error('Failed to fetch');
+            }
+
             const json = await res.json();
             setSummary(json.summary ?? json);
         } catch {
@@ -43,11 +48,13 @@ export default function BolosSummary() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [date]);
 
     useEffect(() => {
-        fetchSummary();
-    }, [date]);
+        queueMicrotask(() => {
+            void fetchSummary();
+        });
+    }, [fetchSummary]);
 
     const handleExport = async () => {
         try {
@@ -63,7 +70,9 @@ export default function BolosSummary() {
                 body: JSON.stringify({ startDate: date, endDate: date }),
             });
 
-            if (!response.ok) throw new Error('Export failed');
+            if (!response.ok) {
+                throw new Error('Export failed');
+            }
 
             const blob = await response.blob();
             const url = URL.createObjectURL(blob);

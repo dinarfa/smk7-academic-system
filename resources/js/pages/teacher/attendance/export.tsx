@@ -1,10 +1,10 @@
 import { Head, Link } from '@inertiajs/react';
+import { Download, FileSpreadsheet, FileText, ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { dashboard } from '@/routes';
-import { Download, FileSpreadsheet, FileText, ArrowLeft } from 'lucide-react';
 
 export default function ExportAttendance() {
     const [startDate, setStartDate] = useState('');
@@ -16,6 +16,7 @@ export default function ExportAttendance() {
 
     const handleExport = async (format: 'csv' | 'xlsx') => {
         setProcessing(true);
+
         try {
             const response = await fetch('/teacher/attendance/export', {
                 method: 'POST',
@@ -31,6 +32,7 @@ export default function ExportAttendance() {
 
             if (!response.ok) {
                 alert('Gagal mengekspor data');
+
                 return;
             }
 

@@ -111,7 +111,11 @@ export default function StudentAttendanceScan() {
                                         onChange={(event) => setData('qr_token', event.target.value)}
                                         placeholder="attendance:01J..."
                                         autoComplete="off"
-                                        ref={(el: HTMLInputElement | null) => { if (el) manualInputRef.current = el; }}
+                                        ref={(el: HTMLInputElement | null) => {
+ if (el) {
+manualInputRef.current = el;
+} 
+}}
                                     />
                                     {errors.qr_token && (
                                         <p className="text-sm text-red-600">{errors.qr_token}</p>

@@ -1,6 +1,6 @@
 import { Head, Link } from '@inertiajs/react'
-import QuestionController from '@/actions/App/Http/Controllers/Teacher/QuestionController'
 import ExamController from '@/actions/App/Http/Controllers/Teacher/ExamController'
+import QuestionController from '@/actions/App/Http/Controllers/Teacher/QuestionController'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { dashboard } from '@/routes'

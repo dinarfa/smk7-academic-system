@@ -1,13 +1,4 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import type { FormEvent } from 'react';
-import { useEffect, useRef, useState } from 'react';
-import QrScanner from 'qr-scanner';
-import AttendanceController from '@/actions/App/Http/Controllers/Student/AttendanceController';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { dashboard } from '@/routes';
 import {
     Camera,
     CheckCircle2,
@@ -19,6 +10,14 @@ import {
     TrendingUp,
     AlertTriangle,
 } from 'lucide-react';
+import QrScanner from 'qr-scanner';
+import type { FormEvent } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import AttendanceController from '@/actions/App/Http/Controllers/Student/AttendanceController';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { dashboard } from '@/routes';
 
 type RecentRecord = {
     id: number;
@@ -66,6 +65,7 @@ export default function StudentDashboard({ summary, recentRecords }: Props) {
 
         if (!videoRef.current) {
             setScannerError('Tidak bisa inisialisasi video element.');
+
             return;
         }
 
@@ -89,7 +89,7 @@ export default function StudentDashboard({ summary, recentRecords }: Props) {
                     });
                 },
                 {
-                    onDecodeError: () => {},
+                    onDecodeError: () => { },
                     preferredCamera: 'environment',
                     maxScansPerSecond: 5,
                     highlightCodeOutline: true,

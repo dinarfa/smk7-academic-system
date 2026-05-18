@@ -1,7 +1,16 @@
-import { useForm, Link } from '@inertiajs/react'
+import { useForm } from '@inertiajs/react'
+import { Pencil, Trash2, Plus, Clock, CalendarDays } from 'lucide-react'
 import { useState } from 'react'
+import AdminSubjectScheduleController from '@/actions/App/Http/Controllers/Admin/SubjectScheduleController'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -11,16 +20,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter,
-} from '@/components/ui/dialog'
 import AdminLayout from '@/layouts/AdminLayout'
-import AdminSubjectScheduleController from '@/actions/App/Http/Controllers/Admin/SubjectScheduleController'
-import { Pencil, Trash2, Plus, Clock, CalendarDays } from 'lucide-react'
 
 const DAY_NAMES = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
 const SCHOOL_DAYS = [1, 2, 3, 4, 5, 6] // Mon–Sat
@@ -109,14 +109,21 @@ export default function AdminSchedulesIndex({ classes, subjects, schedules }: Pr
 
     function handleEdit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
-        if (!editingSchedule) return
+
+        if (!editingSchedule) {
+            return
+        }
+
         editForm.put(AdminSubjectScheduleController.update.url({ subjectSchedule: editingSchedule.id }), {
             onSuccess: () => setEditingSchedule(null),
         })
     }
 
     function handleDelete(schedule: Schedule) {
-        if (!confirm(`Hapus jadwal ${schedule.starts_at}–${schedule.ends_at} pada ${DAY_NAMES[schedule.day_of_week]}?`)) return
+        if (!confirm(`Hapus jadwal ${schedule.starts_at}–${schedule.ends_at} pada ${DAY_NAMES[schedule.day_of_week]}?`)) {
+            return
+        }
+
         editForm.delete(AdminSubjectScheduleController.destroy.url({ subjectSchedule: schedule.id }))
     }
 
@@ -193,7 +200,10 @@ export default function AdminSchedulesIndex({ classes, subjects, schedules }: Pr
                                         value={createForm.data.schedule_type}
                                         onValueChange={(v) => {
                                             createForm.setData('schedule_type', v)
-                                            if (v !== 'subject') createForm.setData('subject_id', '')
+
+                                            if (v !== 'subject') {
+                                                createForm.setData('subject_id', '')
+                                            }
                                         }}
                                     >
                                         <SelectTrigger id="create-type" className="w-full">
@@ -328,7 +338,11 @@ export default function AdminSchedulesIndex({ classes, subjects, schedules }: Pr
                         ) : (
                             SCHOOL_DAYS.map((day) => {
                                 const daySlots = filteredSchedules.filter((s) => s.day_of_week === day)
-                                if (daySlots.length === 0) return null
+
+                                if (daySlots.length === 0) {
+                                    return null
+                                }
+
                                 return (
                                     <Card key={day} className="border-border/60 shadow-sm">
                                         <CardHeader className="pb-3">
@@ -390,7 +404,11 @@ export default function AdminSchedulesIndex({ classes, subjects, schedules }: Pr
             </div>
 
             {/* Edit dialog */}
-            <Dialog open={editingSchedule !== null} onOpenChange={(open) => { if (!open) setEditingSchedule(null) }}>
+            <Dialog open={editingSchedule !== null} onOpenChange={(open) => {
+                if (!open) {
+                    setEditingSchedule(null)
+                }
+            }}>
                 <DialogContent className="max-w-md">
                     <DialogHeader>
                         <DialogTitle>Edit Slot Jadwal</DialogTitle>
@@ -424,7 +442,10 @@ export default function AdminSchedulesIndex({ classes, subjects, schedules }: Pr
                                 value={editForm.data.schedule_type}
                                 onValueChange={(v) => {
                                     editForm.setData('schedule_type', v)
-                                    if (v !== 'subject') editForm.setData('subject_id', '')
+
+                                    if (v !== 'subject') {
+                                        editForm.setData('subject_id', '')
+                                    }
                                 }}
                             >
                                 <SelectTrigger id="edit-type" className="w-full">

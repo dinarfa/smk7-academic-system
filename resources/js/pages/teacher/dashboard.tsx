@@ -1,11 +1,9 @@
 import { Head, Form, Link, router } from '@inertiajs/react';
-import AttendanceSessionController from '@/actions/App/Http/Controllers/Teacher/AttendanceSessionController';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { dashboard } from '@/routes';
 import { QrCode, Clock, Users, Zap, Download, ClipboardList } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import AttendanceSessionController from '@/actions/App/Http/Controllers/Teacher/AttendanceSessionController';
+import { Button } from '@/components/ui/button';
+import { dashboard } from '@/routes';
 
 type ActiveSession = {
     id: number;
@@ -57,35 +55,46 @@ function typeLabel(type: ActiveSession['type']): string {
 }
 
 export default function TeacherDashboard({
-    subjects,
     summary,
     activeSessions,
 }: Props) {
     const [currentTime, setCurrentTime] = useState(new Date());
-    const [selectedType, setSelectedType] = useState<string>('morning');
 
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+
         return () => clearInterval(timer);
     }, []);
 
     // Reload when any active session expires
     useEffect(() => {
         const hasExpired = activeSessions.some((session) => {
-            if (!session.ends_at) return false;
+            if (!session.ends_at) {
+                return false;
+            }
+
             return new Date(session.ends_at).getTime() - currentTime.getTime() <= 0;
         });
+
         if (hasExpired) {
             router.reload({ only: ['summary', 'activeSessions', 'recentRecords'] });
         }
     }, [currentTime, activeSessions]);
 
     const getTimeRemaining = (endTime: string | null) => {
-        if (!endTime) return '—';
+        if (!endTime) {
+            return '—';
+        }
+
         const diff = new Date(endTime).getTime() - currentTime.getTime();
-        if (diff <= 0) return 'Expired';
+
+        if (diff <= 0) {
+            return 'Expired';
+        }
+
         const minutes = Math.floor(diff / 60000);
         const seconds = Math.floor((diff % 60000) / 1000);
+
         return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     };
 

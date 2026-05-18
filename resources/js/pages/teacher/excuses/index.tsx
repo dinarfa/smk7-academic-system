@@ -1,9 +1,9 @@
 import { Head } from '@inertiajs/react';
 import { Link } from '@inertiajs/react';
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { dashboard } from '@/routes';
 import teacher from '@/routes/teacher';
@@ -24,6 +24,10 @@ interface Props {
         data: Excuse[];
         links: any;
     };
+}
+
+interface ExcuseTableProps {
+    data: Excuse[];
 }
 
 const getStatusVariant = (status: string): 'default' | 'destructive' | 'outline' | 'secondary' => {
@@ -52,67 +56,67 @@ const getTypeLabel = (type: string): string => {
     }
 };
 
+function ExcuseTable({ data }: ExcuseTableProps) {
+    return data.length > 0 ? (
+        <Table>
+            <TableHeader>
+                <TableRow>
+                    <TableHead>Siswa</TableHead>
+                    <TableHead>Jenis</TableHead>
+                    <TableHead>Tanggal</TableHead>
+                    <TableHead>Diajukan</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Aksi</TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {data.map((excuse) => (
+                    <TableRow key={excuse.id}>
+                        <TableCell className="font-medium">
+                            {excuse.student.name}
+                        </TableCell>
+                        <TableCell>
+                            <Badge variant="outline">
+                                {getTypeLabel(excuse.type)}
+                            </Badge>
+                        </TableCell>
+                        <TableCell>
+                            {new Date(excuse.excused_date).toLocaleDateString('id-ID')}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                            {new Date(excuse.created_at).toLocaleDateString('id-ID')}
+                        </TableCell>
+                        <TableCell>
+                            <Badge variant={getStatusVariant(excuse.status)}>
+                                {excuse.status === 'pending' ? 'Menunggu' :
+                                    excuse.status === 'approved' ? 'Disetujui' :
+                                        'Ditolak'}
+                            </Badge>
+                        </TableCell>
+                        <TableCell>
+                            <Link href={teacher.excuses.show(excuse.id)}>
+                                <Button variant="ghost" size="sm">
+                                    Lihat
+                                </Button>
+                            </Link>
+                        </TableCell>
+                    </TableRow>
+                ))}
+            </TableBody>
+        </Table>
+    ) : (
+        <div className="py-12 text-center">
+            <p className="text-muted-foreground">Tidak ada ajuan izin</p>
+        </div>
+    );
+}
+
 export default function Index({ excuses }: Props) {
     const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'rejected'>('pending');
     const allExcuses = excuses.data;
     const pendingExcuses = allExcuses.filter(e => e.status === 'pending');
     const approvedExcuses = allExcuses.filter(e => e.status === 'approved');
     const rejectedExcuses = allExcuses.filter(e => e.status === 'rejected');
-
-    const ExcuseTable = ({ data }: { data: Excuse[] }) => (
-        data.length > 0 ? (
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Siswa</TableHead>
-                        <TableHead>Jenis</TableHead>
-                        <TableHead>Tanggal</TableHead>
-                        <TableHead>Diajukan</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Aksi</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {data.map((excuse) => (
-                        <TableRow key={excuse.id}>
-                            <TableCell className="font-medium">
-                                {excuse.student.name}
-                            </TableCell>
-                            <TableCell>
-                                <Badge variant="outline">
-                                    {getTypeLabel(excuse.type)}
-                                </Badge>
-                            </TableCell>
-                            <TableCell>
-                                {new Date(excuse.excused_date).toLocaleDateString('id-ID')}
-                            </TableCell>
-                            <TableCell className="text-sm text-muted-foreground">
-                                {new Date(excuse.created_at).toLocaleDateString('id-ID')}
-                            </TableCell>
-                            <TableCell>
-                                <Badge variant={getStatusVariant(excuse.status)}>
-                                    {excuse.status === 'pending' ? 'Menunggu' :
-                                     excuse.status === 'approved' ? 'Disetujui' :
-                                     'Ditolak'}
-                                </Badge>
-                            </TableCell>
-                            <TableCell>
-                                <Link href={teacher.excuses.show(excuse.id)}>
-                                    <Button variant="ghost" size="sm">
-                                        Lihat
-                                    </Button>
-                                </Link>
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        ) : (
-            <div className="text-center py-12">
-                <p className="text-muted-foreground">Tidak ada ajuan izin</p>
-            </div>
-        )
-    );
 
     return (
         <>
