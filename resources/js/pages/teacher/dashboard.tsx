@@ -187,112 +187,8 @@ export default function TeacherDashboard({
                         </div>
                     </div>
 
-                    {/* Quick Start QR + Quick Links */}
-                    <div className="grid gap-6 lg:grid-cols-3">
-                        {/* Quick Start QR */}
-                        <div className="lg:col-span-2 overflow-hidden rounded-2xl border border-white/60 bg-white/70 shadow-lg shadow-slate-900/5 backdrop-blur-xl dark:border-white/10 dark:bg-white/5">
-                            <div className="px-6 pt-6 pb-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-cyan-400 text-white shadow-md shadow-blue-500/25">
-                                        <QrCode className="h-4 w-4" />
-                                    </div>
-                                    <div>
-                                        <h2 className="text-base font-bold tracking-tight text-slate-900 dark:text-white">
-                                            Mulai Absensi QR
-                                        </h2>
-                                        <p className="text-sm text-slate-500 dark:text-slate-400">
-                                            Buat sesi QR baru untuk absensi cepat
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="px-6 pb-6">
-                                <Form
-                                    {...AttendanceSessionController.store.form()}
-                                    className="grid gap-4 md:grid-cols-4"
-                                >
-                                    {({ processing, errors }) => (
-                                        <>
-                                            <div className="grid gap-2">
-                                                <Label htmlFor="type" className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">Jenis</Label>
-                                                <select
-                                                    id="type"
-                                                    name="type"
-                                                    className="flex h-10 w-full rounded-xl border border-slate-200/80 bg-white/80 px-3 py-1 text-sm font-medium text-slate-700 shadow-sm backdrop-blur-sm transition-colors placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:focus:border-blue-500/50"
-                                                    defaultValue="morning"
-                                                    onChange={(e) => setSelectedType(e.target.value)}
-                                                >
-                                                    <option value="morning">Pagi</option>
-                                                    <option value="subject">Mapel</option>
-                                                    <option value="dismissal">Pulang</option>
-                                                </select>
-                                                {errors.type && (
-                                                    <p className="text-xs font-medium text-red-500">{errors.type}</p>
-                                                )}
-                                            </div>
-
-                                            {selectedType === 'subject' ? (
-                                                <div className="grid gap-2">
-                                                    <Label htmlFor="subject_id" className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">Mata Pelajaran</Label>
-                                                    <select
-                                                        id="subject_id"
-                                                        name="subject_id"
-                                                        className="flex h-10 w-full rounded-xl border border-slate-200/80 bg-white/80 px-3 py-1 text-sm font-medium text-slate-700 shadow-sm backdrop-blur-sm transition-colors placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:focus:border-blue-500/50"
-                                                    >
-                                                        <option value="">Pilih Mata Pelajaran</option>
-                                                        {subjects.map((s) => (
-                                                            <option key={s.id} value={s.id}>
-                                                                {s.code} — {s.name}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                    {errors.subject_id && (
-                                                        <p className="text-xs font-medium text-red-500">{errors.subject_id}</p>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                <div className="grid gap-2">
-                                                    <Label htmlFor="subject" className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">Mata Pelajaran</Label>
-                                                    <Input
-                                                        id="subject"
-                                                        name="subject"
-                                                        placeholder="Opsional"
-                                                        className="h-10 rounded-xl border-slate-200/80 bg-white/80 font-medium backdrop-blur-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:border-white/10 dark:bg-white/5"
-                                                    />
-                                                    {errors.subject && (
-                                                        <p className="text-xs font-medium text-red-500">{errors.subject}</p>
-                                                    )}
-                                                </div>
-                                            )}
-
-                                            <div className="grid gap-2">
-                                                <Label htmlFor="duration_minutes" className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">Durasi</Label>
-                                                <Input
-                                                    id="duration_minutes"
-                                                    name="duration_minutes"
-                                                    type="number"
-                                                    min={1}
-                                                    max={480}
-                                                    defaultValue={30}
-                                                    className="h-10 rounded-xl border-slate-200/80 bg-white/80 font-medium backdrop-blur-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:border-white/10 dark:bg-white/5"
-                                                />
-                                            </div>
-
-                                            <div className="flex items-end">
-                                                <Button
-                                                    className="h-10 w-full rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 font-semibold text-white shadow-lg shadow-blue-500/25 transition-all duration-200 hover:from-blue-700 hover:to-blue-600 hover:shadow-xl hover:shadow-blue-500/30"
-                                                    disabled={processing}
-                                                >
-                                                    {processing ? 'Memproses...' : 'Buka QR'}
-                                                </Button>
-                                            </div>
-                                        </>
-                                    )}
-                                </Form>
-                            </div>
-                        </div>
-
-                        {/* Quick Links */}
+                    {/* Quick Links */}
+                    <div className="grid gap-6 lg:grid-cols-1">
                         <div className="overflow-hidden rounded-2xl border border-white/60 bg-white/70 shadow-lg shadow-slate-900/5 backdrop-blur-xl dark:border-white/10 dark:bg-white/5">
                             <div className="px-6 pt-6 pb-2">
                                 <h2 className="text-base font-bold tracking-tight text-slate-900 dark:text-white">
@@ -389,21 +285,7 @@ export default function TeacherDashboard({
                                             </div>
                                         </div>
                                         <div className="space-y-4 px-6 pb-6">
-                                            <div className="flex items-center justify-center rounded-2xl border border-slate-200/60 bg-white/80 p-4 backdrop-blur-sm dark:border-white/10 dark:bg-slate-900/50">
-                                                <div
-                                                    className="[&_svg]:h-full [&_svg]:w-full"
-                                                    style={{ width: 180, height: 180 }}
-                                                    dangerouslySetInnerHTML={{ __html: session.qr_svg }}
-                                                />
-                                            </div>
-
                                             <div className="space-y-2.5">
-                                                <div className="flex items-center justify-between rounded-xl bg-slate-50/80 px-4 py-2.5 backdrop-blur-sm dark:bg-white/5">
-                                                    <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Token</span>
-                                                    <span className="rounded-lg bg-slate-200/60 px-2.5 py-1 font-mono text-xs font-semibold text-slate-700 dark:bg-white/10 dark:text-slate-300">
-                                                        {session.qr_payload}
-                                                    </span>
-                                                </div>
                                                 <div className="flex items-center justify-between rounded-xl bg-slate-50/80 px-4 py-2.5 backdrop-blur-sm dark:bg-white/5">
                                                     <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Tercatat</span>
                                                     <span className="text-sm font-bold text-slate-900 dark:text-white">

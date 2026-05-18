@@ -6,16 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Teacher\ExportAttendanceRequest;
 use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
+use App\Models\SubjectSchedule;
 use App\Services\Attendance\AbsenceDetectionService;
 use App\Services\Attendance\AttendanceReportService;
 use App\Services\Attendance\DailyAttendanceViewService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use OpenSpout\Common\Entity\Row;
-use OpenSpout\Writer\XLSX\Writer;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
+use OpenSpout\Common\Entity\Row;
+use OpenSpout\Writer\XLSX\Writer;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class AttendanceViewController extends Controller
@@ -45,10 +46,38 @@ class AttendanceViewController extends Controller
     {
         Gate::authorize('viewDaily');
 
-        $session = $service->getActiveSession(auth()->id());
+        $teacher = auth()->user();
+        $session = $service->getActiveSession($teacher->id);
+
+        $homeroomClass = $teacher->homeroomClasses()->first();
+        $currentSchedule = null;
+
+        if ($homeroomClass) {
+            $slot = SubjectSchedule::resolveForClassNow($homeroomClass->id);
+
+            if ($slot) {
+                $currentSchedule = [
+                    'type' => $slot->schedule_type,
+                    'subject_name' => $slot->subject?->name,
+                    'starts_at' => $slot->starts_at,
+                    'ends_at' => $slot->ends_at,
+                    'day_of_week' => $slot->day_of_week,
+                ];
+            }
+        }
+
+        $classes = $teacher
+            ->homeroomClasses()
+            ->get()
+            ->map(fn ($class) => [
+                'id' => $class->id,
+                'name' => $class->name,
+            ])->values();
 
         return Inertia::render('teacher/attendance/qr', [
             'active_session' => $this->mapSession($session),
+            'current_schedule' => $currentSchedule,
+            'classes' => $classes,
         ]);
     }
 
@@ -249,7 +278,7 @@ class AttendanceViewController extends Controller
             $tempPath = tempnam(sys_get_temp_dir(), 'attendance_export_');
             abort_if($tempPath === false, 500, 'Unable to create temporary export file.');
 
-            $writer = new Writer();
+            $writer = new Writer;
             $writer->openToFile($tempPath);
 
             foreach ($rows as $row) {

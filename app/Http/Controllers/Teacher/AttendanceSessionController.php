@@ -7,6 +7,7 @@ use App\Http\Requests\ManualAttendanceRequest;
 use App\Http\Requests\Teacher\OpenAttendanceSessionRequest;
 use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
+use App\Models\SubjectSchedule;
 use App\Services\Attendance\AttendanceSessionLifecycleService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
@@ -15,15 +16,45 @@ use Inertia\Inertia;
 class AttendanceSessionController extends Controller
 {
     /**
-     * Open a new QR attendance session.
+     * Open a new QR attendance session, auto-detecting type and subject from timetable.
      */
     public function store(
         OpenAttendanceSessionRequest $request,
         AttendanceSessionLifecycleService $attendanceSessionLifecycleService,
     ): RedirectResponse {
-        $validated = $request->validated();
+        $teacher = $request->user();
+        $classId = $request->input('class_id');
 
-        $attendanceSessionLifecycleService->open($request->user()->id, $validated);
+        if ($classId) {
+            $homeroomClass = $teacher->homeroomClasses()->where('id', $classId)->first();
+        } else {
+            $homeroomClass = $teacher->homeroomClasses()->first();
+        }
+
+        $schedule = $homeroomClass
+            ? SubjectSchedule::resolveForClassNow($homeroomClass->id)
+            : null;
+
+        if ($schedule) {
+            $endsAt = now()->setTimeFromTimeString($schedule->ends_at);
+            $minutesUntilEnd = now()->diffInMinutes($endsAt, false);
+
+            $sessionData = [
+                'type' => $schedule->resolveQrType()->value,
+                'subject_id' => $schedule->subject_id,
+                'subject' => $schedule->subject?->name,
+                'duration_minutes' => $minutesUntilEnd > 0 ? max(5, $minutesUntilEnd) : 30,
+            ];
+        } else {
+            $sessionData = [
+                'type' => 'morning',
+                'subject_id' => null,
+                'subject' => null,
+                'duration_minutes' => 30,
+            ];
+        }
+
+        $attendanceSessionLifecycleService->open($teacher->id, $sessionData);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('QR absensi berhasil dibuka.')]);
 
