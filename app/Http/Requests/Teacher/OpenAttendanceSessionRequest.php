@@ -2,10 +2,8 @@
 
 namespace App\Http\Requests\Teacher;
 
-use App\Enums\AttendanceQrType;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class OpenAttendanceSessionRequest extends FormRequest
 {
@@ -20,15 +18,15 @@ class OpenAttendanceSessionRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
+     * No fields are required from the frontend — the backend resolves
+     * session type, subject, and duration from the active timetable.
+     *
      * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         return [
-            'type' => ['required', Rule::enum(AttendanceQrType::class)],
-            'subject' => ['nullable', 'string', 'max:100'],
-            'subject_id' => ['nullable', 'integer', 'exists:subjects,id', 'required_if:type,'.AttendanceQrType::Subject->value],
-            'duration_minutes' => ['nullable', 'integer', 'min:1', 'max:480'],
+            'class_id' => ['nullable', 'integer', 'exists:school_classes,id'],
         ];
     }
 }

@@ -6,6 +6,8 @@ use App\Enums\UserRole;
 use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
 use App\Models\SchoolClass;
+use App\Models\Subject;
+use App\Models\SubjectSchedule;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -14,6 +16,23 @@ uses(RefreshDatabase::class);
 
 test('teacher can open a new attendance qr session', function () {
     $teacher = User::factory()->teacher()->create();
+    $class = SchoolClass::factory()->create([
+        'homeroom_teacher_id' => $teacher->id,
+    ]);
+    $subject = Subject::factory()->create([
+        'school_class_id' => $class->id,
+        'teacher_id' => $teacher->id,
+        'name' => 'Matematika',
+    ]);
+
+    SubjectSchedule::query()->create([
+        'school_class_id' => $class->id,
+        'subject_id' => $subject->id,
+        'schedule_type' => 'subject',
+        'day_of_week' => now()->dayOfWeek,
+        'starts_at' => now()->subMinutes(5)->format('H:i'),
+        'ends_at' => now()->addMinutes(30)->format('H:i'),
+    ]);
 
     $response = $this->actingAs($teacher)->post(route('teacher.attendance-sessions.store'), [
         'type' => 'morning',
@@ -23,7 +42,8 @@ test('teacher can open a new attendance qr session', function () {
     $response->assertRedirect();
     $this->assertDatabaseHas('attendance_sessions', [
         'opened_by' => $teacher->id,
-        'type' => 'morning',
+        'type' => 'subject',
+        'subject_id' => $subject->id,
         'is_active' => 1,
     ]);
 });

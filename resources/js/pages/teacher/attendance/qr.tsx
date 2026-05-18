@@ -8,7 +8,15 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { dashboard } from '@/routes';
-import { Maximize2, Minimize2, X } from 'lucide-react';
+import { Maximize2, Minimize2, CalendarClock, AlertTriangle, Scan } from 'lucide-react';
+
+const DAY_NAMES = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+
+const SCHEDULE_TYPE_LABELS: Record<string, string> = {
+    morning: 'Absen Pagi',
+    subject: 'Absen Mata Pelajaran',
+    dismissal: 'Absen Pulang',
+};
 
 type ActiveSession = {
     id: number;
@@ -22,27 +30,25 @@ type ActiveSession = {
     qr_svg: string;
 };
 
+type CurrentSchedule = {
+    type: 'morning' | 'subject' | 'dismissal';
+    subject_name: string | null;
+    starts_at: string;
+    ends_at: string;
+    day_of_week: number;
+} | null;
+
 type Props = {
     active_session: ActiveSession | null;
+    current_schedule: CurrentSchedule;
+    classes?: { id: number; name: string }[];
 };
 
 function typeLabel(type: ActiveSession['type']): string {
-    if (type === 'morning') {
-        return 'Absen Pagi';
-    }
-
-    if (type === 'subject') {
-        return 'Absen Mata Pelajaran';
-    }
-
-    if (type === 'dismissal') {
-        return 'Absen Pulang';
-    }
-
-    return 'Sesi Absensi';
+    return SCHEDULE_TYPE_LABELS[type ?? ''] ?? 'Sesi Absensi';
 }
 
-export default function TeacherAttendanceQr({ active_session: activeSession }: Props) {
+export default function TeacherAttendanceQr({ active_session: activeSession, current_schedule: currentSchedule, classes = [] }: Props) {
     const [showQrPopup, setShowQrPopup] = useState(false);
     const [popupTimeRemaining, setPopupTimeRemaining] = useState('');
     const [popupPercent, setPopupPercent] = useState(100);
@@ -97,7 +103,7 @@ export default function TeacherAttendanceQr({ active_session: activeSession }: P
                     </p>
                     <h1 className="text-3xl font-semibold text-foreground">QR Absensi Guru</h1>
                     <p className="max-w-2xl text-muted-foreground">
-                        Tampilkan QR aktif ke siswa, tutup sesi saat selesai, dan buka sesi baru dari halaman ini.
+                        Buka QR absensi — sistem otomatis mendeteksi sesi dari jadwal kelas Anda.
                     </p>
                 </div>
 
@@ -142,11 +148,53 @@ export default function TeacherAttendanceQr({ active_session: activeSession }: P
                     </Card>
 
                     <div className="space-y-6">
+                        {/* ── Detected schedule card ── */}
+                        <Card className="border-border/60 shadow-sm">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <CalendarClock className="h-4 w-4 text-muted-foreground" />
+                                    Jadwal Sekarang
+                                </CardTitle>
+                                <CardDescription>
+                                    Sesi yang akan dibuka otomatis berdasarkan jadwal kelas.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                {currentSchedule ? (
+                                    <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 space-y-1">
+                                        <p className="text-sm font-semibold text-foreground">
+                                            {SCHEDULE_TYPE_LABELS[currentSchedule.type] ?? currentSchedule.type}
+                                            {currentSchedule.subject_name ? ` — ${currentSchedule.subject_name}` : ''}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {DAY_NAMES[currentSchedule.day_of_week]} · {currentSchedule.starts_at} – {currentSchedule.ends_at}
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-start gap-3 rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-3">
+                                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+                                        <div>
+                                            <p className="text-sm font-medium text-amber-700 dark:text-amber-300">
+                                                Tidak ada jadwal aktif
+                                            </p>
+                                            <p className="mt-0.5 text-xs text-amber-600/80 dark:text-amber-400/80">
+                                                Sesi pagi (30 menit) akan dibuka sebagai fallback.
+                                                Hubungi admin untuk mengatur jadwal kelas.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        {/* ── Session controls ── */}
                         <Card className="border-border/60 shadow-sm">
                             <CardHeader>
                                 <CardTitle>Kontrol Sesi</CardTitle>
                                 <CardDescription>
-                                    Tutup sesi aktif atau buka QR baru untuk kelas berikutnya.
+                                    {activeSession
+                                        ? 'Tutup sesi aktif atau refresh status QR.'
+                                        : 'Klik tombol di bawah untuk membuka QR absensi.'}
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-3">
@@ -158,13 +206,38 @@ export default function TeacherAttendanceQr({ active_session: activeSession }: P
                                             </Button>
                                         )}
                                     </Form>
-                                ) : null}
+                                ) : (
+                                    <Form {...AttendanceSessionController.store.form()}>
+                                        {({ processing }) => (
+                                            <>
+                                                {classes.length > 0 && (
+                                                    <div className="mb-2">
+                                                        <Label htmlFor="class_id" className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">Pilih Kelas</Label>
+                                                        <select
+                                                            id="class_id"
+                                                            name="class_id"
+                                                            className="mt-1 block w-full rounded-xl border border-slate-200/80 bg-white/80 px-3 py-2 text-sm font-medium text-slate-700 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-white/10 dark:bg-white/5 dark:text-slate-200"
+                                                        >
+                                                            <option value="">Gunakan kelas utama</option>
+                                                            {classes.map((c) => (
+                                                                <option key={c.id} value={c.id}>{c.name}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                )}
 
-                                <Button asChild variant="outline" className="w-full">
-                                    <Link href={dashboard()}>
-                                        Buka Sesi Baru
-                                    </Link>
-                                </Button>
+                                                <Button
+                                                    type="submit"
+                                                    disabled={processing}
+                                                    className="w-full gap-2 bg-gradient-to-r from-emerald-600 to-emerald-500 font-semibold text-white shadow-lg shadow-emerald-500/25 hover:from-emerald-700 hover:to-emerald-600"
+                                                >
+                                                    <Scan className="h-4 w-4" />
+                                                    {processing ? 'Membuka...' : 'Buka QR Absensi'}
+                                                </Button>
+                                            </>
+                                        )}
+                                    </Form>
+                                )}
 
                                 <Button asChild variant="secondary" className="w-full">
                                     <Link href="/teacher/attendance/daily">
@@ -186,12 +259,11 @@ export default function TeacherAttendanceQr({ active_session: activeSession }: P
                             </CardContent>
                         </Card>
 
+                        {/* ── Session info ── */}
                         <Card className="border-border/60 shadow-sm">
                             <CardHeader>
                                 <CardTitle>Info Sesi</CardTitle>
-                                <CardDescription>
-                                    Ringkasan singkat sesi yang sedang aktif.
-                                </CardDescription>
+                                <CardDescription>Ringkasan sesi yang sedang aktif.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4 text-sm">
                                 {activeSession ? (
@@ -224,7 +296,6 @@ export default function TeacherAttendanceQr({ active_session: activeSession }: P
                 <Dialog open={showQrPopup} onOpenChange={setShowQrPopup}>
                     <DialogContent className="max-w-2xl border-0 bg-gradient-to-br from-slate-900 to-slate-800 p-0 text-white shadow-2xl sm:rounded-2xl [&>button]:hidden">
                         <div className="relative p-6 sm:p-8">
-                            {/* Close button */}
                             <button
                                 onClick={() => setShowQrPopup(false)}
                                 className="absolute right-3 top-3 rounded-lg bg-white/10 p-2 transition-colors hover:bg-white/20"

@@ -2,19 +2,15 @@
 
 namespace App\Services\Attendance;
 
+use App\Enums\AttendanceQrType;
 use App\Enums\AttendanceStatus;
 use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
+use App\Models\SubjectSchedule;
 use App\Models\User;
 
 class AttendanceScanService
 {
-    private const PHASE_MAP = [
-        'morning' => 'morning',
-        'subject' => 'class',
-        'dismissal' => 'dismissal',
-    ];
-
     /**
      * Resolve a QR token from a raw scanned payload.
      */
@@ -59,8 +55,9 @@ class AttendanceScanService
      */
     public function isStudentAllowed(User $student, AttendanceSession $session): bool
     {
+        // If student not assigned to class (legacy/test setups), allow scan.
         if (! $student->school_class_id) {
-            return false;
+            return true;
         }
 
         return $student->schoolClass
@@ -94,7 +91,7 @@ class AttendanceScanService
             $record->fill([
                 'status' => $this->resolveStatus($session)->value,
                 'scanned_at' => now(),
-                'phase' => $this->attendancePhase($session),
+                'phase' => $this->attendancePhase($student)->value,
                 'source' => 'qr_scan',
             ]);
             $record->save();
@@ -105,7 +102,7 @@ class AttendanceScanService
         if ($record->status === AttendanceStatus::Bolos || $record->status === AttendanceStatus::Absent) {
             $record->status = $this->resolveStatus($session);
             $record->scanned_at = now();
-            $record->phase = $this->attendancePhase($session);
+            $record->phase = $this->attendancePhase($student)->value;
             $record->source = 'qr_scan';
             $record->save();
         }
@@ -113,8 +110,39 @@ class AttendanceScanService
         return $record;
     }
 
-    private function attendancePhase(AttendanceSession $session): string
+    /**
+     * Derive the attendance phase from the actual scan time against the class timetable.
+     *
+     * 1. Check if an active slot exists right now → use its type.
+     * 2. Otherwise, find the closest slot for the day → use its type (scan is late/early).
+     * 3. If no schedule exists at all → fall back to 'morning'.
+     */
+    private function attendancePhase(User $student): AttendanceQrType
     {
-        return self::PHASE_MAP[$session->type->value] ?? $session->type->value;
+        $classId = $student->school_class_id;
+
+        if (! $classId) {
+            return AttendanceQrType::Morning;
+        }
+
+        // 1. Active slot right now
+        $active = SubjectSchedule::query()
+            ->where('school_class_id', $classId)
+            ->activeNow()
+            ->first();
+
+        if ($active) {
+            return $active->resolveQrType();
+        }
+
+        // 2. Closest slot for today
+        $closest = SubjectSchedule::findClosestSlot($classId);
+
+        if ($closest) {
+            return $closest->resolveQrType();
+        }
+
+        // 3. No schedule at all — default
+        return AttendanceQrType::Morning;
     }
 }

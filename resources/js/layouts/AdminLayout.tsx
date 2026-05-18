@@ -16,6 +16,7 @@ export default function AdminLayout({ children, title = 'Admin' }: { children: R
               <Link href={admin.users.index.url()} className="hover:text-foreground">Pengguna</Link>
               <Link href={admin.classes.index.url()} className="hover:text-foreground">Kelas</Link>
               <Link href={admin.subjects.index.url()} className="hover:text-foreground">Mapel</Link>
+              <Link href={admin.schedules.index.url()} className="hover:text-foreground">Jadwal</Link>
             </nav>
           </div>
 

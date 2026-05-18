@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AdminReportController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\SchoolClassController as AdminSchoolClassController;
 use App\Http\Controllers\Admin\SubjectController as AdminSubjectController;
+use App\Http\Controllers\Admin\SubjectScheduleController as AdminSubjectScheduleController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Student\AttendanceController as StudentAttendanceController;
 use App\Http\Controllers\Student\ExamAttemptController;
@@ -56,6 +57,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Audit logs
         Route::get('audit-logs', [AdminAuditLogController::class, 'index'])->name('audit-logs.index');
         Route::get('audit-logs/{auditLog}', [AdminAuditLogController::class, 'show'])->name('audit-logs.show');
+
+        // Subject schedules (timetable)
+        Route::get('schedules', [AdminSubjectScheduleController::class, 'index'])->name('schedules.index');
+        Route::post('schedules', [AdminSubjectScheduleController::class, 'store'])->name('schedules.store');
+        Route::put('schedules/{subjectSchedule}', [AdminSubjectScheduleController::class, 'update'])->name('schedules.update');
+        Route::delete('schedules/{subjectSchedule}', [AdminSubjectScheduleController::class, 'destroy'])->name('schedules.destroy');
     });
 
     Route::middleware('role:teacher')->prefix('teacher')->name('teacher.')->group(function () {
@@ -132,4 +139,4 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 });
 
-require __DIR__ . '/settings.php';
+require __DIR__.'/settings.php';

@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Enums\UserRole;
 use App\Models\SchoolClass;
-use App\Models\Subject;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -29,9 +28,7 @@ class StudentClassSeeder extends Seeder
             'XII IPA 1', 'XII IPA 2', 'XII IPS 1', 'XII IPS 2',
         ];
 
-        $subjectNames = ['Matematika', 'Bahasa Indonesia', 'Bahasa Inggris', 'Fisika', 'Kimia', 'Biologi', 'Ekonomi', 'Sejarah'];
-
-        $classes = collect($classNames)->map(function (string $name, int $i) use ($teachers, $subjectNames) {
+        $classes = collect($classNames)->map(function (string $name, int $i) use ($teachers) {
             $class = SchoolClass::factory()->create([
                 'name' => $name,
                 'code' => str_replace(' ', '-', $name),
@@ -39,20 +36,11 @@ class StudentClassSeeder extends Seeder
                 'academic_year' => '2025/2026',
             ]);
 
-            // 3-4 subjects per class
-            $classSubjects = collect($subjectNames)->random(rand(3, 4));
-            $subjCounter = 1;
-            foreach ($classSubjects as $subjName) {
-                Subject::factory()->create([
-                    'school_class_id' => $class->id,
-                    'teacher_id' => $teachers->random()->id,
-                    'name' => $subjName,
-                    'code' => strtoupper(substr($subjName, 0, 3)) . '-' . $class->id . '-' . $subjCounter++,
-                ]);
-            }
-
             return $class;
         });
+
+        $this->call(SubjectSeeder::class);
+        $this->call(SubjectScheduleSeeder::class);
 
         // 120 students distributed across classes
         $studentNum = 1;
