@@ -1,4 +1,5 @@
 import { Head, Link, Form, router } from '@inertiajs/react';
+import { Maximize2, Minimize2, CalendarClock, AlertTriangle, Scan } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import AttendanceSessionController from '@/actions/App/Http/Controllers/Teacher/AttendanceSessionController';
 import QRDisplay from '@/components/QRDisplayV2';
@@ -8,7 +9,6 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { dashboard } from '@/routes';
-import { Maximize2, Minimize2, CalendarClock, AlertTriangle, Scan } from 'lucide-react';
 
 const DAY_NAMES = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
@@ -55,7 +55,9 @@ export default function TeacherAttendanceQr({ active_session: activeSession, cur
     const popupExpiredRef = useRef(false);
 
     useEffect(() => {
-        if (!showQrPopup || !activeSession?.ends_at) return;
+        if (!showQrPopup || !activeSession?.ends_at) {
+return;
+}
 
         popupExpiredRef.current = false;
 
@@ -69,9 +71,11 @@ export default function TeacherAttendanceQr({ active_session: activeSession, cur
             if (remaining <= 0) {
                 setPopupTimeRemaining('KADALUARSA');
                 setPopupPercent(0);
+
                 if (!popupExpiredRef.current) {
                     popupExpiredRef.current = true;
                 }
+
                 return;
             }
 
@@ -84,6 +88,7 @@ export default function TeacherAttendanceQr({ active_session: activeSession, cur
 
         updateTimer();
         const interval = setInterval(updateTimer, 500);
+
         return () => clearInterval(interval);
     }, [showQrPopup, activeSession?.ends_at, activeSession?.starts_at]);
 

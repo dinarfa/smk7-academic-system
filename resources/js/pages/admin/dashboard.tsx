@@ -1,4 +1,5 @@
 import { Link } from '@inertiajs/react';
+import { Users, BookOpen, UserCheck, Zap, BarChart3, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -8,7 +9,6 @@ import {
 } from '@/components/ui/card';
 import AdminLayout from '@/layouts/AdminLayout';
 import admin from '@/routes/admin';
-import { Users, BookOpen, UserCheck, Zap, BarChart3, Activity } from 'lucide-react';
 
 type Summary = {
     total_users: number;
@@ -89,6 +89,7 @@ export default function AdminDashboard({ summary }: Props) {
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
                     {statCards.map((stat) => {
                         const Icon = stat.icon;
+
                         return (
                             <Card key={stat.key}>
                                 <CardContent className="pt-6">

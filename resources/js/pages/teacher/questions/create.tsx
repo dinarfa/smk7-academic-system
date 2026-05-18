@@ -1,6 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react'
-import QuestionController from '@/actions/App/Http/Controllers/Teacher/QuestionController'
 import ExamController from '@/actions/App/Http/Controllers/Teacher/ExamController'
+import QuestionController from '@/actions/App/Http/Controllers/Teacher/QuestionController'
 import RichEditor from '@/components/RichEditor'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'

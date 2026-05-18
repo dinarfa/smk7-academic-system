@@ -1,10 +1,10 @@
 import { Head, useForm } from '@inertiajs/react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { dashboard } from '@/routes';
 import teacher from '@/routes/teacher';
 
@@ -79,8 +79,8 @@ export default function Show({ excuse }: Props) {
                     </div>
                     <Badge variant={getStatusVariant(excuse.status)}>
                         {excuse.status === 'pending' ? 'Menunggu' :
-                         excuse.status === 'approved' ? 'Disetujui' :
-                         'Ditolak'}
+                            excuse.status === 'approved' ? 'Disetujui' :
+                                'Ditolak'}
                     </Badge>
                 </div>
 

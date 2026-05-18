@@ -1,12 +1,12 @@
 import { Head, router, Link } from '@inertiajs/react';
+import { Download } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import QRScanner from '@/components/QRScanner';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { dashboard } from '@/routes';
-import { Download } from 'lucide-react';
 
 interface AttendanceRecord {
     id: number;
@@ -47,6 +47,7 @@ export default function Index({ attendance, active_session: activeSession, date 
 
     const handleExport = async (format: 'csv' | 'xlsx') => {
         setExportProcessing(true);
+
         try {
             const payload = {
                 startDate: date,
@@ -70,6 +71,7 @@ export default function Index({ attendance, active_session: activeSession, date 
                 const txt = await res.text();
                 console.error('Export failed', txt);
                 alert('Export gagal');
+
                 return;
             }
 
@@ -93,6 +95,7 @@ export default function Index({ attendance, active_session: activeSession, date 
 
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+
         return () => clearInterval(timer);
     }, []);
 
@@ -116,10 +119,13 @@ export default function Index({ attendance, active_session: activeSession, date 
         const end = new Date(endTime);
         const diff = end.getTime() - currentTime.getTime();
 
-        if (diff <= 0) return 'Expired';
+        if (diff <= 0) {
+return 'Expired';
+}
 
         const minutes = Math.floor(diff / 60000);
         const seconds = Math.floor((diff % 60000) / 1000);
+
         return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     };
 
@@ -229,6 +235,7 @@ export default function Index({ attendance, active_session: activeSession, date 
                                     <QRScanner
                                         onScan={async (data) => {
                                             setShowScanner(false);
+
                                             try {
                                                 const fd = new FormData();
                                                 fd.append('qr_token', data);

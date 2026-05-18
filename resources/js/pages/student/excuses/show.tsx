@@ -1,8 +1,8 @@
 import { Head } from '@inertiajs/react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { dashboard } from '@/routes';
 import student from '@/routes/student';
 
@@ -63,8 +63,8 @@ export default function Show({ excuse }: Props) {
                     </div>
                     <Badge variant={getStatusVariant(excuse.status)}>
                         {excuse.status === 'pending' ? 'Menunggu' :
-                         excuse.status === 'approved' ? 'Disetujui' :
-                         'Ditolak'}
+                            excuse.status === 'approved' ? 'Disetujui' :
+                                'Ditolak'}
                     </Badge>
                 </div>
 
@@ -119,8 +119,8 @@ export default function Show({ excuse }: Props) {
                                 <p className="text-sm text-muted-foreground">Status</p>
                                 <p className="font-medium">
                                     {excuse.status === 'pending' ? 'Menunggu Persetujuan' :
-                                     excuse.status === 'approved' ? 'Disetujui' :
-                                     'Ditolak'}
+                                        excuse.status === 'approved' ? 'Disetujui' :
+                                            'Ditolak'}
                                 </p>
                             </div>
                             {excuse.reviewedBy && (

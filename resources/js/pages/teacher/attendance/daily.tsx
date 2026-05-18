@@ -1,9 +1,4 @@
 import { Head, Link } from '@inertiajs/react';
-import { useMemo } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { dashboard } from '@/routes';
 import {
     CalendarDays,
     QrCode,
@@ -16,6 +11,11 @@ import {
     BookOpen,
     Download,
 } from 'lucide-react';
+import { useMemo } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { dashboard } from '@/routes';
 
 type AttendanceRecord = {
     id: number;
@@ -74,11 +74,16 @@ export default function TeacherAttendanceDaily({ attendance, active_session: act
             const bySubject: Record<string, AttendanceRecord[]> = {};
             records.forEach((r) => {
                 const subject = r.session?.subject_name ?? 'Umum';
-                if (!bySubject[subject]) bySubject[subject] = [];
+
+                if (!bySubject[subject]) {
+bySubject[subject] = [];
+}
+
                 bySubject[subject].push(r);
             });
             result[phase] = bySubject;
         });
+
         return result;
     }, [attendance]);
 

@@ -1,9 +1,4 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { useState, useMemo } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { dashboard } from '@/routes';
 import {
     Search,
     Users,
@@ -17,6 +12,11 @@ import {
     CalendarDays,
     BookOpen,
 } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { dashboard } from '@/routes';
 
 type AttendanceRecord = {
     id: number;
@@ -75,6 +75,7 @@ function buildRows(records: RecapData): DayRow[] {
                         student_name: r.student.name,
                     });
                 }
+
                 const row = studentMap.get(r.student_id)!;
                 const phaseKey = r.phase === 'subject' ? 'class' : r.phase;
                 row[phaseKey as keyof DayRow] = r.status;
@@ -86,9 +87,17 @@ function buildRows(records: RecapData): DayRow[] {
 
     return rows.sort((a, b) => {
         const dateCmp = a.date.localeCompare(b.date);
-        if (dateCmp !== 0) return dateCmp;
+
+        if (dateCmp !== 0) {
+return dateCmp;
+}
+
         const subjCmp = a.subject.localeCompare(b.subject, 'id-ID');
-        if (subjCmp !== 0) return subjCmp;
+
+        if (subjCmp !== 0) {
+return subjCmp;
+}
+
         return a.student_name.localeCompare(b.student_name, 'id-ID');
     });
 }
@@ -110,8 +119,10 @@ const renderCell = (status?: string) => {
             </div>
         );
     }
+
     const cfg = statusConfig[status] || { icon: null, label: status, color: 'text-muted-foreground', bg: 'bg-muted' };
     const Icon = cfg.icon;
+
     return (
         <div className="flex items-center justify-center" title={cfg.label}>
             <div className={`flex h-7 w-7 items-center justify-center rounded-full ${cfg.bg}`}>
@@ -133,19 +144,23 @@ export default function AttendanceRecap({ records, startDate, endDate }: Props) 
     const subjects = useMemo(() => {
         const set = new Set<string>();
         allRows.forEach((r) => set.add(r.subject));
+
         return Array.from(set).sort((a, b) => a.localeCompare(b, 'id-ID'));
     }, [allRows]);
 
     const filteredRows = useMemo(() => {
         let rows = allRows;
+
         if (filterSubject) {
             rows = rows.filter((r) => r.subject === filterSubject);
         }
+
         if (search) {
             rows = rows.filter((r) =>
                 r.student_name.toLowerCase().includes(search.toLowerCase()),
             );
         }
+
         return rows;
     }, [allRows, search, filterSubject]);
 
@@ -154,15 +169,23 @@ export default function AttendanceRecap({ records, startDate, endDate }: Props) 
         filteredRows.forEach((row) => {
             phases.forEach((phase) => {
                 const status = row[phase];
+
                 if (status) {
                     counts.total++;
-                    if (status === 'present') counts.present++;
-                    else if (status === 'late') counts.late++;
-                    else if (status === 'absent') counts.absent++;
-                    else if (status === 'bolos') counts.bolos++;
+
+                    if (status === 'present') {
+counts.present++;
+} else if (status === 'late') {
+counts.late++;
+} else if (status === 'absent') {
+counts.absent++;
+} else if (status === 'bolos') {
+counts.bolos++;
+}
                 }
             });
         });
+
         return counts;
     }, [filteredRows]);
 
@@ -180,12 +203,16 @@ export default function AttendanceRecap({ records, startDate, endDate }: Props) 
             if (!groups.has(row.date)) {
                 groups.set(row.date, new Map());
             }
+
             const subjectMap = groups.get(row.date)!;
+
             if (!subjectMap.has(row.subject)) {
                 subjectMap.set(row.subject, []);
             }
+
             subjectMap.get(row.subject)!.push(row);
         });
+
         return groups;
     }, [filteredRows]);
 
@@ -369,6 +396,7 @@ export default function AttendanceRecap({ records, startDate, endDate }: Props) 
                     <span className="text-xs font-medium text-muted-foreground">Keterangan:</span>
                     {Object.entries(statusConfig).map(([status, cfg]) => {
                         const Icon = cfg.icon;
+
                         return (
                             <div key={status} className="flex items-center gap-1.5">
                                 <div className={`flex h-5 w-5 items-center justify-center rounded-full ${cfg.bg}`}>

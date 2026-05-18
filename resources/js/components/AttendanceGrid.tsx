@@ -1,6 +1,6 @@
+import { Search, Users, CheckCircle2, XCircle, Clock, AlertTriangle, ShieldQuestion } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
-import { Search, Users, CheckCircle2, XCircle, Clock, AlertTriangle, ShieldQuestion } from 'lucide-react';
 
 type AttendanceRecord = {
     id: number;
@@ -47,12 +47,14 @@ export default function AttendanceGrid({ attendance }: AttendanceGridProps) {
     Object.entries(attendance).forEach(([phase, records]) => {
         records.forEach((record) => {
             const key = record.student_id;
+
             if (!studentMap.has(key)) {
                 studentMap.set(key, {
                     student_id: key,
                     student_name: record.student.name,
                 });
             }
+
             const gridRow = studentMap.get(key)!;
             const phaseKey = phase === 'subject' ? 'class' : phase;
             gridRow[phaseKey] = record.status;
@@ -64,7 +66,10 @@ export default function AttendanceGrid({ attendance }: AttendanceGridProps) {
     );
 
     const filteredStudents = useMemo(() => {
-        if (!search) return sortedStudents;
+        if (!search) {
+return sortedStudents;
+}
+
         return sortedStudents.filter((s) =>
             s.student_name.toLowerCase().includes(search.toLowerCase()),
         );
@@ -75,15 +80,23 @@ export default function AttendanceGrid({ attendance }: AttendanceGridProps) {
         sortedStudents.forEach((row) => {
             phases.forEach((phase) => {
                 const status = row[phase];
+
                 if (status) {
                     counts.total++;
-                    if (status === 'present') counts.present++;
-                    else if (status === 'late') counts.late++;
-                    else if (status === 'absent') counts.absent++;
-                    else if (status === 'bolos') counts.bolos++;
+
+                    if (status === 'present') {
+counts.present++;
+} else if (status === 'late') {
+counts.late++;
+} else if (status === 'absent') {
+counts.absent++;
+} else if (status === 'bolos') {
+counts.bolos++;
+}
                 }
             });
         });
+
         return counts;
     }, [sortedStudents]);
 
@@ -95,8 +108,10 @@ export default function AttendanceGrid({ attendance }: AttendanceGridProps) {
                 </div>
             );
         }
+
         const cfg = statusConfig[status] || { icon: null, label: status, color: 'text-muted-foreground', bg: 'bg-muted' };
         const Icon = cfg.icon;
+
         return (
             <div className="flex items-center justify-center" title={cfg.label}>
                 <div className={`flex h-7 w-7 items-center justify-center rounded-full ${cfg.bg}`}>
@@ -199,6 +214,7 @@ export default function AttendanceGrid({ attendance }: AttendanceGridProps) {
                 <span className="text-xs font-medium text-muted-foreground">Keterangan:</span>
                 {Object.entries(statusConfig).map(([status, cfg]) => {
                     const Icon = cfg.icon;
+
                     return (
                         <div key={status} className="flex items-center gap-1.5">
                             <div className={`flex h-5 w-5 items-center justify-center rounded-full ${cfg.bg}`}>
