@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Teacher;
 
+use App\Enums\AttendanceQrType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ManualAttendanceRequest;
 use App\Http\Requests\Teacher\OpenAttendanceSessionRequest;
@@ -105,7 +106,7 @@ class AttendanceSessionController extends Controller
                 ],
                 [
                     'status' => $student['status'],
-                    'phase' => $validated['phase'],
+                    'phase' => AttendanceQrType::from($validated['phase'])->toRecordPhase()->value,
                     'source' => 'manual',
                     'scanned_at' => now(),
                 ],

@@ -91,7 +91,7 @@ class AttendanceScanService
             $record->fill([
                 'status' => $this->resolveStatus($session)->value,
                 'scanned_at' => now(),
-                'phase' => $this->attendancePhase($student)->value,
+                'phase' => $this->attendancePhase($student)->toRecordPhase()->value,
                 'source' => 'qr_scan',
             ]);
             $record->save();
@@ -102,7 +102,7 @@ class AttendanceScanService
         if ($record->status === AttendanceStatus::Bolos || $record->status === AttendanceStatus::Absent) {
             $record->status = $this->resolveStatus($session);
             $record->scanned_at = now();
-            $record->phase = $this->attendancePhase($student)->value;
+            $record->phase = $this->attendancePhase($student)->toRecordPhase()->value;
             $record->source = 'qr_scan';
             $record->save();
         }

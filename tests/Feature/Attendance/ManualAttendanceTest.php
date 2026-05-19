@@ -13,7 +13,7 @@ test('teacher can create manual attendance', function () {
 
     $response = $this->post(route('teacher.attendance.manual'), [
         'session_id' => $session->id,
-        'phase' => AttendanceQrType::Morning->value,
+        'phase' => AttendanceQrType::Subject->value,
         'students' => [
             ['student_id' => $student->id, 'status' => 'present'],
         ],
@@ -24,7 +24,7 @@ test('teacher can create manual attendance', function () {
         'attendance_session_id' => $session->id,
         'student_id' => $student->id,
         'status' => 'present',
-        'phase' => AttendanceQrType::Morning->value,
+        'phase' => AttendanceQrType::ClassPhase->value,
         'source' => 'manual',
     ]);
 });

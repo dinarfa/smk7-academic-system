@@ -203,7 +203,24 @@ test('attendance session closing command deactivates expired sessions', function
 
 test('student can scan active qr token and record attendance', function () {
     $teacher = User::factory()->teacher()->create();
-    $student = User::factory()->student()->create();
+    $class = SchoolClass::factory()->create([
+        'homeroom_teacher_id' => $teacher->id,
+    ]);
+    $subject = Subject::factory()->create([
+        'school_class_id' => $class->id,
+        'teacher_id' => $teacher->id,
+        'name' => 'Matematika',
+    ]);
+    $student = User::factory()->student()->create(['school_class_id' => $class->id]);
+
+    SubjectSchedule::query()->create([
+        'school_class_id' => $class->id,
+        'subject_id' => $subject->id,
+        'schedule_type' => 'subject',
+        'day_of_week' => now()->dayOfWeek,
+        'starts_at' => now()->subMinutes(5)->format('H:i'),
+        'ends_at' => now()->addMinutes(20)->format('H:i'),
+    ]);
 
     $session = AttendanceSession::query()->create([
         'opened_by' => $teacher->id,
@@ -224,6 +241,7 @@ test('student can scan active qr token and record attendance', function () {
         'attendance_session_id' => $session->id,
         'student_id' => $student->id,
         'status' => 'present',
+        'phase' => AttendanceQrType::ClassPhase->value,
     ]);
 });
 
