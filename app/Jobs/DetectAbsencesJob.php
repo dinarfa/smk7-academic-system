@@ -8,8 +8,7 @@ class DetectAbsencesJob
 {
     public function __construct(
         public string $date,
-    ) {
-    }
+    ) {}
 
     public function handle(AbsenceDetectionService $service): array
     {

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Teacher;
 
+use App\Enums\AttendanceQrType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ManualAttendanceRequest;
 use App\Http\Requests\Teacher\OpenAttendanceSessionRequest;
@@ -11,6 +12,7 @@ use App\Models\SubjectSchedule;
 use App\Services\Attendance\AttendanceSessionLifecycleService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class AttendanceSessionController extends Controller
@@ -23,36 +25,26 @@ class AttendanceSessionController extends Controller
         AttendanceSessionLifecycleService $attendanceSessionLifecycleService,
     ): RedirectResponse {
         $teacher = $request->user();
-        $classId = $request->input('class_id');
+        $validated = $request->validated();
+        $classId = (int) $validated['class_id'];
 
-        if ($classId) {
-            $homeroomClass = $teacher->homeroomClasses()->where('id', $classId)->first();
-        } else {
-            $homeroomClass = $teacher->homeroomClasses()->first();
+        $schedule = SubjectSchedule::resolveForClassNow($classId);
+
+        if (! $schedule) {
+            throw ValidationException::withMessages([
+                'class_id' => __('Sesi absensi hanya bisa dibuka saat jadwal kelas sedang aktif.'),
+            ]);
         }
 
-        $schedule = $homeroomClass
-            ? SubjectSchedule::resolveForClassNow($homeroomClass->id)
-            : null;
+        $endsAt = now()->setTimeFromTimeString($schedule->ends_at);
+        $minutesUntilEnd = now()->diffInMinutes($endsAt, false);
 
-        if ($schedule) {
-            $endsAt = now()->setTimeFromTimeString($schedule->ends_at);
-            $minutesUntilEnd = now()->diffInMinutes($endsAt, false);
-
-            $sessionData = [
-                'type' => $schedule->resolveQrType()->value,
-                'subject_id' => $schedule->subject_id,
-                'subject' => $schedule->subject?->name,
-                'duration_minutes' => $minutesUntilEnd > 0 ? max(5, $minutesUntilEnd) : 30,
-            ];
-        } else {
-            $sessionData = [
-                'type' => 'morning',
-                'subject_id' => null,
-                'subject' => null,
-                'duration_minutes' => 30,
-            ];
-        }
+        $sessionData = [
+            'type' => $schedule->resolveQrType()->value,
+            'subject_id' => $schedule->subject_id,
+            'subject' => $schedule->subject?->name,
+            'duration_minutes' => $minutesUntilEnd > 0 ? max(5, $minutesUntilEnd) : 30,
+        ];
 
         $attendanceSessionLifecycleService->open($teacher->id, $sessionData);
 
@@ -105,7 +97,7 @@ class AttendanceSessionController extends Controller
                 ],
                 [
                     'status' => $student['status'],
-                    'phase' => $validated['phase'],
+                    'phase' => AttendanceQrType::from($validated['phase'])->toRecordPhase()->value,
                     'source' => 'manual',
                     'scanned_at' => now(),
                 ],

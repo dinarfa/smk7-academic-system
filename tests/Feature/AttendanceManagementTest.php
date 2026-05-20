@@ -35,8 +35,8 @@ test('teacher can open a new attendance qr session', function () {
     ]);
 
     $response = $this->actingAs($teacher)->post(route('teacher.attendance-sessions.store'), [
-        'type' => 'morning',
-        'duration_minutes' => 45,
+        'subject_key' => $subject->code.'::'.$subject->name,
+        'class_id' => $class->id,
     ]);
 
     $response->assertRedirect();
@@ -45,6 +45,39 @@ test('teacher can open a new attendance qr session', function () {
         'type' => 'subject',
         'subject_id' => $subject->id,
         'is_active' => 1,
+    ]);
+});
+
+test('teacher cannot open attendance session outside active schedule time', function () {
+    $teacher = User::factory()->teacher()->create();
+    $class = SchoolClass::factory()->create([
+        'homeroom_teacher_id' => $teacher->id,
+    ]);
+    $subject = Subject::factory()->create([
+        'school_class_id' => $class->id,
+        'teacher_id' => $teacher->id,
+        'name' => 'Fisika',
+    ]);
+
+    SubjectSchedule::query()->create([
+        'school_class_id' => $class->id,
+        'subject_id' => $subject->id,
+        'schedule_type' => 'subject',
+        'day_of_week' => now()->dayOfWeek,
+        'starts_at' => now()->addHour()->format('H:i'),
+        'ends_at' => now()->addHours(2)->format('H:i'),
+    ]);
+
+    $this->actingAs($teacher)
+        ->post(route('teacher.attendance-sessions.store'), [
+            'subject_key' => $subject->code.'::'.$subject->name,
+            'class_id' => $class->id,
+        ])
+        ->assertSessionHasErrors(['class_id']);
+
+    $this->assertDatabaseMissing('attendance_sessions', [
+        'opened_by' => $teacher->id,
+        'subject_id' => $subject->id,
     ]);
 });
 
@@ -134,7 +167,8 @@ test('teacher opening a session only closes their own active sessions', function
 
     $ownActiveSession = AttendanceSession::query()->create([
         'opened_by' => $teacher->id,
-        'type' => 'morning',
+        'type' => 'subject',
+        'subject' => 'Matematika',
         'qr_token' => 'OWN-ACTIVE-001',
         'starts_at' => now()->subMinutes(10),
         'ends_at' => now()->addMinutes(20),
@@ -150,9 +184,25 @@ test('teacher opening a session only closes their own active sessions', function
         'is_active' => true,
     ]);
 
+    $class = SchoolClass::factory()->create();
+    $subject = Subject::factory()->create([
+        'teacher_id' => $teacher->id,
+        'school_class_id' => $class->id,
+        'code' => 'MTK',
+        'name' => 'Matematika',
+    ]);
+    SubjectSchedule::query()->create([
+        'school_class_id' => $class->id,
+        'subject_id' => $subject->id,
+        'schedule_type' => 'subject',
+        'day_of_week' => now()->dayOfWeek,
+        'starts_at' => now()->subMinutes(5)->format('H:i'),
+        'ends_at' => now()->addMinutes(30)->format('H:i'),
+    ]);
+
     $this->actingAs($teacher)->post(route('teacher.attendance-sessions.store'), [
-        'type' => 'morning',
-        'duration_minutes' => 45,
+        'subject_key' => $subject->code.'::'.$subject->name,
+        'class_id' => $class->id,
     ])->assertRedirect();
 
     $this->assertDatabaseHas('attendance_sessions', [
@@ -203,7 +253,24 @@ test('attendance session closing command deactivates expired sessions', function
 
 test('student can scan active qr token and record attendance', function () {
     $teacher = User::factory()->teacher()->create();
-    $student = User::factory()->student()->create();
+    $class = SchoolClass::factory()->create([
+        'homeroom_teacher_id' => $teacher->id,
+    ]);
+    $subject = Subject::factory()->create([
+        'school_class_id' => $class->id,
+        'teacher_id' => $teacher->id,
+        'name' => 'Matematika',
+    ]);
+    $student = User::factory()->student()->create(['school_class_id' => $class->id]);
+
+    SubjectSchedule::query()->create([
+        'school_class_id' => $class->id,
+        'subject_id' => $subject->id,
+        'schedule_type' => 'subject',
+        'day_of_week' => now()->dayOfWeek,
+        'starts_at' => now()->subMinutes(5)->format('H:i'),
+        'ends_at' => now()->addMinutes(20)->format('H:i'),
+    ]);
 
     $session = AttendanceSession::query()->create([
         'opened_by' => $teacher->id,
@@ -224,6 +291,7 @@ test('student can scan active qr token and record attendance', function () {
         'attendance_session_id' => $session->id,
         'student_id' => $student->id,
         'status' => 'present',
+        'phase' => AttendanceQrType::ClassPhase->value,
     ]);
 });
 
@@ -238,11 +306,77 @@ test('student can open the dedicated attendance scanner page', function () {
 
 test('teacher can open the dedicated qr attendance page', function () {
     $teacher = User::factory()->teacher()->create();
+    $class = SchoolClass::factory()->create();
+
+    $subject = Subject::factory()->create([
+        'teacher_id' => $teacher->id,
+        'school_class_id' => $class->id,
+        'code' => 'MTK',
+        'name' => 'Matematika',
+    ]);
+    SubjectSchedule::query()->create([
+        'school_class_id' => $class->id,
+        'subject_id' => $subject->id,
+        'schedule_type' => 'subject',
+        'day_of_week' => now()->dayOfWeek,
+        'starts_at' => now()->subMinutes(5)->format('H:i'),
+        'ends_at' => now()->addMinutes(30)->format('H:i'),
+    ]);
 
     $this->actingAs($teacher)
         ->get(route('teacher.attendance.qr'))
         ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page->component('teacher/attendance/qr'));
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('teacher/attendance/qr')
+            ->has('subject_groups', 1)
+            ->where('subject_groups.0.name', 'Matematika')
+            ->where('subject_groups.0.classes.0.id', $class->id));
+});
+
+test('teacher qr attendance page only shows currently active schedules', function () {
+    $teacher = User::factory()->teacher()->create();
+
+    $activeClass = SchoolClass::factory()->create();
+    $activeSubject = Subject::factory()->create([
+        'teacher_id' => $teacher->id,
+        'school_class_id' => $activeClass->id,
+        'code' => 'FIS',
+        'name' => 'Fisika',
+    ]);
+    SubjectSchedule::query()->create([
+        'school_class_id' => $activeClass->id,
+        'subject_id' => $activeSubject->id,
+        'schedule_type' => 'subject',
+        'day_of_week' => now()->dayOfWeek,
+        'starts_at' => now()->subMinutes(5)->format('H:i'),
+        'ends_at' => now()->addMinutes(30)->format('H:i'),
+    ]);
+
+    $futureClass = SchoolClass::factory()->create();
+    Subject::factory()->create([
+        'teacher_id' => $teacher->id,
+        'school_class_id' => $futureClass->id,
+        'code' => 'BIO',
+        'name' => 'Biologi',
+    ]);
+    SubjectSchedule::query()->create([
+        'school_class_id' => $futureClass->id,
+        'schedule_type' => 'morning',
+        'day_of_week' => now()->dayOfWeek,
+        'starts_at' => now()->addHour()->format('H:i'),
+        'ends_at' => now()->addHours(2)->format('H:i'),
+    ]);
+
+    $this->actingAs($teacher)
+        ->get(route('teacher.attendance.qr'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('teacher/attendance/qr')
+            ->has('subject_groups', 1)
+            ->has('accessible_classes', 1)
+            ->where('subject_groups.0.name', 'Fisika')
+            ->where('subject_groups.0.classes.0.id', $activeClass->id)
+            ->where('accessible_classes.0.id', $activeClass->id));
 });
 
 test('teacher can open the dedicated daily attendance page', function () {
@@ -252,6 +386,78 @@ test('teacher can open the dedicated daily attendance page', function () {
         ->get(route('teacher.attendance.daily'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page->component('teacher/attendance/daily'));
+});
+
+test('teacher cannot open attendance session using foreign subject class mapping', function () {
+    $teacher = User::factory()->teacher()->create();
+    $otherTeacher = User::factory()->teacher()->create();
+
+    $class = SchoolClass::factory()->create();
+    Subject::factory()->create([
+        'teacher_id' => $otherTeacher->id,
+        'school_class_id' => $class->id,
+        'code' => 'BIO',
+        'name' => 'Biologi',
+    ]);
+
+    $this->actingAs($teacher)
+        ->post(route('teacher.attendance-sessions.store'), [
+            'subject_key' => 'BIO::Biologi',
+            'class_id' => $class->id,
+        ])
+        ->assertSessionHasErrors(['subject_key', 'class_id']);
+});
+
+test('teacher can open attendance session without selecting subject when homeroom', function () {
+    $teacher = User::factory()->teacher()->create();
+    $class = SchoolClass::factory()->create(['homeroom_teacher_id' => $teacher->id]);
+    SubjectSchedule::query()->create([
+        'school_class_id' => $class->id,
+        'schedule_type' => 'morning',
+        'day_of_week' => now()->dayOfWeek,
+        'starts_at' => now()->subMinutes(5)->format('H:i'),
+        'ends_at' => now()->addMinutes(30)->format('H:i'),
+    ]);
+
+    $response = $this->actingAs($teacher)->post(route('teacher.attendance-sessions.store'), [
+        'class_id' => $class->id,
+    ]);
+
+    $response->assertRedirect();
+    $this->assertDatabaseHas('attendance_sessions', [
+        'opened_by' => $teacher->id,
+        'is_active' => 1,
+    ]);
+});
+
+test('teacher can open attendance session without selecting subject when they teach in class', function () {
+    $teacher = User::factory()->teacher()->create();
+    $class = SchoolClass::factory()->create();
+
+    // Teacher has subject mapping to the class but does not select subject_key
+    $subject = Subject::factory()->create([
+        'teacher_id' => $teacher->id,
+        'school_class_id' => $class->id,
+        'name' => 'Sejarah',
+    ]);
+    SubjectSchedule::query()->create([
+        'school_class_id' => $class->id,
+        'subject_id' => $subject->id,
+        'schedule_type' => 'subject',
+        'day_of_week' => now()->dayOfWeek,
+        'starts_at' => now()->subMinutes(5)->format('H:i'),
+        'ends_at' => now()->addMinutes(30)->format('H:i'),
+    ]);
+
+    $response = $this->actingAs($teacher)->post(route('teacher.attendance-sessions.store'), [
+        'class_id' => $class->id,
+    ]);
+
+    $response->assertRedirect();
+    $this->assertDatabaseHas('attendance_sessions', [
+        'opened_by' => $teacher->id,
+        'is_active' => 1,
+    ]);
 });
 
 test('duplicate scans do not create duplicate attendance records', function () {

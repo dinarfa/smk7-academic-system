@@ -51,11 +51,11 @@ class StartExamAttemptRequest extends FormRequest
     {
         $exam = $this->route('exam');
         $rules = [];
-        
+
         if ($exam && $exam->access_code) {
             $rules['access_code'] = ['required', 'string'];
         }
-        
+
         return $rules;
     }
 
@@ -66,7 +66,7 @@ class StartExamAttemptRequest extends FormRequest
     {
         $validator->after(function ($validator) {
             $exam = $this->route('exam');
-            
+
             if ($exam && $exam->access_code) {
                 if ($this->input('access_code') !== $exam->access_code) {
                     $validator->errors()->add('access_code', 'Kode akses ujian tidak valid.');

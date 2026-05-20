@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Teacher;
 
-use App\Models\Subject;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreExamRequest extends FormRequest
 {
@@ -23,10 +23,22 @@ class StoreExamRequest extends FormRequest
      */
     public function rules(): array
     {
+        $teacherId = $this->user()?->id;
+
         return [
             'title' => ['required', 'string', 'max:255'],
-            'subject_id' => ['required', 'exists:subjects,id'],
-            'class_id' => ['required', 'exists:school_classes,id'],
+            'subject_id' => [
+                'required',
+                'integer',
+                Rule::exists('subjects', 'id')->where(fn ($query) => $query->where('teacher_id', $teacherId)),
+            ],
+            'class_id' => [
+                'required',
+                'integer',
+                Rule::exists('subjects', 'school_class_id')->where(fn ($query) => $query
+                    ->where('teacher_id', $teacherId)
+                    ->where('id', $this->input('subject_id'))),
+            ],
             'duration_minutes' => ['required', 'integer', 'min:5', 'max:480'],
             'instructions' => ['nullable', 'string', 'max:2000'],
         ];
@@ -43,27 +55,13 @@ class StoreExamRequest extends FormRequest
             'title.required' => 'Exam title is required.',
             'title.max' => 'Exam title cannot exceed 255 characters.',
             'subject_id.required' => 'Subject is required.',
-            'subject_id.exists' => 'The selected subject does not exist.',
+            'subject_id.exists' => 'The selected subject is not assigned to you.',
             'class_id.required' => 'Class is required.',
-            'class_id.exists' => 'The selected class does not exist.',
+            'class_id.exists' => 'The selected class is not valid for the selected subject.',
             'duration_minutes.required' => 'Duration is required.',
             'duration_minutes.min' => 'Duration must be at least 5 minutes.',
             'duration_minutes.max' => 'Duration cannot exceed 480 minutes.',
             'instructions.max' => 'Instructions cannot exceed 2000 characters.',
         ];
-    }
-
-    /**
-     * Prepare the data for validation.
-     */
-    protected function prepareForValidation(): void
-    {
-        // Ensure subject and class belong together (subject must be in the specified class)
-        if ($this->has('subject_id') && $this->has('class_id')) {
-            $subject = Subject::find($this->input('subject_id'));
-            if ($subject && $subject->school_class_id != $this->input('class_id')) {
-                $this->merge(['subject_id' => null]); // Force validation failure
-            }
-        }
     }
 }

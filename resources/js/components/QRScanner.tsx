@@ -29,12 +29,9 @@ export default function QRScanner({
             cancelAnimationFrame(frameRef.current);
             frameRef.current = null;
         }
-
         if (videoRef.current?.srcObject) {
             const stream = videoRef.current.srcObject as MediaStream;
-
             stream.getTracks().forEach(track => track.stop());
-
             videoRef.current.srcObject = null;
         }
 

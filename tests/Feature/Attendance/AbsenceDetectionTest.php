@@ -2,8 +2,6 @@
 
 use App\Enums\AttendanceQrType;
 use App\Enums\AttendanceStatus;
-use App\Enums\UserRole;
-use App\Jobs\DetectAbsencesJob;
 use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
 use App\Models\SchoolClass;
@@ -21,7 +19,7 @@ test('absence detection creates bolos records for missing student scans', functi
 
     $session = AttendanceSession::factory()->create([
         'opened_by' => $teacher->id,
-        'type' => AttendanceQrType::Morning->value,
+        'type' => AttendanceQrType::Subject->value,
         'starts_at' => now()->startOfDay()->addHours(7),
         'ends_at' => now()->startOfDay()->addHours(8),
         'is_active' => false,
@@ -41,6 +39,7 @@ test('absence detection creates bolos records for missing student scans', functi
         'attendance_session_id' => $session->id,
         'student_id' => $studentMissing->id,
         'status' => AttendanceStatus::Bolos->value,
+        'phase' => AttendanceQrType::ClassPhase->value,
         'source' => 'system',
     ]);
 });
