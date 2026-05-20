@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Enums\UserRole;
 use App\Models\SchoolClass;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -56,6 +55,6 @@ class StudentClassSeeder extends Seeder
             }
         }
 
-        $this->command->info("Seeded: {$classes->count()} classes, {$teachers->count()} teachers, " . ($studentNum - 1) . " students");
+        $this->command->info("Seeded: {$classes->count()} classes, {$teachers->count()} teachers, ".($studentNum - 1).' students');
     }
 }

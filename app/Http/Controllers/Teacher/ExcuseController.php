@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Teacher;
 use App\Http\Controllers\Controller;
 use App\Models\Excuse;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
@@ -20,11 +19,11 @@ class ExcuseController extends Controller
         Gate::authorize('viewAny', Excuse::class);
 
         $teacher = auth()->user();
-        
+
         // Get all excuses for students in teacher's classes
         $excuses = Excuse::query()
             ->whereHas('student', function ($query) use ($teacher) {
-                $query->whereIn('school_class_id', 
+                $query->whereIn('school_class_id',
                     $teacher->homeroomClasses()->pluck('id')
                 );
             })

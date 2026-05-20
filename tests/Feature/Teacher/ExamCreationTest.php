@@ -5,16 +5,28 @@ use App\Models\Exam;
 use App\Models\SchoolClass;
 use App\Models\Subject;
 use App\Models\User;
+use Inertia\Testing\AssertableInertia as Assert;
 
 test('teacher can view exam creation form', function () {
     $teacher = User::factory()->create(['role' => UserRole::Teacher]);
     $schoolClass = SchoolClass::factory()->create();
-    $subject = Subject::factory()->create(['school_class_id' => $schoolClass->id, 'teacher_id' => $teacher->id]);
+    Subject::factory()->create([
+        'school_class_id' => $schoolClass->id,
+        'teacher_id' => $teacher->id,
+        'code' => 'MTK',
+        'name' => 'Matematika',
+    ]);
 
-    $this->actingAs($teacher)
+    $response = $this->actingAs($teacher)
         ->get('/teacher/exams/create')
         ->assertStatus(200)
         ->assertViewIs('app');
+
+    $response->assertInertia(fn (Assert $page) => $page
+        ->component('teacher/exams/create')
+        ->has('subject_groups', 1)
+        ->where('subject_groups.0.name', 'Matematika')
+        ->where('subject_groups.0.classes.0.id', $schoolClass->id));
 });
 
 test('teacher can create exam with valid data', function () {
@@ -66,6 +78,46 @@ test('class must exist validation', function () {
             'title' => 'Test Exam',
             'subject_id' => $subject->id,
             'class_id' => 9999,
+            'duration_minutes' => 60,
+        ])
+        ->assertSessionHasErrors('class_id');
+});
+
+test('teacher cannot create exam with foreign subject', function () {
+    $teacher = User::factory()->create(['role' => UserRole::Teacher]);
+    $otherTeacher = User::factory()->create(['role' => UserRole::Teacher]);
+    $schoolClass = SchoolClass::factory()->create();
+
+    $foreignSubject = Subject::factory()->create([
+        'school_class_id' => $schoolClass->id,
+        'teacher_id' => $otherTeacher->id,
+    ]);
+
+    $this->actingAs($teacher)
+        ->post('/teacher/exams', [
+            'title' => 'Test Exam',
+            'subject_id' => $foreignSubject->id,
+            'class_id' => $schoolClass->id,
+            'duration_minutes' => 60,
+        ])
+        ->assertSessionHasErrors('subject_id');
+});
+
+test('teacher cannot create exam with mismatched class and subject', function () {
+    $teacher = User::factory()->create(['role' => UserRole::Teacher]);
+    $schoolClass = SchoolClass::factory()->create();
+    $otherClass = SchoolClass::factory()->create();
+
+    $subject = Subject::factory()->create([
+        'school_class_id' => $schoolClass->id,
+        'teacher_id' => $teacher->id,
+    ]);
+
+    $this->actingAs($teacher)
+        ->post('/teacher/exams', [
+            'title' => 'Test Exam',
+            'subject_id' => $subject->id,
+            'class_id' => $otherClass->id,
             'duration_minutes' => 60,
         ])
         ->assertSessionHasErrors('class_id');

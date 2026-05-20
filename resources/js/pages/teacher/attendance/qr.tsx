@@ -33,26 +33,40 @@ type ActiveSession = {
 type CurrentSchedule = {
     type: 'morning' | 'subject' | 'dismissal';
     subject_name: string | null;
+    class_name: string | null;
     starts_at: string;
     ends_at: string;
     day_of_week: number;
 } | null;
 
+type SubjectGroup = {
+    key: string;
+    name: string;
+    code: string;
+    classes: { id: number; name: string }[];
+};
+
 type Props = {
     active_session: ActiveSession | null;
     current_schedule: CurrentSchedule;
-    classes?: { id: number; name: string }[];
+    subject_groups?: SubjectGroup[];
+    accessible_classes?: { id: number; name: string }[];
 };
 
 function typeLabel(type: ActiveSession['type']): string {
     return SCHEDULE_TYPE_LABELS[type ?? ''] ?? 'Sesi Absensi';
 }
 
-export default function TeacherAttendanceQr({ active_session: activeSession, current_schedule: currentSchedule, classes = [] }: Props) {
+export default function TeacherAttendanceQr({ active_session: activeSession, current_schedule: currentSchedule, subject_groups: subjectGroups = [], accessible_classes: accessibleClasses = [] }: Props) {
     const [showQrPopup, setShowQrPopup] = useState(false);
     const [popupTimeRemaining, setPopupTimeRemaining] = useState('');
     const [popupPercent, setPopupPercent] = useState(100);
+    const [selectedSubjectKey, setSelectedSubjectKey] = useState('');
     const popupExpiredRef = useRef(false);
+
+    const selectedSubject = subjectGroups.find((group) => group.key === selectedSubjectKey) ?? null;
+    const selectedClasses = selectedSubject?.classes ?? accessibleClasses ?? [];
+    const canOpenSession = selectedClasses.length > 0;
 
     useEffect(() => {
         if (!showQrPopup || !activeSession?.ends_at) {
@@ -108,7 +122,7 @@ return;
                     </p>
                     <h1 className="text-3xl font-semibold text-foreground">QR Absensi Guru</h1>
                     <p className="max-w-2xl text-muted-foreground">
-                        Buka QR absensi — sistem otomatis mendeteksi sesi dari jadwal kelas Anda.
+                        Hanya sesi yang sedang aktif sekarang yang bisa dibuka.
                     </p>
                 </div>
 
@@ -158,10 +172,10 @@ return;
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <CalendarClock className="h-4 w-4 text-muted-foreground" />
-                                    Jadwal Sekarang
+                                        Sesi Tersedia Sekarang
                                 </CardTitle>
                                 <CardDescription>
-                                    Sesi yang akan dibuka otomatis berdasarkan jadwal kelas.
+                                        Sesi yang boleh dibuka pada waktu ini.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
@@ -170,6 +184,7 @@ return;
                                         <p className="text-sm font-semibold text-foreground">
                                             {SCHEDULE_TYPE_LABELS[currentSchedule.type] ?? currentSchedule.type}
                                             {currentSchedule.subject_name ? ` — ${currentSchedule.subject_name}` : ''}
+                                            {currentSchedule.class_name ? ` · ${currentSchedule.class_name}` : ''}
                                         </p>
                                         <p className="text-xs text-muted-foreground">
                                             {DAY_NAMES[currentSchedule.day_of_week]} · {currentSchedule.starts_at} – {currentSchedule.ends_at}
@@ -180,11 +195,10 @@ return;
                                         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
                                         <div>
                                             <p className="text-sm font-medium text-amber-700 dark:text-amber-300">
-                                                Tidak ada jadwal aktif
+                                                    Tidak ada sesi aktif sekarang
                                             </p>
                                             <p className="mt-0.5 text-xs text-amber-600/80 dark:text-amber-400/80">
-                                                Sesi pagi (30 menit) akan dibuka sebagai fallback.
-                                                Hubungi admin untuk mengatur jadwal kelas.
+                                                    Tunggu jam pelajaran aktif. Sesi tidak bisa dibuka di luar jam.
                                             </p>
                                         </div>
                                     </div>
@@ -199,7 +213,7 @@ return;
                                 <CardDescription>
                                     {activeSession
                                         ? 'Tutup sesi aktif atau refresh status QR.'
-                                        : 'Klik tombol di bawah untuk membuka QR absensi.'}
+                                        : 'Pilih sesi yang sedang aktif untuk membuka QR absensi.'}
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-3">
@@ -215,29 +229,51 @@ return;
                                     <Form {...AttendanceSessionController.store.form()}>
                                         {({ processing }) => (
                                             <>
-                                                {classes.length > 0 && (
-                                                    <div className="mb-2">
-                                                        <Label htmlFor="class_id" className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">Pilih Kelas</Label>
-                                                        <select
-                                                            id="class_id"
-                                                            name="class_id"
-                                                            className="mt-1 block w-full rounded-xl border border-slate-200/80 bg-white/80 px-3 py-2 text-sm font-medium text-slate-700 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-white/10 dark:bg-white/5 dark:text-slate-200"
-                                                        >
-                                                            <option value="">Gunakan kelas utama</option>
-                                                            {classes.map((c) => (
-                                                                <option key={c.id} value={c.id}>{c.name}</option>
-                                                            ))}
-                                                        </select>
+                                                <div className="mb-2 space-y-2">
+                                                    <Label htmlFor="subject_key" className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">Pilih Mata Pelajaran</Label>
+                                                    <select
+                                                        id="subject_key"
+                                                        name="subject_key"
+                                                        value={selectedSubjectKey}
+                                                        onChange={(event) => setSelectedSubjectKey(event.target.value)}
+                                                        className="mt-1 block w-full rounded-xl border border-slate-200/80 bg-white/80 px-3 py-2 text-sm font-medium text-slate-700 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-white/10 dark:bg-white/5 dark:text-slate-200"
+                                                    >
+                                                        <option value="">Pilih Mata Pelajaran</option>
+                                                        {subjectGroups.map((group) => (
+                                                            <option key={group.key} value={group.key}>{group.name}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+
+                                                <div className="mb-2 space-y-2">
+                                                    <Label htmlFor="class_id" className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">Pilih Kelas</Label>
+                                                    <select
+                                                        key={selectedSubjectKey || 'no-subject'}
+                                                        id="class_id"
+                                                        name="class_id"
+                                                        defaultValue=""
+                                                        className="mt-1 block w-full rounded-xl border border-slate-200/80 bg-white/80 px-3 py-2 text-sm font-medium text-slate-700 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/10 dark:bg-white/5 dark:text-slate-200"
+                                                    >
+                                                        <option value="">Pilih Kelas</option>
+                                                        {selectedClasses.map((c) => (
+                                                            <option key={c.id} value={c.id}>{c.name}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+
+                                                {subjectGroups.length === 0 && (
+                                                    <div className="rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-700 dark:text-amber-300">
+                                                        Anda belum memiliki relasi mata pelajaran-kelas. Hubungi admin untuk penugasan mapel.
                                                     </div>
                                                 )}
 
                                                 <Button
                                                     type="submit"
-                                                    disabled={processing}
+                                                    disabled={processing || !canOpenSession}
                                                     className="w-full gap-2 bg-gradient-to-r from-emerald-600 to-emerald-500 font-semibold text-white shadow-lg shadow-emerald-500/25 hover:from-emerald-700 hover:to-emerald-600"
                                                 >
                                                     <Scan className="h-4 w-4" />
-                                                    {processing ? 'Membuka...' : 'Buka QR Absensi'}
+                                                    {processing ? 'Membuka...' : 'Buka QR Sesi Aktif'}
                                                 </Button>
                                             </>
                                         )}
@@ -268,7 +304,7 @@ return;
                         <Card className="border-border/60 shadow-sm">
                             <CardHeader>
                                 <CardTitle>Info Sesi</CardTitle>
-                                <CardDescription>Ringkasan sesi yang sedang aktif.</CardDescription>
+                                    <CardDescription>Ringkasan sesi yang sedang aktif sekarang.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4 text-sm">
                                 {activeSession ? (

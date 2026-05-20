@@ -160,8 +160,6 @@ describe('Teacher Question CRUD', function () {
         ]);
     });
 
-
-
     test('teacher can delete a question', function () {
         $question = Question::factory()->create([
             'exam_id' => $this->exam->id,

@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Student\SaveExamResponseRequest;
 use App\Models\AnswerOption;
+use App\Models\Exam;
+use App\Models\ExamAttempt;
 use App\Models\ExamResponse;
 use App\Models\Question;
 use Illuminate\Http\RedirectResponse;
@@ -14,7 +16,7 @@ class ExamResponseController extends Controller
     /**
      * Save (or autosave) a student's response for a question.
      */
-    public function store(SaveExamResponseRequest $request, \App\Models\Exam $exam, \App\Models\ExamAttempt $attempt): RedirectResponse
+    public function store(SaveExamResponseRequest $request, Exam $exam, ExamAttempt $attempt): RedirectResponse
     {
         $data = $request->validated();
         $attemptModel = $attempt;

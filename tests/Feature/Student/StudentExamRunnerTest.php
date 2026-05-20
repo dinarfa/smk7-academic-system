@@ -176,5 +176,5 @@ test('submitting exam calculates score correctly', function () {
 
     $attempt->refresh();
     expect($attempt->status)->toBe('submitted');
-    expect((float)$attempt->score)->toEqual(50.0); // 10/20 * 100
+    expect((float) $attempt->score)->toEqual(50.0); // 10/20 * 100
 });

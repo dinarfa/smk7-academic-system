@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use App\Enums\AttendanceQrType;
+use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Carbon\CarbonInterface;
-use Carbon\Carbon;
+use Illuminate\Support\Collection;
 
 class SubjectSchedule extends Model
 {
@@ -122,11 +123,11 @@ class SubjectSchedule extends Model
             $ends = $slot->ends_at;
 
             if (is_string($starts) && strlen($starts) === 5) { // H:i -> append seconds
-                $starts = $starts . ':00';
+                $starts = $starts.':00';
             }
 
             if (is_string($ends) && strlen($ends) === 5) { // H:i -> append seconds
-                $ends = $ends . ':00';
+                $ends = $ends.':00';
             }
 
             try {
@@ -168,40 +169,39 @@ class SubjectSchedule extends Model
     {
         $at ??= now();
 
-        $slots = static::query()
-            ->where('school_class_id', $schoolClassId)
-            ->where('day_of_week', $at->dayOfWeek)
-            ->with('subject:id,name')
-            ->orderBy('starts_at')
-            ->get();
-
-        if ($slots->isEmpty()) {
-            return null;
-        }
-
-        $active = static::query()
+        return static::query()
             ->where('school_class_id', $schoolClassId)
             ->activeNow($at)
-            ->with('subject:id,name')
+            ->with('subject:id,code,name')
             ->first();
+    }
 
-        if ($active) {
-            return $active;
+    /**
+     * Resolve all active schedule slots for a teacher at the given time.
+     *
+     * @return Collection<int, self>
+     */
+    public static function activeForTeacherNow(User $teacher, ?CarbonInterface $at = null): Collection
+    {
+        $at ??= now();
+
+        $classIds = $teacher->homeroomClasses()
+            ->pluck('school_classes.id')
+            ->merge($teacher->subjects()->pluck('school_class_id'))
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($classIds->isEmpty()) {
+            return collect();
         }
 
-        $firstSlot = $slots->first();
-        $lastSlot = $slots->last();
-        $timeString = $at->format('H:i:s');
-
-        if ($timeString < $firstSlot->starts_at) {
-            return $firstSlot;
-        }
-
-        if ($timeString > $lastSlot->ends_at) {
-            return $lastSlot;
-        }
-
-        return static::findClosestSlot($schoolClassId, $at)?->loadMissing('subject:id,name');
+        return static::query()
+            ->whereIn('school_class_id', $classIds->all())
+            ->activeNow($at)
+            ->with(['subject:id,code,name', 'schoolClass:id,name'])
+            ->orderBy('starts_at')
+            ->get();
     }
 
     /**

@@ -75,13 +75,13 @@ class ExamAttemptController extends Controller
             ->keyBy('question_id');
 
         $questions = collect()
-            ->merge($exam->questions->map(fn($question) => [
+            ->merge($exam->questions->map(fn ($question) => [
                 'id' => $question->id,
                 'prompt' => $question->prompt,
                 'type' => $question->type,
                 'points' => $question->points,
                 'sort_order' => $question->sort_order,
-                'answer_options' => $question->answerOptions->map(fn($option) => [
+                'answer_options' => $question->answerOptions->map(fn ($option) => [
                     'id' => $option->id,
                     'option_text' => $option->option_text,
                     'sort_order' => $option->sort_order,
@@ -92,13 +92,13 @@ class ExamAttemptController extends Controller
                 ] : null,
                 'source_sort_order' => $question->sort_order,
             ]))
-            ->merge($exam->attachedQuestions->map(fn($question) => [
+            ->merge($exam->attachedQuestions->map(fn ($question) => [
                 'id' => $question->id,
                 'prompt' => $question->prompt,
                 'type' => $question->type,
                 'points' => $question->points,
                 'sort_order' => $question->pivot?->sort_order ?? $question->sort_order,
-                'answer_options' => $question->answerOptions->map(fn($option) => [
+                'answer_options' => $question->answerOptions->map(fn ($option) => [
                     'id' => $option->id,
                     'option_text' => $option->option_text,
                     'sort_order' => $option->sort_order,

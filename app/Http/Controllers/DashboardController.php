@@ -26,7 +26,7 @@ class DashboardController extends Controller
             $totalSessions = AttendanceSession::count();
             $todayRecords = AttendanceRecord::whereDate('scanned_at', now()->toDateString())->count();
             $activeSessions = AttendanceSession::where('is_active', true)->count();
-            
+
             $recentActivities = AttendanceRecord::query()
                 ->with(['student:id,name', 'session:id,type,subject'])
                 ->latest('scanned_at')

@@ -49,35 +49,53 @@ class AttendanceViewController extends Controller
         $teacher = auth()->user();
         $session = $service->getActiveSession($teacher->id);
 
-        $homeroomClass = $teacher->homeroomClasses()->first();
-        $currentSchedule = null;
+        $activeSchedules = SubjectSchedule::activeForTeacherNow($teacher);
 
-        if ($homeroomClass) {
-            $slot = SubjectSchedule::resolveForClassNow($homeroomClass->id);
+        $subjectGroups = $activeSchedules
+            ->filter(fn (SubjectSchedule $schedule) => $schedule->subject_id !== null)
+            ->groupBy(fn (SubjectSchedule $schedule) => $schedule->subject?->code.'::'.$schedule->subject?->name)
+            ->map(function ($schedulesInGroup, $subjectKey) {
+                $firstSchedule = $schedulesInGroup->first();
 
-            if ($slot) {
-                $currentSchedule = [
-                    'type' => $slot->schedule_type,
-                    'subject_name' => $slot->subject?->name,
-                    'starts_at' => $slot->starts_at,
-                    'ends_at' => $slot->ends_at,
-                    'day_of_week' => $slot->day_of_week,
+                return [
+                    'key' => $subjectKey,
+                    'name' => $firstSchedule?->subject?->name,
+                    'code' => $firstSchedule?->subject?->code,
+                    'classes' => $schedulesInGroup
+                        ->map(fn (SubjectSchedule $schedule) => [
+                            'id' => $schedule->school_class_id,
+                            'name' => $schedule->schoolClass?->name,
+                        ])
+                        ->filter(fn ($class) => filled($class['name']))
+                        ->unique('id')
+                        ->values(),
                 ];
-            }
-        }
+            })
+            ->values();
 
-        $classes = $teacher
-            ->homeroomClasses()
-            ->get()
-            ->map(fn ($class) => [
-                'id' => $class->id,
-                'name' => $class->name,
-            ])->values();
+        $accessibleClasses = $activeSchedules
+            ->map(fn (SubjectSchedule $schedule) => [
+                'id' => $schedule->school_class_id,
+                'name' => $schedule->schoolClass?->name,
+            ])
+            ->filter(fn ($class) => filled($class['name']))
+            ->unique('id')
+            ->values();
+
+        $currentSchedule = $activeSchedules->first();
 
         return Inertia::render('teacher/attendance/qr', [
             'active_session' => $this->mapSession($session),
-            'current_schedule' => $currentSchedule,
-            'classes' => $classes,
+            'current_schedule' => $currentSchedule ? [
+                'type' => $currentSchedule->schedule_type,
+                'subject_name' => $currentSchedule->subject?->name,
+                'class_name' => $currentSchedule->schoolClass?->name,
+                'starts_at' => $currentSchedule->starts_at,
+                'ends_at' => $currentSchedule->ends_at,
+                'day_of_week' => $currentSchedule->day_of_week,
+            ] : null,
+            'subject_groups' => $subjectGroups,
+            'accessible_classes' => $accessibleClasses,
         ]);
     }
 

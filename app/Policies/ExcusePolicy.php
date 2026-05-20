@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Excuse;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class ExcusePolicy
 {
@@ -53,7 +52,7 @@ class ExcusePolicy
     public function update(User $user, Excuse $excuse): bool
     {
         // Only teacher or admin can approve/reject excuses
-        if (!($user->isTeacher() || $user->isAdmin())) {
+        if (! ($user->isTeacher() || $user->isAdmin())) {
             return false;
         }
 
@@ -82,7 +81,6 @@ class ExcusePolicy
         // Admin can delete any
         return $user->isAdmin();
     }
-
 
     /**
      * Determine whether the user can restore the model.

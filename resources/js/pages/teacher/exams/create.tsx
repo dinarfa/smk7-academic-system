@@ -12,31 +12,31 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { dashboard } from '@/routes';
 
-type Subject = {
-    id: number;
-    name: string;
-    class_id: number;
-};
+import { useMemo, useState } from 'react';
 
-type Class = {
-    id: number;
+type SubjectGroup = {
+    key: string;
     name: string;
-    code: string | null;
+    code: string;
+    classes: {
+        id: number;
+        name: string;
+        code: string | null;
+        subject_id: number;
+    }[];
 };
 
 type Props = {
-    subjects: Subject[][];
-    classes: Class[];
+    subject_groups: SubjectGroup[];
 };
 
-export default function TeacherExamsCreate({ subjects, classes }: Props) {
-    const subjectsMap = new Map<number, Subject[]>();
-    subjects.forEach((subjectGroup) => {
-        if (subjectGroup.length > 0) {
-            const classId = subjectGroup[0].class_id;
-            subjectsMap.set(classId, subjectGroup);
-        }
-    });
+export default function TeacherExamsCreate({ subject_groups: subjectGroups }: Props) {
+    const [selectedSubjectKey, setSelectedSubjectKey] = useState('');
+
+    const selectedSubject = useMemo(
+        () => subjectGroups.find((group) => group.key === selectedSubjectKey) ?? null,
+        [selectedSubjectKey, subjectGroups],
+    );
 
     return (
         <>
@@ -84,21 +84,36 @@ export default function TeacherExamsCreate({ subjects, classes }: Props) {
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="class_id">Kelas</Label>
+                                        <Label htmlFor="subject_key">Mata Pelajaran</Label>
                                         <select
-                                            id="class_id"
-                                            name="class_id"
-                                            required
+                                            id="subject_key"
+                                            value={selectedSubjectKey}
+                                            onChange={(event) => setSelectedSubjectKey(event.target.value)}
                                             className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm focus-visible:ring-1 focus-visible:outline-hidden"
                                         >
-                                            <option value="">
-                                                Pilih Kelas
-                                            </option>
-                                            {classes.map((cls) => (
-                                                <option
-                                                    key={cls.id}
-                                                    value={cls.id}
-                                                >
+                                            <option value="">Pilih Mata Pelajaran</option>
+                                            {subjectGroups.map((group) => (
+                                                <option key={group.key} value={group.key}>
+                                                    {group.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="class_id">Kelas</Label>
+                                        <select
+                                            key={selectedSubjectKey || 'no-subject'}
+                                            id="class_id"
+                                            name="class_id"
+                                            defaultValue=""
+                                            required
+                                            disabled={selectedSubject === null}
+                                            className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm focus-visible:ring-1 focus-visible:outline-hidden disabled:cursor-not-allowed disabled:opacity-60"
+                                        >
+                                            <option value="">Pilih Kelas</option>
+                                            {selectedSubject?.classes.map((cls) => (
+                                                <option key={cls.id} value={cls.id}>
                                                     {cls.name}
                                                 </option>
                                             ))}
@@ -111,32 +126,22 @@ export default function TeacherExamsCreate({ subjects, classes }: Props) {
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="subject_id">
-                                            Mata Pelajaran
-                                        </Label>
+                                        <Label htmlFor="subject_id">Mapel (untuk submit)</Label>
                                         <select
+                                            key={selectedSubjectKey || 'no-subject-id'}
                                             id="subject_id"
                                             name="subject_id"
+                                            defaultValue=""
                                             required
-                                            className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm focus-visible:ring-1 focus-visible:outline-hidden"
+                                            disabled={selectedSubject === null}
+                                            className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm focus-visible:ring-1 focus-visible:outline-hidden disabled:cursor-not-allowed disabled:opacity-60"
                                         >
-                                            <option value="">
-                                                Pilih Mata Pelajaran
-                                            </option>
-                                            {Array.from(
-                                                subjectsMap.values()
-                                            ).map((subjectGroup) =>
-                                                subjectGroup.map(
-                                                    (subject) => (
-                                                        <option
-                                                            key={subject.id}
-                                                            value={subject.id}
-                                                        >
-                                                            {subject.name}
-                                                        </option>
-                                                    )
-                                                )
-                                            )}
+                                            <option value="">Pilih Mapel di Kelas Terpilih</option>
+                                            {selectedSubject?.classes.map((cls) => (
+                                                <option key={cls.subject_id} value={cls.subject_id}>
+                                                    {selectedSubject.name} - {cls.name}
+                                                </option>
+                                            ))}
                                         </select>
                                         {errors.subject_id && (
                                             <p className="text-sm text-red-600">
@@ -144,6 +149,12 @@ export default function TeacherExamsCreate({ subjects, classes }: Props) {
                                             </p>
                                         )}
                                     </div>
+
+                                    {subjectGroups.length === 0 && (
+                                        <p className="text-sm text-amber-600">
+                                            Anda belum punya relasi mata pelajaran-kelas. Hubungi admin.
+                                        </p>
+                                    )}
 
                                     <div className="grid gap-2">
                                         <Label htmlFor="duration_minutes">
@@ -184,7 +195,7 @@ export default function TeacherExamsCreate({ subjects, classes }: Props) {
                                     <div className="flex gap-3">
                                         <Button
                                             type="submit"
-                                            disabled={processing}
+                                            disabled={processing || subjectGroups.length === 0 || selectedSubject === null}
                                         >
                                             Buat Ujian
                                         </Button>

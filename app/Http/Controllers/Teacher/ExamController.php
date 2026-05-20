@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Teacher;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Teacher\StoreExamRequest;
 use App\Models\Exam;
-use App\Models\SchoolClass;
+use App\Models\ExamAttempt;
+use App\Models\ExamResponse;
 use App\Models\Subject;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -45,23 +47,37 @@ class ExamController extends Controller
      */
     public function create(): Response
     {
-        $subjects = Subject::with('schoolClass')
-            ->get()
-            ->groupBy('school_class_id')
-            ->map(fn ($subjectsInClass) => $subjectsInClass->map(fn (Subject $subject) => [
-                'id' => $subject->id,
-                'name' => $subject->name,
-                'class_id' => $subject->school_class_id,
-            ])->values())
+        $teacher = auth()->user();
+
+        $subjectGroups = Subject::query()
+            ->with('schoolClass:id,name,code')
+            ->where('teacher_id', $teacher->id)
+            ->orderBy('name')
+            ->get(['id', 'code', 'name', 'school_class_id'])
+            ->groupBy(fn (Subject $subject) => $subject->code.'::'.$subject->name)
+            ->map(function ($subjectsInGroup, $subjectKey) {
+                $firstSubject = $subjectsInGroup->first();
+
+                return [
+                    'key' => $subjectKey,
+                    'name' => $firstSubject?->name,
+                    'code' => $firstSubject?->code,
+                    'classes' => $subjectsInGroup
+                        ->map(fn (Subject $subject) => [
+                            'id' => $subject->school_class_id,
+                            'name' => $subject->schoolClass?->name,
+                            'code' => $subject->schoolClass?->code,
+                            'subject_id' => $subject->id,
+                        ])
+                        ->filter(fn (array $class): bool => filled($class['name']))
+                        ->unique('id')
+                        ->values(),
+                ];
+            })
             ->values();
 
-        $classes = SchoolClass::select('id', 'name', 'code')
-            ->orderBy('name')
-            ->get();
-
         return Inertia::render('teacher/exams/create', [
-            'subjects' => $subjects,
-            'classes' => $classes,
+            'subject_groups' => $subjectGroups,
         ]);
     }
 
@@ -154,7 +170,7 @@ class ExamController extends Controller
     /**
      * Show the correction page for a specific attempt.
      */
-    public function correction(Exam $exam, \App\Models\ExamAttempt $attempt): Response
+    public function correction(Exam $exam, ExamAttempt $attempt): Response
     {
         $this->authorize('view', $exam);
 
@@ -172,12 +188,13 @@ class ExamController extends Controller
 
         $mappedQuestions = $allQuestions->map(function ($q) use ($responses) {
             $resp = $responses->get($q->id);
+
             return [
                 'id' => $q->id,
                 'prompt' => $q->prompt,
                 'type' => $q->type,
                 'points' => (float) $q->points,
-                'answer_options' => $q->answerOptions->map(fn($opt) => [
+                'answer_options' => $q->answerOptions->map(fn ($opt) => [
                     'id' => $opt->id,
                     'option_text' => $opt->option_text,
                     'is_correct' => $opt->is_correct,
@@ -210,7 +227,7 @@ class ExamController extends Controller
     /**
      * Update the points for an attempt.
      */
-    public function updateCorrection(\Illuminate\Http\Request $request, Exam $exam, \App\Models\ExamAttempt $attempt): RedirectResponse
+    public function updateCorrection(Request $request, Exam $exam, ExamAttempt $attempt): RedirectResponse
     {
         $this->authorize('update', $exam);
 
@@ -225,7 +242,7 @@ class ExamController extends Controller
         ]);
 
         foreach ($validated['grades'] as $grade) {
-            \App\Models\ExamResponse::updateOrCreate(
+            ExamResponse::updateOrCreate(
                 ['exam_attempt_id' => $attempt->id, 'question_id' => $grade['question_id']],
                 ['points_awarded' => $grade['points_awarded']]
             );
@@ -256,17 +273,17 @@ class ExamController extends Controller
 
         $attempts = $exam->attempts()->with('student')->latest()->get();
 
-        $filename = "hasil_ujian_{$exam->id}_" . date('Y-m-d') . ".csv";
+        $filename = "hasil_ujian_{$exam->id}_".date('Y-m-d').'.csv';
 
         $headers = [
-            "Content-type"        => "text/csv",
-            "Content-Disposition" => "attachment; filename=$filename",
-            "Pragma"              => "no-cache",
-            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
-            "Expires"             => "0"
+            'Content-type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=$filename",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
         ];
 
-        $callback = function() use ($attempts) {
+        $callback = function () use ($attempts) {
             $file = fopen('php://output', 'w');
             fputcsv($file, ['No', 'Nama Siswa', 'Status', 'Waktu Mulai', 'Waktu Selesai', 'Nilai']);
 
