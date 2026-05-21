@@ -21,6 +21,8 @@ type Subject = {
     code: string | null
     name: string
     class: string | null
+    schedule_time?: string | null
+    schedule_day?: string | null
 }
 
 type Props = {
@@ -137,6 +139,14 @@ export default function TeacherSubjectsIndex({ subjects }: Props) {
                                                 Kode
                                             </TableHead>
 
+                                            <TableHead className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                                Hari
+                                            </TableHead>
+
+                                            <TableHead className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                                Waktu
+                                            </TableHead>
+
                                             <TableHead className="pr-5 text-xs font-semibold uppercase tracking-wider text-slate-400">
                                                 Kelas
                                             </TableHead>
@@ -180,6 +190,25 @@ export default function TeacherSubjectsIndex({ subjects }: Props) {
                                                     <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-600">
                                                         {subject.code ?? '—'}
                                                     </span>
+                                                </TableCell>
+
+
+                                                {/* Day */}
+                                                <TableCell>
+                                                    {subject.schedule_day ? (
+                                                        <span className="text-sm text-slate-600">{subject.schedule_day}</span>
+                                                    ) : (
+                                                        <span className="text-sm text-slate-400">—</span>
+                                                    )}
+                                                </TableCell>
+
+                                                {/* Schedule Time */}
+                                                <TableCell>
+                                                    {subject.schedule_time ? (
+                                                        <span className="text-sm text-slate-600">{subject.schedule_time}</span>
+                                                    ) : (
+                                                        <span className="text-sm text-slate-400">—</span>
+                                                    )}
                                                 </TableCell>
 
                                                 {/* Class */}
