@@ -68,7 +68,7 @@ class AttendanceController extends Controller
 
         if (! $attendanceScanService->isStudentAllowed($request->user(), $session)) {
             return back()->withErrors([
-                'qr_token' => 'Anda tidak memiliki akses untuk mengisi absensi pada sesi ini. Hanya murid dari kelas wali kelas yang bersangkutan yang dapat melakukan scan.',
+                'qr_token' => 'Anda tidak memiliki akses untuk mengisi absensi pada sesi ini. Hanya murid dari kelas yang bersangkutan yang dapat melakukan scan.',
             ]);
         }
 

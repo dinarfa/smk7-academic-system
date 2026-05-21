@@ -56,6 +56,14 @@ class SubjectSchedule extends Model
     }
 
     /**
+     * The teacher who teaches this subject slot (resolved via subject).
+     */
+    public function teacher(): ?User
+    {
+        return $this->subject?->teacher;
+    }
+
+    /**
      * Scope: slots that are active right now for the given time.
      *
      * @param  Builder<SubjectSchedule>  $query
@@ -179,29 +187,49 @@ class SubjectSchedule extends Model
     /**
      * Resolve all active schedule slots for a teacher at the given time.
      *
+     * Homeroom teachers see ALL active slots for their classes.
+     * Subject teachers see only their own subject slots + morning/dismissal
+     * for non-homeroom classes they teach in.
+     *
      * @return Collection<int, self>
      */
     public static function activeForTeacherNow(User $teacher, ?CarbonInterface $at = null): Collection
     {
         $at ??= now();
 
-        $classIds = $teacher->homeroomClasses()
-            ->pluck('school_classes.id')
-            ->merge($teacher->subjects()->pluck('school_class_id'))
-            ->filter()
-            ->unique()
-            ->values();
+        // 1. Homeroom classes: teacher sees ALL active slots
+        $homeroomClassIds = $teacher->homeroomClasses()->pluck('school_classes.id');
 
-        if ($classIds->isEmpty()) {
-            return collect();
+        $homeroomSlots = collect();
+        if ($homeroomClassIds->isNotEmpty()) {
+            $homeroomSlots = static::query()
+                ->whereIn('school_class_id', $homeroomClassIds->all())
+                ->activeNow($at)
+                ->with(['subject:id,code,name', 'schoolClass:id,name'])
+                ->get();
         }
 
-        return static::query()
-            ->whereIn('school_class_id', $classIds->all())
-            ->activeNow($at)
-            ->with(['subject:id,code,name', 'schoolClass:id,name'])
-            ->orderBy('starts_at')
-            ->get();
+        // 2. Subject-taught classes (non-homeroom): only teacher's own subjects + morning/dismissal
+        $subjectClassIds = $teacher->subjects()->pluck('school_class_id')->filter()->unique();
+        $teacherSubjectIds = $teacher->subjects()->pluck('subjects.id');
+        $nonHomeroomSubjectClassIds = $subjectClassIds->diff($homeroomClassIds);
+
+        $subjectSlots = collect();
+        if ($nonHomeroomSubjectClassIds->isNotEmpty()) {
+            $subjectSlots = static::query()
+                ->whereIn('school_class_id', $nonHomeroomSubjectClassIds->all())
+                ->activeNow($at)
+                ->where(function ($q) use ($teacherSubjectIds) {
+                    $q->whereNull('subject_id')
+                        ->orWhereIn('subject_id', $teacherSubjectIds->all());
+                })
+                ->with(['subject:id,code,name', 'schoolClass:id,name'])
+                ->get();
+        }
+
+        return $homeroomSlots->merge($subjectSlots)
+            ->sortBy('starts_at')
+            ->values();
     }
 
     /**

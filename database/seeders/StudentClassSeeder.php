@@ -22,9 +22,16 @@ class StudentClassSeeder extends Seeder
 
         // 10 classes, each with homeroom teacher + subjects
         $classNames = [
-            'X IPA 1', 'X IPA 2', 'X IPS 1',
-            'XI IPA 1', 'XI IPA 2', 'XI IPS 1',
-            'XII IPA 1', 'XII IPA 2', 'XII IPS 1', 'XII IPS 2',
+            'X IPA 1',
+            'X IPA 2',
+            'X IPS 1',
+            'XI IPA 1',
+            'XI IPA 2',
+            'XI IPS 1',
+            'XII IPA 1',
+            'XII IPA 2',
+            'XII IPS 1',
+            'XII IPS 2',
         ];
 
         $classes = collect($classNames)->map(function (string $name, int $i) use ($teachers) {
@@ -38,8 +45,8 @@ class StudentClassSeeder extends Seeder
             return $class;
         });
 
-        $this->call(SubjectSeeder::class);
-        $this->call(SubjectScheduleSeeder::class);
+        /* $this->call(SubjectSeeder::class); */
+        /* $this->call(SubjectScheduleSeeder::class); */
 
         // 120 students distributed across classes
         $studentNum = 1;

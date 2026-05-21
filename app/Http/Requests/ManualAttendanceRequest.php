@@ -55,21 +55,29 @@ class ManualAttendanceRequest extends FormRequest
     {
         return [
             function ($validator) {
-                // Get teacher's assigned classes
                 $teacher = auth()->user();
+
+                // Homeroom class IDs
                 $classIds = $teacher->homeroomClasses()->pluck('id')->toArray();
 
-                // If teacher has no assigned homeroom classes, skip class membership checks
-                if (empty($classIds)) {
+                // Subject-taught class IDs
+                $subjectClassIds = $teacher->subjects()
+                    ->pluck('school_class_id')
+                    ->filter()
+                    ->unique()
+                    ->toArray();
+
+                $allowedClassIds = array_unique(array_merge($classIds, $subjectClassIds));
+
+                if (empty($allowedClassIds)) {
                     return;
                 }
 
-                // Check if all students belong to teacher's classes
                 foreach ($this->input('students', []) as $index => $student) {
                     $studentId = $student['student_id'] ?? null;
                     if ($studentId) {
                         $studentClass = User::find($studentId)?->school_class_id;
-                        if (! $studentClass || ! in_array($studentClass, $classIds)) {
+                        if (! $studentClass || ! in_array($studentClass, $allowedClassIds)) {
                             $validator->errors()->add(
                                 "students.{$index}.student_id",
                                 "Student ID {$studentId} is not in your assigned class."

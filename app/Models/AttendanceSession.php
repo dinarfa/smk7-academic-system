@@ -23,6 +23,7 @@ class AttendanceSession extends Model
      */
     protected $fillable = [
         'opened_by',
+        'class_id',
         'type',
         'subject',
         'subject_id',
@@ -54,6 +55,14 @@ class AttendanceSession extends Model
     }
 
     /**
+     * The school class targeted by this attendance session.
+     */
+    public function schoolClass(): BelongsTo
+    {
+        return $this->belongsTo(SchoolClass::class, 'class_id');
+    }
+
+    /**
      * Subject linked to this session (if type=subject).
      */
     public function subjectModel(): BelongsTo
@@ -67,6 +76,14 @@ class AttendanceSession extends Model
     public function getSubjectNameAttribute(): ?string
     {
         return $this->subjectModel?->name ?? $this->subject;
+    }
+
+    /**
+     * Resolve the target class for this session.
+     */
+    public function resolvedClassId(): ?int
+    {
+        return $this->class_id ?? $this->subjectModel?->school_class_id;
     }
 
     /**
