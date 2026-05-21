@@ -51,13 +51,19 @@ class AttendanceScanService
     }
 
     /**
-     * Check if the student belongs to the homeroom class of the teacher who opened the session.
+     * Check if the student belongs to the class targeted by the session.
      */
     public function isStudentAllowed(User $student, AttendanceSession $session): bool
     {
         // If student not assigned to class (legacy/test setups), allow scan.
         if (! $student->school_class_id) {
             return true;
+        }
+
+        $targetClassId = $session->resolvedClassId();
+
+        if ($targetClassId) {
+            return (int) $student->school_class_id === (int) $targetClassId;
         }
 
         return $student->schoolClass

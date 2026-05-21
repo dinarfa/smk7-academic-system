@@ -36,10 +36,38 @@ class AttendanceSessionController extends Controller
             ]);
         }
 
+        // Security: for subject-type slots, verify the teacher owns this subject
+        if ($schedule->schedule_type === 'subject' && $schedule->subject_id !== null) {
+            $teacherOwnsSubject = $teacher->subjects()
+                ->where('id', $schedule->subject_id)
+                ->exists();
+
+            if (! $teacherOwnsSubject) {
+                $teacherSubjectIds = $teacher->subjects()
+                    ->where('school_class_id', $classId)
+                    ->pluck('id');
+
+                $teacherSchedule = SubjectSchedule::query()
+                    ->where('school_class_id', $classId)
+                    ->whereIn('subject_id', $teacherSubjectIds)
+                    ->activeNow()
+                    ->first();
+
+                if ($teacherSchedule) {
+                    $schedule = $teacherSchedule;
+                } else {
+                    throw ValidationException::withMessages([
+                        'class_id' => __('Anda tidak memiliki mata pelajaran yang aktif saat ini di kelas ini.'),
+                    ]);
+                }
+            }
+        }
+
         $endsAt = now()->setTimeFromTimeString($schedule->ends_at);
         $minutesUntilEnd = now()->diffInMinutes($endsAt, false);
 
         $sessionData = [
+            'class_id' => $schedule->school_class_id,
             'type' => $schedule->resolveQrType()->value,
             'subject_id' => $schedule->subject_id,
             'subject' => $schedule->subject?->name,

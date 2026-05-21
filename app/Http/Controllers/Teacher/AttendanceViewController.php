@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Teacher\ExportAttendanceRequest;
 use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
+use App\Models\SchoolClass;
 use App\Models\SubjectSchedule;
 use App\Services\Attendance\AbsenceDetectionService;
 use App\Services\Attendance\AttendanceReportService;
@@ -107,12 +108,28 @@ class AttendanceViewController extends Controller
         Gate::authorize('viewDaily');
 
         $teacher = auth()->user();
-        $classes = $teacher
-            ->homeroomClasses()
-            ->with('students')
-            ->get();
 
-        $students = $classes
+        // Homeroom classes: full access
+        $homeroomClasses = $teacher->homeroomClasses()->with('students')->get();
+
+        // Subject-taught classes (non-homeroom): access to students in those classes
+        $subjectClassIds = $teacher->subjects()
+            ->pluck('school_class_id')
+            ->filter()
+            ->unique()
+            ->diff($homeroomClasses->pluck('id'));
+
+        $subjectClasses = collect();
+        if ($subjectClassIds->isNotEmpty()) {
+            $subjectClasses = SchoolClass::query()
+                ->whereIn('id', $subjectClassIds->all())
+                ->with('students')
+                ->get();
+        }
+
+        $allClasses = $homeroomClasses->merge($subjectClasses);
+
+        $students = $allClasses
             ->flatMap(fn ($class) => $class->students->map(fn ($student) => [
                 'id' => $student->id,
                 'name' => $student->name,
@@ -124,7 +141,7 @@ class AttendanceViewController extends Controller
 
         return response()->json([
             'students' => $students,
-            'classes' => $classes->map(fn ($class) => [
+            'classes' => $allClasses->map(fn ($class) => [
                 'id' => $class->id,
                 'name' => $class->name,
             ])->values()->toArray(),
@@ -141,12 +158,27 @@ class AttendanceViewController extends Controller
         $teacher = auth()->user();
         $date = today()->format('Y-m-d');
 
-        $classes = $teacher
-            ->homeroomClasses()
-            ->with('students')
-            ->get();
+        // Homeroom classes: full access
+        $homeroomClasses = $teacher->homeroomClasses()->with('students')->get();
 
-        $students = $classes
+        // Subject-taught classes (non-homeroom): access to students in those classes
+        $subjectClassIds = $teacher->subjects()
+            ->pluck('school_class_id')
+            ->filter()
+            ->unique()
+            ->diff($homeroomClasses->pluck('id'));
+
+        $subjectClasses = collect();
+        if ($subjectClassIds->isNotEmpty()) {
+            $subjectClasses = SchoolClass::query()
+                ->whereIn('id', $subjectClassIds->all())
+                ->with('students')
+                ->get();
+        }
+
+        $allClasses = $homeroomClasses->merge($subjectClasses);
+
+        $students = $allClasses
             ->flatMap(fn ($class) => $class->students->map(fn ($student) => [
                 'id' => $student->id,
                 'name' => $student->name,
@@ -171,7 +203,7 @@ class AttendanceViewController extends Controller
 
         return Inertia::render('teacher/attendance/manual', [
             'students' => $students,
-            'classes' => $classes->map(fn ($class) => [
+            'classes' => $allClasses->map(fn ($class) => [
                 'id' => $class->id,
                 'name' => $class->name,
             ])->values(),

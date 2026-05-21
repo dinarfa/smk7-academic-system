@@ -16,6 +16,7 @@ class AttendanceSessionLifecycleService
 
         return AttendanceSession::query()->create([
             'opened_by' => $teacherId,
+            'class_id' => $validated['class_id'] ?? null,
             'type' => $validated['type'],
             'subject' => $validated['subject'] ?? null,
             'subject_id' => $validated['subject_id'] ?? null,

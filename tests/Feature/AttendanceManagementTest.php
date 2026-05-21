@@ -295,6 +295,52 @@ test('student can scan active qr token and record attendance', function () {
     ]);
 });
 
+test('student can scan qr session for class taught by non-homeroom teacher', function () {
+    $homeroomTeacher = User::factory()->teacher()->create();
+    $subjectTeacher = User::factory()->teacher()->create();
+    $class = SchoolClass::factory()->create([
+        'homeroom_teacher_id' => $homeroomTeacher->id,
+    ]);
+    $subject = Subject::factory()->create([
+        'school_class_id' => $class->id,
+        'teacher_id' => $subjectTeacher->id,
+        'name' => 'Fisika',
+    ]);
+    $student = User::factory()->student()->create(['school_class_id' => $class->id]);
+
+    SubjectSchedule::query()->create([
+        'school_class_id' => $class->id,
+        'subject_id' => $subject->id,
+        'schedule_type' => 'subject',
+        'day_of_week' => now()->dayOfWeek,
+        'starts_at' => now()->subMinutes(5)->format('H:i'),
+        'ends_at' => now()->addMinutes(20)->format('H:i'),
+    ]);
+
+    $session = AttendanceSession::query()->create([
+        'opened_by' => $subjectTeacher->id,
+        'class_id' => $class->id,
+        'type' => 'subject',
+        'subject_id' => $subject->id,
+        'subject' => $subject->name,
+        'qr_token' => 'SESSION-NON-HOMEROOM-001',
+        'starts_at' => now()->subMinutes(5),
+        'ends_at' => now()->addMinutes(20),
+        'is_active' => true,
+    ]);
+
+    $response = $this->actingAs($student)->post(route('student.attendance.scan'), [
+        'qr_token' => 'attendance:'.$session->qr_token,
+    ]);
+
+    $response->assertRedirect();
+    $this->assertDatabaseHas('attendance_records', [
+        'attendance_session_id' => $session->id,
+        'student_id' => $student->id,
+        'status' => 'present',
+    ]);
+});
+
 test('student can open the dedicated attendance scanner page', function () {
     $student = User::factory()->student()->create();
 

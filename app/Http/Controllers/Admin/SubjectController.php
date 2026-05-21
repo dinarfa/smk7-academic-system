@@ -32,13 +32,22 @@ class SubjectController extends Controller
             ->get();
 
         $subjects = Subject::query()
-            ->select(['id', 'code', 'name', 'created_at', 'updated_at'])
+            ->with(['teacher:id,name', 'schoolClass:id,name'])
+            ->select(['id', 'code', 'name', 'school_class_id', 'teacher_id', 'created_at', 'updated_at'])
             ->latest('id')
             ->paginate(10)
             ->through(fn (Subject $subject): array => [
                 'id' => $subject->id,
                 'code' => $subject->code,
                 'name' => $subject->name,
+                'school_class' => $subject->schoolClass ? [
+                    'id' => $subject->schoolClass->id,
+                    'name' => $subject->schoolClass->name,
+                ] : null,
+                'teacher' => $subject->teacher ? [
+                    'id' => $subject->teacher->id,
+                    'name' => $subject->teacher->name,
+                ] : null,
                 'created_at' => $subject->created_at?->toIso8601String(),
                 'updated_at' => $subject->updated_at?->toIso8601String(),
             ]);
