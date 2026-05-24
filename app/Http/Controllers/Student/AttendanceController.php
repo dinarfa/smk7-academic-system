@@ -29,7 +29,8 @@ class AttendanceController extends Controller
 
         $records = AttendanceRecord::query()
             ->where('student_id', $student->id)
-            ->with('session:id,type,subject,starts_at,ends_at')
+            ->with('session:id,type,subject,subject_id,starts_at,ends_at')
+            ->with('session.subjectModel:id,name')
             ->latest('scanned_at')
             ->paginate(15)
             ->through(fn (AttendanceRecord $record): array => [
@@ -38,14 +39,28 @@ class AttendanceController extends Controller
                 'scanned_at' => $record->scanned_at?->toIso8601String(),
                 'session' => [
                     'type' => $record->session?->type,
-                    'subject' => $record->session?->subject,
+                    'subject' => $record->session?->subjectModel?->name ?? $record->session?->subject,
                     'starts_at' => $record->session?->starts_at?->toIso8601String(),
                     'ends_at' => $record->session?->ends_at?->toIso8601String(),
                 ],
             ]);
 
+        $stats = AttendanceRecord::query()
+            ->where('student_id', $student->id)
+            ->selectRaw("count(*) as total")
+            ->selectRaw("sum(case when status = 'present' then 1 else 0 end) as present")
+            ->selectRaw("sum(case when status = 'late' then 1 else 0 end) as late")
+            ->selectRaw("sum(case when status in ('absent', 'bolos') then 1 else 0 end) as absent")
+            ->first();
+
         return Inertia::render('student/attendance', [
             'records' => $records,
+            'overallStats' => [
+                'total' => (int) ($stats->total ?? 0),
+                'present' => (int) ($stats->present ?? 0),
+                'late' => (int) ($stats->late ?? 0),
+                'absent' => (int) ($stats->absent ?? 0),
+            ],
         ]);
     }
 

@@ -11,6 +11,8 @@ use App\Models\User;
 
 class AttendanceScanService
 {
+    /** @var array<int, AttendanceQrType> */
+    private static array $phaseCache = [];
     /**
      * Resolve a QR token from a raw scanned payload.
      */
@@ -55,9 +57,9 @@ class AttendanceScanService
      */
     public function isStudentAllowed(User $student, AttendanceSession $session): bool
     {
-        // If student not assigned to class (legacy/test setups), allow scan.
+        // If student not assigned to any class, reject scan.
         if (! $student->school_class_id) {
-            return true;
+            return false;
         }
 
         $targetClassId = $session->resolvedClassId();
@@ -88,29 +90,28 @@ class AttendanceScanService
      */
     public function record(User $student, AttendanceSession $session): AttendanceRecord
     {
-        $record = AttendanceRecord::query()->firstOrNew([
-            'attendance_session_id' => $session->id,
-            'student_id' => $student->id,
-        ]);
+        $phase = $this->attendancePhase($student)->toRecordPhase()->value;
 
-        if (! $record->exists) {
-            $record->fill([
+        $record = AttendanceRecord::query()->firstOrCreate(
+            [
+                'attendance_session_id' => $session->id,
+                'student_id' => $student->id,
+            ],
+            [
                 'status' => $this->resolveStatus($session)->value,
                 'scanned_at' => now(),
-                'phase' => $this->attendancePhase($student)->toRecordPhase()->value,
+                'phase' => $phase,
                 'source' => 'qr_scan',
-            ]);
-            $record->save();
-
-            return $record;
-        }
+            ],
+        );
 
         if ($record->status === AttendanceStatus::Bolos || $record->status === AttendanceStatus::Absent) {
-            $record->status = $this->resolveStatus($session);
-            $record->scanned_at = now();
-            $record->phase = $this->attendancePhase($student)->toRecordPhase()->value;
-            $record->source = 'qr_scan';
-            $record->save();
+            $record->update([
+                'status' => $this->resolveStatus($session)->value,
+                'scanned_at' => now(),
+                'phase' => $phase,
+                'source' => 'qr_scan',
+            ]);
         }
 
         return $record;
@@ -131,6 +132,10 @@ class AttendanceScanService
             return AttendanceQrType::Morning;
         }
 
+        if (isset(self::$phaseCache[$classId])) {
+            return self::$phaseCache[$classId];
+        }
+
         // 1. Active slot right now
         $active = SubjectSchedule::query()
             ->where('school_class_id', $classId)
@@ -138,17 +143,17 @@ class AttendanceScanService
             ->first();
 
         if ($active) {
-            return $active->resolveQrType();
+            return self::$phaseCache[$classId] = $active->resolveQrType();
         }
 
         // 2. Closest slot for today
         $closest = SubjectSchedule::findClosestSlot($classId);
 
         if ($closest) {
-            return $closest->resolveQrType();
+            return self::$phaseCache[$classId] = $closest->resolveQrType();
         }
 
         // 3. No schedule at all — default
-        return AttendanceQrType::Morning;
+        return self::$phaseCache[$classId] = AttendanceQrType::Morning;
     }
 }

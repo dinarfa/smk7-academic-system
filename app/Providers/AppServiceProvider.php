@@ -3,8 +3,10 @@
 namespace App\Providers;
 
 use App\Models\AttendanceSession;
+use App\Models\Excuse;
 use App\Models\User;
 use App\Policies\AttendanceSessionPolicy;
+use App\Policies\ExcusePolicy;
 use App\Policies\UserPolicy;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
@@ -38,6 +40,7 @@ class AppServiceProvider extends ServiceProvider
     protected function registerPolicies(): void
     {
         Gate::policy(AttendanceSession::class, AttendanceSessionPolicy::class);
+        Gate::policy(Excuse::class, ExcusePolicy::class);
         Gate::policy(User::class, UserPolicy::class);
 
         Gate::define('viewDaily', fn (User $user): bool => $user->isTeacher());

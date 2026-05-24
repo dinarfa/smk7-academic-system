@@ -124,7 +124,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
         Route::get('attendance', [StudentAttendanceController::class, 'index'])->name('attendance.index');
         Route::get('attendance/scan', [StudentAttendanceController::class, 'scanPage'])->name('attendance.scan.page');
-        Route::post('attendance/scan', [StudentAttendanceController::class, 'scan'])->name('attendance.scan');
+        Route::post('attendance/scan', [StudentAttendanceController::class, 'scan'])->name('attendance.scan')->middleware('throttle:15,1');
         Route::get('exams', [StudentExamController::class, 'index'])->name('exams.index');
         // Student exam attempts
         Route::post('exams/{exam}/attempts', [ExamAttemptController::class, 'store'])->name('exams.attempts.store');

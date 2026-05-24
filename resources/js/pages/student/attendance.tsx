@@ -29,6 +29,12 @@ type Props = {
     records: {
         data: AttendanceRecord[];
     };
+    overallStats?: {
+        total: number;
+        present: number;
+        late: number;
+        absent: number;
+    };
 };
 
 const sessionTypeLabels: Record<string, string> = {
@@ -58,8 +64,8 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; i
     },
 };
 
-export default function StudentAttendance({ records }: Props) {
-    const stats = useMemo(() => {
+export default function StudentAttendance({ records, overallStats }: Props) {
+    const stats = overallStats ?? useMemo(() => {
         const counts = { total: records.data.length, present: 0, late: 0, absent: 0 };
         records.data.forEach((r) => {
             if (r.status === 'present') {
