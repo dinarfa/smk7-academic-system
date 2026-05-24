@@ -194,12 +194,21 @@ class AttendanceReportService
     /**
      * Build the CSV contents for a teacher attendance export within a date range.
      */
-    public function exportCsvForTeacher(int $teacherId, string $startDate, string $endDate): string
+    public function exportCsvForTeacher(int $teacherId, string $startDate, string $endDate, ?int $classId = null, ?int $subjectId = null): string
     {
         $records = AttendanceRecord::query()
             ->with(['student:id,name,email', 'session', 'session.subjectModel:id,name'])
-            ->whereHas('session', function ($query) use ($teacherId): void {
+            ->whereHas('session', function ($query) use ($teacherId, $classId, $subjectId): void {
                 $query->where('opened_by', $teacherId);
+                if ($classId !== null) {
+                    $query->where(function ($q) use ($classId): void {
+                        $q->where('class_id', $classId)
+                            ->orWhereHas('subjectModel', fn ($sq) => $sq->where('school_class_id', $classId));
+                    });
+                }
+                if ($subjectId !== null) {
+                    $query->where('subject_id', $subjectId);
+                }
             })
             ->whereBetween('scanned_at', [
                 Carbon::parse($startDate)->startOfDay(),
@@ -251,12 +260,21 @@ class AttendanceReportService
      *
      * @return array<int, array<int, mixed>>
      */
-    public function exportArrayForTeacher(int $teacherId, string $startDate, string $endDate): array
+    public function exportArrayForTeacher(int $teacherId, string $startDate, string $endDate, ?int $classId = null, ?int $subjectId = null): array
     {
         $records = AttendanceRecord::query()
             ->with(['student:id,name,email', 'session', 'session.subjectModel:id,name'])
-            ->whereHas('session', function ($query) use ($teacherId): void {
+            ->whereHas('session', function ($query) use ($teacherId, $classId, $subjectId): void {
                 $query->where('opened_by', $teacherId);
+                if ($classId !== null) {
+                    $query->where(function ($q) use ($classId): void {
+                        $q->where('class_id', $classId)
+                            ->orWhereHas('subjectModel', fn ($sq) => $sq->where('school_class_id', $classId));
+                    });
+                }
+                if ($subjectId !== null) {
+                    $query->where('subject_id', $subjectId);
+                }
             })
             ->whereBetween('scanned_at', [
                 Carbon::parse($startDate)->startOfDay(),

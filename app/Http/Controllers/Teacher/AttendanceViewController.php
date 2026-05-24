@@ -303,7 +303,37 @@ class AttendanceViewController extends Controller
     {
         Gate::authorize('viewDaily');
 
-        return Inertia::render('teacher/attendance/export');
+        $teacher = auth()->user();
+
+        $homeroomClasses = $teacher->homeroomClasses()->get();
+
+        $subjectClassIds = $teacher->subjects()
+            ->pluck('school_class_id')
+            ->filter()
+            ->unique()
+            ->diff($homeroomClasses->pluck('id'));
+
+        $subjectClasses = $subjectClassIds->isNotEmpty()
+            ? SchoolClass::query()->whereIn('id', $subjectClassIds->all())->get()
+            : collect();
+
+        $allClasses = $homeroomClasses->merge($subjectClasses);
+
+        $subjects = $teacher->subjects()
+            ->select('id', 'name', 'school_class_id')
+            ->get();
+
+        return Inertia::render('teacher/attendance/export', [
+            'schoolClasses' => $allClasses->map(fn ($class) => [
+                'id' => $class->id,
+                'name' => $class->name,
+            ])->values(),
+            'subjects' => $subjects->map(fn ($subject) => [
+                'id' => $subject->id,
+                'name' => $subject->name,
+                'school_class_id' => $subject->school_class_id,
+            ])->values(),
+        ]);
     }
 
     /**
@@ -317,12 +347,16 @@ class AttendanceViewController extends Controller
 
         $validated = $request->validated();
         $format = $validated['format'] ?? 'csv';
+        $classId = $validated['classId'] ?? null;
+        $subjectId = $validated['subjectId'] ?? null;
 
         if ($format === 'xlsx') {
             $rows = $service->exportArrayForTeacher(
                 $request->user()->id,
                 $validated['startDate'],
                 $validated['endDate'],
+                $classId,
+                $subjectId,
             );
 
             $tempPath = tempnam(sys_get_temp_dir(), 'attendance_export_');
@@ -353,6 +387,8 @@ class AttendanceViewController extends Controller
             $request->user()->id,
             $validated['startDate'],
             $validated['endDate'],
+            $classId,
+            $subjectId,
         );
 
         $filename = 'teacher-attendance-export-'.now()->format('Y-m-d-His').'.csv';

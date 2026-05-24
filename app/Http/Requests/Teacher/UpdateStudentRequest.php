@@ -5,6 +5,7 @@ namespace App\Http\Requests\Teacher;
 use App\Models\User;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 class UpdateStudentRequest extends FormRequest
@@ -14,7 +15,7 @@ class UpdateStudentRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->isAdmin() ?? false;
     }
 
     /**
@@ -28,6 +29,7 @@ class UpdateStudentRequest extends FormRequest
         $student = $this->route('student');
 
         return [
+            'school_class_id' => ['required', 'integer', Rule::exists('school_classes', 'id')],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.$student->id],
             'password' => ['nullable', 'confirmed', Password::defaults()],

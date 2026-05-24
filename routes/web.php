@@ -70,11 +70,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('class', [SchoolClassController::class, 'index'])->name('class.index');
         Route::get('subjects', [SubjectController::class, 'index'])->name('subjects.index');
 
-        Route::get('students', [StudentController::class, 'index'])->name('students.index');
-        Route::post('students', [StudentController::class, 'store'])->name('students.store');
-        Route::put('students/{student}', [StudentController::class, 'update'])->name('students.update');
-        Route::delete('students/{student}', [StudentController::class, 'destroy'])->name('students.destroy');
-
         Route::post('attendance-sessions', [AttendanceSessionController::class, 'store'])->name('attendance-sessions.store');
         Route::patch('attendance-sessions/{attendanceSession}/close', [AttendanceSessionController::class, 'close'])->name('attendance-sessions.close');
         Route::post('attendance/manual', [AttendanceSessionController::class, 'storeManual'])->name('attendance.manual');
@@ -113,6 +108,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('excuses/{excuse}', [TeacherExcuseController::class, 'show'])->name('excuses.show');
         Route::patch('excuses/{excuse}/approve', [TeacherExcuseController::class, 'approve'])->name('excuses.approve');
         Route::patch('excuses/{excuse}/reject', [TeacherExcuseController::class, 'reject'])->name('excuses.reject');
+    });
+
+    Route::middleware('role:teacher,admin')->prefix('teacher')->name('teacher.')->group(function () {
+        Route::get('students', [StudentController::class, 'index'])->name('students.index');
+    });
+
+    Route::middleware('role:admin')->prefix('teacher')->name('teacher.')->group(function () {
+        Route::post('students', [StudentController::class, 'store'])->name('students.store');
+        Route::put('students/{student}', [StudentController::class, 'update'])->name('students.update');
+        Route::delete('students/{student}', [StudentController::class, 'destroy'])->name('students.destroy');
     });
 
     Route::middleware('role:student')->prefix('student')->name('student.')->group(function () {

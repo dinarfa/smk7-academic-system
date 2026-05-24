@@ -536,35 +536,41 @@ test('duplicate scans do not create duplicate attendance records', function () {
         ->count())->toBe(1);
 });
 
-test('teacher can create update and delete student data', function () {
+test('admin can create update and delete student data', function () {
+    $admin = User::factory()->admin()->create();
     $teacher = User::factory()->teacher()->create();
-    SchoolClass::factory()->create([
+    $schoolClass = SchoolClass::factory()->create([
         'homeroom_teacher_id' => $teacher->id,
     ]);
 
-    $this->actingAs($teacher)->post(route('teacher.students.store'), [
+    $this->actingAs($admin)->post(route('teacher.students.store'), [
         'name' => 'Budi',
         'email' => 'budi@example.com',
         'password' => 'password',
         'password_confirmation' => 'password',
+        'school_class_id' => $schoolClass->id,
     ])->assertRedirect();
 
     $student = User::query()->where('email', 'budi@example.com')->firstOrFail();
 
     expect($student->role)->toBe(UserRole::Student);
 
-    $this->actingAs($teacher)->put(route('teacher.students.update', $student), [
+    $anotherClass = SchoolClass::factory()->create();
+
+    $this->actingAs($admin)->put(route('teacher.students.update', $student), [
         'name' => 'Budi Santoso',
         'email' => 'budi.santoso@example.com',
+        'school_class_id' => $anotherClass->id,
     ])->assertRedirect();
 
     $this->assertDatabaseHas('users', [
         'id' => $student->id,
         'name' => 'Budi Santoso',
         'email' => 'budi.santoso@example.com',
+        'school_class_id' => $anotherClass->id,
     ]);
 
-    $this->actingAs($teacher)->delete(route('teacher.students.destroy', $student))
+    $this->actingAs($admin)->delete(route('teacher.students.destroy', $student))
         ->assertRedirect();
 
     $this->assertDatabaseMissing('users', [
@@ -573,8 +579,17 @@ test('teacher can create update and delete student data', function () {
 });
 
 test('role middleware prevents cross-role area access', function () {
+    $admin = User::factory()->admin()->create();
     $teacher = User::factory()->teacher()->create();
     $student = User::factory()->student()->create();
+
+    $this->actingAs($teacher)
+        ->get(route('teacher.students.index'))
+        ->assertOk();
+
+    $this->actingAs($admin)
+        ->get(route('teacher.students.index'))
+        ->assertOk();
 
     $this->actingAs($student)
         ->get(route('teacher.students.index'))

@@ -14,11 +14,16 @@ class EnsureUserRole
      *
      * @param  Closure(Request): (Response)  $next
      */
-    public function handle(Request $request, Closure $next, string $role): Response
+    public function handle(Request $request, Closure $next, string ...$roles): Response
     {
         $user = $request->user();
+        $allowedRoles = collect($roles)
+            ->flatMap(fn (string $role): array => array_map('trim', explode(',', $role)))
+            ->filter()
+            ->map(fn (string $value): UserRole => UserRole::tryFrom($value))
+            ->filter();
 
-        if (! $user || $user->role !== UserRole::from($role)) {
+        if (! $user || $allowedRoles->doesntContain($user->role)) {
             abort(403);
         }
 

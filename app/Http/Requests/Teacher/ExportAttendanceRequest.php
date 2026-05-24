@@ -26,6 +26,8 @@ class ExportAttendanceRequest extends FormRequest
             'startDate' => ['required', 'date'],
             'endDate' => ['required', 'date', 'after_or_equal:startDate'],
             'format' => ['nullable', 'string', 'in:csv,xlsx'],
+            'classId' => ['nullable', 'integer', 'exists:school_classes,id'],
+            'subjectId' => ['nullable', 'integer', 'exists:subjects,id'],
         ];
     }
 }

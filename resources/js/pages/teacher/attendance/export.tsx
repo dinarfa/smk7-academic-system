@@ -1,15 +1,38 @@
 import { Head, Link } from '@inertiajs/react';
 import { Download, FileSpreadsheet, FileText, ArrowLeft } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { dashboard } from '@/routes';
 
-export default function ExportAttendance() {
+interface SchoolClass {
+    id: number;
+    name: string;
+}
+
+interface Subject {
+    id: number;
+    name: string;
+    school_class_id: number | null;
+}
+
+interface Props {
+    schoolClasses: SchoolClass[];
+    subjects: Subject[];
+}
+
+export default function ExportAttendance({ schoolClasses, subjects }: Props) {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
+    const [classId, setClassId] = useState<string>('');
+    const [subjectId, setSubjectId] = useState<string>('');
     const [processing, setProcessing] = useState(false);
+
+    const filteredSubjects = useMemo(() => {
+        if (!classId) return subjects;
+        return subjects.filter((s) => s.school_class_id === Number(classId));
+    }, [subjects, classId]);
 
     const getCsrfToken = () =>
         document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
@@ -27,7 +50,13 @@ export default function ExportAttendance() {
                     'X-Requested-With': 'XMLHttpRequest',
                     ...(getCsrfToken() ? { 'X-CSRF-TOKEN': getCsrfToken() } : {}),
                 },
-                body: JSON.stringify({ startDate, endDate, format }),
+                body: JSON.stringify({
+                    startDate,
+                    endDate,
+                    format,
+                    ...(classId ? { classId: Number(classId) } : {}),
+                    ...(subjectId ? { subjectId: Number(subjectId) } : {}),
+                }),
             });
 
             if (!response.ok) {
@@ -40,7 +69,13 @@ export default function ExportAttendance() {
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `absensi-${startDate || 'mulai'}-sampai-${endDate || 'akhir'}.${format}`;
+            const classSuffix = classId
+                ? `-${schoolClasses.find((c) => c.id === Number(classId))?.name ?? 'kelas'}`
+                : '';
+            const subjectSuffix = subjectId
+                ? `-${subjects.find((s) => s.id === Number(subjectId))?.name ?? 'mapel'}`
+                : '';
+            link.download = `absensi${classSuffix}${subjectSuffix}-${startDate || 'mulai'}-sampai-${endDate || 'akhir'}.${format}`;
             document.body.appendChild(link);
             link.click();
             link.remove();
@@ -49,6 +84,17 @@ export default function ExportAttendance() {
             alert('Kesalahan saat mengekspor');
         } finally {
             setProcessing(false);
+        }
+    };
+
+    const handleClassChange = (value: string) => {
+        setClassId(value);
+        // Reset subject if it doesn't belong to the new class
+        if (value && subjectId) {
+            const belongs = subjects.some(
+                (s) => s.id === Number(subjectId) && s.school_class_id === Number(value),
+            );
+            if (!belongs) setSubjectId('');
         }
     };
 
@@ -63,7 +109,7 @@ export default function ExportAttendance() {
                     </p>
                     <h1 className="text-3xl font-semibold text-foreground">Ekspor Absensi</h1>
                     <p className="max-w-2xl text-muted-foreground">
-                        Unduh data absensi siswa dalam format CSV atau XLSX berdasarkan rentang tanggal.
+                        Unduh data absensi siswa dalam format CSV atau XLSX berdasarkan rentang tanggal, kelas, dan mata pelajaran.
                     </p>
                 </div>
 
@@ -76,10 +122,10 @@ export default function ExportAttendance() {
                             </div>
                             <div>
                                 <h2 className="text-base font-bold tracking-tight text-slate-900 dark:text-white">
-                                    Rentang Tanggal
+                                    Filter Ekspor
                                 </h2>
                                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                                    Pilih tanggal awal dan akhir untuk mengekspor
+                                    Pilih kelas, mata pelajaran, dan rentang tanggal
                                 </p>
                             </div>
                         </div>
@@ -110,6 +156,54 @@ export default function ExportAttendance() {
                                 />
                             </div>
                         </div>
+
+                        {schoolClasses.length > 0 && (
+                            <div className="mt-4 space-y-2">
+                                <Label htmlFor="classId" className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                                    Kelas
+                                </Label>
+                                <select
+                                    id="classId"
+                                    value={classId}
+                                    onChange={(e) => handleClassChange(e.target.value)}
+                                    className="h-10 w-full rounded-xl border border-slate-200/80 bg-white/80 px-3 font-medium text-sm backdrop-blur-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-white"
+                                >
+                                    <option value="">Semua Kelas</option>
+                                    {schoolClasses.map((cls) => (
+                                        <option key={cls.id} value={cls.id}>
+                                            {cls.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <p className="text-xs text-slate-400 dark:text-slate-500">
+                                    Kosongkan untuk mengekspor semua kelas
+                                </p>
+                            </div>
+                        )}
+
+                        {filteredSubjects.length > 0 && (
+                            <div className="mt-4 space-y-2">
+                                <Label htmlFor="subjectId" className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                                    Mata Pelajaran
+                                </Label>
+                                <select
+                                    id="subjectId"
+                                    value={subjectId}
+                                    onChange={(e) => setSubjectId(e.target.value)}
+                                    className="h-10 w-full rounded-xl border border-slate-200/80 bg-white/80 px-3 font-medium text-sm backdrop-blur-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-white"
+                                >
+                                    <option value="">Semua Mata Pelajaran</option>
+                                    {filteredSubjects.map((subject) => (
+                                        <option key={subject.id} value={subject.id}>
+                                            {subject.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <p className="text-xs text-slate-400 dark:text-slate-500">
+                                    {classId ? 'Mata pelajaran untuk kelas yang dipilih' : 'Kosongkan untuk mengekspor semua mata pelajaran'}
+                                </p>
+                            </div>
+                        )}
 
                         <div className="mt-6 flex flex-wrap gap-3">
                             <Button
