@@ -38,7 +38,7 @@ class ExcuseController extends Controller
         // Get student's pending excuses for reference
         $pendingAbsences = auth()->user()
             ->attendanceRecords()
-            ->where('status', 'absent')
+            ->whereIn('status', ['absent', 'bolos'])
             ->where('excused', false)
             ->whereDoesntHave('excuse')
             ->with('student', 'session')

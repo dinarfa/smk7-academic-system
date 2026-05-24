@@ -13,6 +13,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import admin from '@/routes/admin';
 import student from '@/routes/student';
 import teacher from '@/routes/teacher';
 import type { NavItem } from '@/types';
@@ -25,7 +26,9 @@ export function AppSidebar() {
         ? teacher.dashboard.url()
         : role === 'student'
             ? student.dashboard.url()
-            : dashboard();
+            : role === 'admin'
+                ? admin.dashboard.url()
+                : dashboard();
 
     const mainNavItems: NavItem[] = [
         {
@@ -62,6 +65,21 @@ export function AppSidebar() {
             //     href: teacher.exams.index.url(),
             //     icon: ClipboardList,
             // },
+        );
+    }
+
+    if (role === 'admin') {
+        mainNavItems.push(
+            {
+                title: 'Data Siswa',
+                href: teacher.students.index.url(),
+                icon: Users,
+            },
+            {
+                title: 'Kelola Kelas',
+                href: admin.classes.index.url(),
+                icon: School,
+            },
         );
     }
 

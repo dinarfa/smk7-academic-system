@@ -1,6 +1,6 @@
 import { Head, Form, Link } from '@inertiajs/react';
 import { useState } from 'react';
-import SchoolClassController from '@/actions/App/Http/Controllers/Teacher/SchoolClassController';
+import SchoolClassController from '@/actions/App/Http/Controllers/Admin/SchoolClassController';
 import StudentController from '@/actions/App/Http/Controllers/Teacher/StudentController';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,7 +28,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { dashboard } from '@/routes';
+import admin from '@/routes/admin';
 import {
     Users,
     BookOpen,
@@ -48,6 +48,7 @@ type Student = {
     id: number;
     name: string;
     email: string;
+    school_class_id: number | null;
     school_class_name: string | null;
     created_at: string | null;
 };
@@ -77,11 +78,12 @@ type PaginatedStudents = {
 };
 
 type Props = {
+    canManageStudents: boolean;
     schoolClasses: SchoolClass[];
     students: PaginatedStudents;
 };
 
-export default function TeacherStudents({ schoolClasses, students }: Props) {
+export default function TeacherStudents({ canManageStudents, schoolClasses, students }: Props) {
     const totalStudents = schoolClasses.reduce((sum, c) => sum + c.students_count, 0);
 
     const [editTarget, setEditTarget] = useState<Student | null>(null);
@@ -109,13 +111,15 @@ export default function TeacherStudents({ schoolClasses, students }: Props) {
                     <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
                         <div>
                             <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-indigo-500">
-                                Dashboard Guru
+                                {canManageStudents ? 'Dashboard Admin' : 'Dashboard Guru'}
                             </p>
                             <h1 className="text-4xl font-bold tracking-tight text-slate-900">
                                 Data Siswa
                             </h1>
                             <p className="mt-1.5 text-slate-500">
-                                Kelola data siswa di kelas perwalian Anda.
+                                {canManageStudents
+                                    ? 'Kelola akun siswa dan penempatan kelas.'
+                                    : 'Lihat data siswa di kelas perwalian Anda.'}
                             </p>
                         </div>
 
@@ -143,7 +147,7 @@ export default function TeacherStudents({ schoolClasses, students }: Props) {
                         <div className="mb-3 flex items-center gap-2">
                             <BookOpen className="h-4 w-4 text-indigo-500" />
                             <h2 className="text-sm font-semibold uppercase tracking-widest text-slate-500">
-                                Kelas Perwalian
+                                Daftar Kelas
                             </h2>
                         </div>
 
@@ -181,105 +185,113 @@ export default function TeacherStudents({ schoolClasses, students }: Props) {
                                     <BookOpen className="h-6 w-6 text-indigo-400" />
                                 </div>
                                 <div>
-                                    <p className="font-semibold text-slate-700">Belum ada kelas wali</p>
+                                    <p className="font-semibold text-slate-700">Belum ada kelas</p>
                                     <p className="mt-1 text-sm text-slate-400">
                                         Buat kelas terlebih dahulu sebelum menambahkan siswa.
                                     </p>
                                 </div>
-                                <Button asChild className="gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700">
-                                    <Link href={SchoolClassController.index.url()}>
-                                        <Plus className="h-4 w-4" /> Buat Kelas
-                                    </Link>
-                                </Button>
+                                {canManageStudents && (
+                                    <Button asChild className="gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700">
+                                        <Link href={SchoolClassController.index.url()}>
+                                            <Plus className="h-4 w-4" /> Kelola Kelas
+                                        </Link>
+                                    </Button>
+                                )}
                             </div>
                         )}
                     </section>
 
-                    {/* ── Tambah Siswa ── */}
-                    <section>
-                        <div className="mb-3 flex items-center gap-2">
-                            <Plus className="h-4 w-4 text-emerald-500" />
-                            <h2 className="text-sm font-semibold uppercase tracking-widest text-slate-500">
-                                Tambah Siswa Baru
-                            </h2>
-                        </div>
-
-                        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                            <div className="border-b border-slate-100 bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100">
-                                        <GraduationCap className="h-5 w-5 text-emerald-600" />
-                                    </div>
-                                    <div>
-                                        <p className="font-semibold text-slate-800">Buat Akun Siswa</p>
-                                        <p className="text-xs text-slate-500">Isi data lengkap untuk mendaftarkan siswa baru.</p>
-                                    </div>
-                                </div>
+                    {canManageStudents ? (
+                        <section>
+                            <div className="mb-3 flex items-center gap-2">
+                                <Plus className="h-4 w-4 text-emerald-500" />
+                                <h2 className="text-sm font-semibold uppercase tracking-widest text-slate-500">
+                                    Tambah Akun Siswa
+                                </h2>
                             </div>
 
-                            <div className="p-6">
-                                {schoolClasses.length === 0 ? (
-                                    <div className="flex items-center gap-3 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                                        <AlertCircle className="h-4 w-4 shrink-0" />
-                                        Form siswa akan aktif setelah kelas wali dibuat.
+                            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                                <div className="border-b border-slate-100 bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100">
+                                            <GraduationCap className="h-5 w-5 text-emerald-600" />
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-slate-800">Buat Akun Siswa</p>
+                                            <p className="text-xs text-slate-500">Isi data lengkap dan pilih kelas tujuan.</p>
+                                        </div>
                                     </div>
-                                ) : (
-                                    <Form {...StudentController.store.form()} className="grid gap-5 sm:grid-cols-2">
-                                        {({ processing, errors }) => (
-                                            <>
-                                                <div className="grid gap-1.5">
-                                                    <Label htmlFor="name" className="text-xs font-semibold uppercase tracking-wide text-slate-500">Nama Lengkap</Label>
-                                                    <Input id="name" name="name" required placeholder="Contoh: Budi Santoso"
-                                                        className="rounded-xl border-slate-200 bg-slate-50 focus:border-indigo-400 focus:bg-white" />
-                                                    {errors.name && <p className="flex items-center gap-1 text-xs text-red-500"><AlertCircle className="h-3 w-3" />{errors.name}</p>}
-                                                </div>
+                                </div>
 
-                                                <div className="grid gap-1.5">
-                                                    <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wide text-slate-500">Email</Label>
-                                                    <Input id="email" name="email" type="email" required placeholder="siswa@sekolah.ac.id"
-                                                        className="rounded-xl border-slate-200 bg-slate-50 focus:border-indigo-400 focus:bg-white" />
-                                                    {errors.email && <p className="flex items-center gap-1 text-xs text-red-500"><AlertCircle className="h-3 w-3" />{errors.email}</p>}
-                                                </div>
+                                <div className="p-6">
+                                    {schoolClasses.length === 0 ? (
+                                        <div className="flex items-center gap-3 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                                            <AlertCircle className="h-4 w-4 shrink-0" />
+                                            Form siswa akan aktif setelah kelas dibuat.
+                                        </div>
+                                    ) : (
+                                        <Form {...StudentController.store.form()} className="grid gap-5 sm:grid-cols-2">
+                                            {({ processing, errors }) => (
+                                                <>
+                                                    <div className="grid gap-1.5">
+                                                        <Label htmlFor="name" className="text-xs font-semibold uppercase tracking-wide text-slate-500">Nama Lengkap</Label>
+                                                        <Input id="name" name="name" required placeholder="Contoh: Budi Santoso"
+                                                            className="rounded-xl border-slate-200 bg-slate-50 focus:border-indigo-400 focus:bg-white" />
+                                                        {errors.name && <p className="flex items-center gap-1 text-xs text-red-500"><AlertCircle className="h-3 w-3" />{errors.name}</p>}
+                                                    </div>
 
-                                                <div className="grid gap-1.5">
-                                                    <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-wide text-slate-500">Password</Label>
-                                                    <Input id="password" name="password" type="password" required placeholder="Min. 8 karakter"
-                                                        className="rounded-xl border-slate-200 bg-slate-50 focus:border-indigo-400 focus:bg-white" />
-                                                    {errors.password && <p className="flex items-center gap-1 text-xs text-red-500"><AlertCircle className="h-3 w-3" />{errors.password}</p>}
-                                                </div>
+                                                    <div className="grid gap-1.5">
+                                                        <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wide text-slate-500">Email</Label>
+                                                        <Input id="email" name="email" type="email" required placeholder="siswa@sekolah.ac.id"
+                                                            className="rounded-xl border-slate-200 bg-slate-50 focus:border-indigo-400 focus:bg-white" />
+                                                        {errors.email && <p className="flex items-center gap-1 text-xs text-red-500"><AlertCircle className="h-3 w-3" />{errors.email}</p>}
+                                                    </div>
 
-                                                <div className="grid gap-1.5">
-                                                    <Label htmlFor="password_confirmation" className="text-xs font-semibold uppercase tracking-wide text-slate-500">Konfirmasi Password</Label>
-                                                    <Input id="password_confirmation" name="password_confirmation" type="password" required placeholder="Ulangi password"
-                                                        className="rounded-xl border-slate-200 bg-slate-50 focus:border-indigo-400 focus:bg-white" />
-                                                </div>
+                                                    <div className="grid gap-1.5">
+                                                        <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-wide text-slate-500">Password</Label>
+                                                        <Input id="password" name="password" type="password" required placeholder="Min. 8 karakter"
+                                                            className="rounded-xl border-slate-200 bg-slate-50 focus:border-indigo-400 focus:bg-white" />
+                                                        {errors.password && <p className="flex items-center gap-1 text-xs text-red-500"><AlertCircle className="h-3 w-3" />{errors.password}</p>}
+                                                    </div>
 
-                                                {schoolClasses.length > 1 && (
+                                                    <div className="grid gap-1.5">
+                                                        <Label htmlFor="password_confirmation" className="text-xs font-semibold uppercase tracking-wide text-slate-500">Konfirmasi Password</Label>
+                                                        <Input id="password_confirmation" name="password_confirmation" type="password" required placeholder="Ulangi password"
+                                                            className="rounded-xl border-slate-200 bg-slate-50 focus:border-indigo-400 focus:bg-white" />
+                                                    </div>
+
                                                     <div className="grid gap-1.5">
                                                         <Label htmlFor="school_class_id" className="text-xs font-semibold uppercase tracking-wide text-slate-500">Kelas</Label>
-                                                        <select id="school_class_id" name="school_class_id"
+                                                        <select
+                                                            id="school_class_id"
+                                                            name="school_class_id"
+                                                            required
                                                             className="flex h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-indigo-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-100"
-                                                            defaultValue={schoolClasses[0]?.id}>
+                                                            defaultValue={schoolClasses[0]?.id}
+                                                        >
                                                             {schoolClasses.map((sc) => (
                                                                 <option key={sc.id} value={sc.id}>{sc.name}</option>
                                                             ))}
                                                         </select>
+                                                        {errors.school_class_id && <p className="flex items-center gap-1 text-xs text-red-500"><AlertCircle className="h-3 w-3" />{errors.school_class_id}</p>}
                                                     </div>
-                                                )}
 
-                                                <div className="flex items-end sm:col-span-2">
-                                                    <Button disabled={processing} className="gap-2 rounded-xl bg-emerald-600 px-6 hover:bg-emerald-700 disabled:opacity-60">
-                                                        <Plus className="h-4 w-4" />
-                                                        {processing ? 'Menyimpan...' : 'Simpan Siswa'}
-                                                    </Button>
-                                                </div>
-                                            </>
-                                        )}
-                                    </Form>
-                                )}
+                                                    <div className="flex items-end sm:col-span-2">
+                                                        <Button disabled={processing} className="gap-2 rounded-xl bg-emerald-600 px-6 hover:bg-emerald-700 disabled:opacity-60">
+                                                            <Plus className="h-4 w-4" />
+                                                            {processing ? 'Menyimpan...' : 'Simpan Siswa'}
+                                                        </Button>
+                                                    </div>
+                                                </>
+                                            )}
+                                        </Form>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    </section>
+                        </section>
+                    ) : (
+                        null
+                    )}
 
                     {/* ── Daftar Siswa ── */}
                     <section>
@@ -317,7 +329,7 @@ export default function TeacherStudents({ schoolClasses, students }: Props) {
                                                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-slate-400">Siswa</TableHead>
                                                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-slate-400">Email</TableHead>
                                                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-slate-400">Kelas</TableHead>
-                                                <TableHead className="pr-5 text-right text-xs font-semibold uppercase tracking-wider text-slate-400">Aksi</TableHead>
+                                                {canManageStudents && <TableHead className="pr-5 text-right text-xs font-semibold uppercase tracking-wider text-slate-400">Aksi</TableHead>}
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -347,36 +359,38 @@ export default function TeacherStudents({ schoolClasses, students }: Props) {
                                                             <span className="text-sm text-slate-400">—</span>
                                                         )}
                                                     </TableCell>
-                                                    <TableCell className="pr-5 text-right">
-                                                        <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 data-[state=open]:opacity-100"
-                                                                >
-                                                                    <MoreHorizontal className="h-4 w-4" />
-                                                                </Button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end" className="w-40 rounded-xl">
-                                                                <DropdownMenuItem
-                                                                    className="gap-2 rounded-lg text-sm"
-                                                                    onSelect={() => setEditTarget(student)}
-                                                                >
-                                                                    <Pencil className="h-3.5 w-3.5 text-indigo-500" />
-                                                                    Edit Data
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuSeparator />
-                                                                <DropdownMenuItem
-                                                                    className="gap-2 rounded-lg text-sm text-red-500 focus:text-red-600"
-                                                                    onSelect={() => setDeleteTarget(student)}
-                                                                >
-                                                                    <Trash2 className="h-3.5 w-3.5" />
-                                                                    Hapus Siswa
-                                                                </DropdownMenuItem>
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
-                                                    </TableCell>
+                                                    {canManageStudents && (
+                                                        <TableCell className="pr-5 text-right">
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger asChild>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 data-[state=open]:opacity-100"
+                                                                    >
+                                                                        <MoreHorizontal className="h-4 w-4" />
+                                                                    </Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent align="end" className="w-40 rounded-xl">
+                                                                    <DropdownMenuItem
+                                                                        className="gap-2 rounded-lg text-sm"
+                                                                        onSelect={() => setEditTarget(student)}
+                                                                    >
+                                                                        <Pencil className="h-3.5 w-3.5 text-indigo-500" />
+                                                                        Edit Data
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuSeparator />
+                                                                    <DropdownMenuItem
+                                                                        className="gap-2 rounded-lg text-sm text-red-500 focus:text-red-600"
+                                                                        onSelect={() => setDeleteTarget(student)}
+                                                                    >
+                                                                        <Trash2 className="h-3.5 w-3.5" />
+                                                                        Hapus Siswa
+                                                                    </DropdownMenuItem>
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                        </TableCell>
+                                                    )}
                                                 </TableRow>
                                             ))}
                                         </TableBody>
@@ -484,113 +498,133 @@ export default function TeacherStudents({ schoolClasses, students }: Props) {
                 </div>
             </div>
 
-            {/* ── Edit Dialog ── */}
-            <Dialog open={!!editTarget} onOpenChange={(open) => !open && setEditTarget(null)}>
-                <DialogContent className="rounded-2xl sm:max-w-lg">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-sm font-bold text-indigo-600">
-                                {editTarget?.name.charAt(0).toUpperCase()}
+            {canManageStudents && (
+                /* ── Edit Dialog ── */
+                <Dialog open={!!editTarget} onOpenChange={(open) => !open && setEditTarget(null)}>
+                    <DialogContent className="rounded-2xl sm:max-w-lg">
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-sm font-bold text-indigo-600">
+                                    {editTarget?.name.charAt(0).toUpperCase()}
+                                </div>
+                                Edit Data Siswa
+                            </DialogTitle>
+                            <DialogDescription>
+                                Perbarui informasi akun{' '}
+                                <span className="font-medium text-slate-700">{editTarget?.name}</span>.
+                                Kosongkan password jika tidak ingin menggantinya.
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        {editTarget && (
+                            <Form {...StudentController.update.form(editTarget.id)} className="grid gap-4">
+                                {({ processing, errors }) => (
+                                    <>
+                                        <div className="grid gap-4 sm:grid-cols-2">
+                                            <div className="grid gap-1.5">
+                                                <Label htmlFor="edit-name" className="text-xs font-semibold uppercase tracking-wide text-slate-500">Nama Lengkap</Label>
+                                                <Input id="edit-name" name="name" defaultValue={editTarget.name} required
+                                                    className="rounded-xl border-slate-200 bg-slate-50 focus:border-indigo-400 focus:bg-white" />
+                                                {errors.name && <p className="flex items-center gap-1 text-xs text-red-500"><AlertCircle className="h-3 w-3" />{errors.name}</p>}
+                                            </div>
+
+                                            <div className="grid gap-1.5">
+                                                <Label htmlFor="edit-email" className="text-xs font-semibold uppercase tracking-wide text-slate-500">Email</Label>
+                                                <Input id="edit-email" name="email" type="email" defaultValue={editTarget.email} required
+                                                    className="rounded-xl border-slate-200 bg-slate-50 focus:border-indigo-400 focus:bg-white" />
+                                                {errors.email && <p className="flex items-center gap-1 text-xs text-red-500"><AlertCircle className="h-3 w-3" />{errors.email}</p>}
+                                            </div>
+
+                                            <div className="grid gap-1.5">
+                                                <Label htmlFor="edit-password" className="text-xs font-semibold uppercase tracking-wide text-slate-500">Password Baru</Label>
+                                                <Input id="edit-password" name="password" type="password" placeholder="Opsional"
+                                                    className="rounded-xl border-slate-200 bg-slate-50 focus:border-indigo-400 focus:bg-white" />
+                                                {errors.password && <p className="flex items-center gap-1 text-xs text-red-500"><AlertCircle className="h-3 w-3" />{errors.password}</p>}
+                                            </div>
+
+                                            <div className="grid gap-1.5">
+                                                <Label htmlFor="edit-password-confirm" className="text-xs font-semibold uppercase tracking-wide text-slate-500">Konfirmasi Password</Label>
+                                                <Input id="edit-password-confirm" name="password_confirmation" type="password" placeholder="Ulangi password baru"
+                                                    className="rounded-xl border-slate-200 bg-slate-50 focus:border-indigo-400 focus:bg-white" />
+                                            </div>
+
+                                            <div className="grid gap-1.5 sm:col-span-2">
+                                                <Label htmlFor="edit-school-class-id" className="text-xs font-semibold uppercase tracking-wide text-slate-500">Kelas</Label>
+                                                <select
+                                                    id="edit-school-class-id"
+                                                    name="school_class_id"
+                                                    required
+                                                    defaultValue={String(editTarget.school_class_id ?? '')}
+                                                    className="flex h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-indigo-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                                                >
+                                                    {schoolClasses.map((sc) => (
+                                                        <option key={sc.id} value={sc.id}>{sc.name}</option>
+                                                    ))}
+                                                </select>
+                                                {errors.school_class_id && <p className="flex items-center gap-1 text-xs text-red-500"><AlertCircle className="h-3 w-3" />{errors.school_class_id}</p>}
+                                            </div>
+                                        </div>
+
+                                        <DialogFooter className="gap-2 pt-2">
+                                            <Button type="button" variant="outline" className="rounded-xl" onClick={() => setEditTarget(null)}>
+                                                Batal
+                                            </Button>
+                                            <Button type="submit" disabled={processing}
+                                                className="gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60">
+                                                <Pencil className="h-3.5 w-3.5" />
+                                                {processing ? 'Menyimpan...' : 'Simpan Perubahan'}
+                                            </Button>
+                                        </DialogFooter>
+                                    </>
+                                )}
+                            </Form>
+                        )}
+                    </DialogContent>
+                </Dialog>
+            )}
+
+            {canManageStudents && (
+                /* ── Delete Confirmation Dialog ── */
+                <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+                    <DialogContent className="rounded-2xl sm:max-w-sm">
+                        <DialogHeader>
+                            <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50">
+                                <Trash2 className="h-6 w-6 text-red-500" />
                             </div>
-                            Edit Data Siswa
-                        </DialogTitle>
-                        <DialogDescription>
-                            Perbarui informasi akun{' '}
-                            <span className="font-medium text-slate-700">{editTarget?.name}</span>.
-                            Kosongkan password jika tidak ingin menggantinya.
-                        </DialogDescription>
-                    </DialogHeader>
+                            <DialogTitle>Hapus Siswa?</DialogTitle>
+                            <DialogDescription>
+                                Tindakan ini akan menghapus akun{' '}
+                                <span className="font-semibold text-slate-800">{deleteTarget?.name}</span>{' '}
+                                secara permanen dan tidak dapat dibatalkan.
+                            </DialogDescription>
+                        </DialogHeader>
 
-                    {editTarget && (
-                        <Form {...StudentController.update.form(editTarget.id)} className="grid gap-4">
-                            {({ processing, errors }) => (
-                                <>
-                                    <div className="grid gap-4 sm:grid-cols-2">
-                                        <div className="grid gap-1.5">
-                                            <Label htmlFor="edit-name" className="text-xs font-semibold uppercase tracking-wide text-slate-500">Nama Lengkap</Label>
-                                            <Input id="edit-name" name="name" defaultValue={editTarget.name} required
-                                                className="rounded-xl border-slate-200 bg-slate-50 focus:border-indigo-400 focus:bg-white" />
-                                            {errors.name && <p className="flex items-center gap-1 text-xs text-red-500"><AlertCircle className="h-3 w-3" />{errors.name}</p>}
-                                        </div>
-
-                                        <div className="grid gap-1.5">
-                                            <Label htmlFor="edit-email" className="text-xs font-semibold uppercase tracking-wide text-slate-500">Email</Label>
-                                            <Input id="edit-email" name="email" type="email" defaultValue={editTarget.email} required
-                                                className="rounded-xl border-slate-200 bg-slate-50 focus:border-indigo-400 focus:bg-white" />
-                                            {errors.email && <p className="flex items-center gap-1 text-xs text-red-500"><AlertCircle className="h-3 w-3" />{errors.email}</p>}
-                                        </div>
-
-                                        <div className="grid gap-1.5">
-                                            <Label htmlFor="edit-password" className="text-xs font-semibold uppercase tracking-wide text-slate-500">Password Baru</Label>
-                                            <Input id="edit-password" name="password" type="password" placeholder="Opsional"
-                                                className="rounded-xl border-slate-200 bg-slate-50 focus:border-indigo-400 focus:bg-white" />
-                                            {errors.password && <p className="flex items-center gap-1 text-xs text-red-500"><AlertCircle className="h-3 w-3" />{errors.password}</p>}
-                                        </div>
-
-                                        <div className="grid gap-1.5">
-                                            <Label htmlFor="edit-password-confirm" className="text-xs font-semibold uppercase tracking-wide text-slate-500">Konfirmasi Password</Label>
-                                            <Input id="edit-password-confirm" name="password_confirmation" type="password" placeholder="Ulangi password baru"
-                                                className="rounded-xl border-slate-200 bg-slate-50 focus:border-indigo-400 focus:bg-white" />
-                                        </div>
-                                    </div>
-
+                        {deleteTarget && (
+                            <Form {...StudentController.destroy.form(deleteTarget.id)}>
+                                {({ processing }) => (
                                     <DialogFooter className="gap-2 pt-2">
-                                        <Button type="button" variant="outline" className="rounded-xl" onClick={() => setEditTarget(null)}>
+                                        <Button type="button" variant="outline" className="rounded-xl" onClick={() => setDeleteTarget(null)}>
                                             Batal
                                         </Button>
                                         <Button type="submit" disabled={processing}
-                                            className="gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60">
-                                            <Pencil className="h-3.5 w-3.5" />
-                                            {processing ? 'Menyimpan...' : 'Simpan Perubahan'}
+                                            className="gap-2 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-60">
+                                            <Trash2 className="h-3.5 w-3.5" />
+                                            {processing ? 'Menghapus...' : 'Ya, Hapus'}
                                         </Button>
                                     </DialogFooter>
-                                </>
-                            )}
-                        </Form>
-                    )}
-                </DialogContent>
-            </Dialog>
-
-            {/* ── Delete Confirmation Dialog ── */}
-            <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-                <DialogContent className="rounded-2xl sm:max-w-sm">
-                    <DialogHeader>
-                        <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50">
-                            <Trash2 className="h-6 w-6 text-red-500" />
-                        </div>
-                        <DialogTitle>Hapus Siswa?</DialogTitle>
-                        <DialogDescription>
-                            Tindakan ini akan menghapus akun{' '}
-                            <span className="font-semibold text-slate-800">{deleteTarget?.name}</span>{' '}
-                            secara permanen dan tidak dapat dibatalkan.
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    {deleteTarget && (
-                        <Form {...StudentController.destroy.form(deleteTarget.id)}>
-                            {({ processing }) => (
-                                <DialogFooter className="gap-2 pt-2">
-                                    <Button type="button" variant="outline" className="rounded-xl" onClick={() => setDeleteTarget(null)}>
-                                        Batal
-                                    </Button>
-                                    <Button type="submit" disabled={processing}
-                                        className="gap-2 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-60">
-                                        <Trash2 className="h-3.5 w-3.5" />
-                                        {processing ? 'Menghapus...' : 'Ya, Hapus'}
-                                    </Button>
-                                </DialogFooter>
-                            )}
-                        </Form>
-                    )}
-                </DialogContent>
-            </Dialog>
+                                )}
+                            </Form>
+                        )}
+                    </DialogContent>
+                </Dialog>
+            )}
         </>
     );
 }
 
 TeacherStudents.layout = {
     breadcrumbs: [
-        { title: 'Dashboard Guru', href: dashboard() },
+        { title: 'Dashboard Admin', href: admin.dashboard.url() },
         { title: 'Data Siswa', href: StudentController.index() },
     ],
 };

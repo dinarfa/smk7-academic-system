@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Teacher\StoreStudentRequest;
 use App\Http\Requests\Teacher\UpdateStudentRequest;
+use App\Models\SchoolClass;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,29 +16,44 @@ use Inertia\Response;
 class StudentController extends Controller
 {
     /**
-     * Show students list for teachers.
+     * Show students list for teachers and admins.
      */
     public function index(Request $request): Response
     {
-        $homeroomClassIds = $request->user()->homeroomClasses()->pluck('school_classes.id');
+        $user = $request->user();
+        $isAdmin = $user?->isAdmin() ?? false;
 
-        $students = User::query()
-            ->where('role', UserRole::Student)
-            ->when($homeroomClassIds->isNotEmpty(), fn ($query) => $query->whereIn('school_class_id', $homeroomClassIds), fn ($query) => $query->whereRaw('1 = 0'))
+        $studentsQuery = User::query()
+            ->with('schoolClass:id,name')
+            ->where('role', UserRole::Student);
+
+        if (! $isAdmin) {
+            $homeroomClassIds = $user?->homeroomClasses()->pluck('school_classes.id') ?? collect();
+
+            $studentsQuery->when(
+                $homeroomClassIds->isNotEmpty(),
+                fn ($query) => $query->whereIn('school_class_id', $homeroomClassIds),
+                fn ($query) => $query->whereRaw('1 = 0')
+            );
+        }
+
+        $students = $studentsQuery
             ->latest()
             ->paginate(10)
             ->through(fn (User $student): array => [
                 'id' => $student->id,
                 'name' => $student->name,
                 'email' => $student->email,
+                'school_class_id' => $student->school_class_id,
                 'school_class_name' => $student->schoolClass?->name,
                 'created_at' => $student->created_at?->toIso8601String(),
             ]);
 
-        $schoolClasses = $request->user()
-            ->homeroomClasses()
-            ->withCount('students')
-            ->get()
+        $schoolClassesQuery = $isAdmin
+            ? SchoolClass::query()->select(['id', 'name', 'code', 'academic_year'])->withCount('students')->latest('id')
+            : $user?->homeroomClasses()->select(['id', 'name', 'code', 'academic_year'])->withCount('students')->latest('id');
+
+        $schoolClasses = ($schoolClassesQuery?->get() ?? collect())
             ->map(fn ($c) => [
                 'id' => $c->id,
                 'name' => $c->name,
@@ -47,6 +63,7 @@ class StudentController extends Controller
             ])->values();
 
         return Inertia::render('teacher/students', [
+            'canManageStudents' => $isAdmin,
             'schoolClasses' => $schoolClasses,
             'students' => $students,
         ]);
@@ -57,17 +74,11 @@ class StudentController extends Controller
      */
     public function store(StoreStudentRequest $request): RedirectResponse
     {
-        $homeroomClassIds = $request->user()->homeroomClasses()->pluck('school_classes.id');
-        $classId = $request->validated('school_class_id') ?? $homeroomClassIds->first();
-
-        if (! $homeroomClassIds->contains($classId)) {
-            abort(403);
-        }
+        abort_unless($request->user()?->isAdmin(), 403);
 
         User::query()->create([
             ...$request->validated(),
             'role' => UserRole::Student,
-            'school_class_id' => $classId,
             'email_verified_at' => now(),
         ]);
 
@@ -81,14 +92,10 @@ class StudentController extends Controller
      */
     public function update(UpdateStudentRequest $request, User $student): RedirectResponse
     {
+        abort_unless($request->user()?->isAdmin(), 403);
+
         if (! $student->isStudent()) {
             abort(404);
-        }
-
-        $homeroomClassIds = $request->user()->homeroomClasses()->pluck('school_classes.id');
-
-        if (! $homeroomClassIds->contains($student->school_class_id)) {
-            abort(403);
         }
 
         $validated = $request->validated();
@@ -109,14 +116,10 @@ class StudentController extends Controller
      */
     public function destroy(Request $request, User $student): RedirectResponse
     {
+        abort_unless($request->user()?->isAdmin(), 403);
+
         if (! $student->isStudent()) {
             abort(404);
-        }
-
-        $homeroomClassIds = $request->user()->homeroomClasses()->pluck('school_classes.id');
-
-        if (! $homeroomClassIds->contains($student->school_class_id)) {
-            abort(403);
         }
 
         $student->delete();

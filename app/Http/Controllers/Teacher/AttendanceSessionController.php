@@ -108,9 +108,16 @@ class AttendanceSessionController extends Controller
 
         $sessionId = $validated['session_id'] ?? null;
 
-        if (! $sessionId) {
+        if ($sessionId) {
+            $session = AttendanceSession::findOrFail($sessionId);
+            if ($session->opened_by !== $request->user()->id) {
+                abort(403, 'Anda tidak memiliki akses untuk sesi ini.');
+            }
+        } else {
+            $classId = $validated['class_id'] ?? null;
             $session = $lifecycleService->open($request->user()->id, [
                 'type' => $validated['phase'],
+                'class_id' => $classId,
                 'duration_minutes' => 480,
             ]);
             $sessionId = $session->id;

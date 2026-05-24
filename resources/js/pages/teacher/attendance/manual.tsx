@@ -117,13 +117,17 @@ export default function ManualAttendance({
     }, [students, search, selectedClass]);
 
     const summary = useMemo(() => {
-        const counts = { present: 0, late: 0, absent: 0, unset: 0 };
+        const counts = { present: 0, late: 0, absent: 0, unset: 0, overwrites: 0 };
 
         for (const s of filteredStudents) {
             const status = statuses.get(s.id);
+            const existing = existingRecords[s.id];
 
             if (status) {
                 counts[status]++;
+                if (existing && existing.phase === phase && existing.status !== status) {
+                    counts.overwrites++;
+                }
             } else {
                 counts.unset++;
             }
@@ -501,6 +505,11 @@ export default function ManualAttendance({
                     </DialogHeader>
 
                     <div className="space-y-3">
+                        {summary.overwrites > 0 && (
+                            <div className="rounded-lg border border-amber-400/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
+                                Peringatan: {summary.overwrites} data akan ditimpa dengan status baru.
+                            </div>
+                        )}
                         <div className="rounded-lg border p-4">
                             <p className="text-sm text-muted-foreground">Fase</p>
                             <p className="font-medium">{phaseLabels[phase]}</p>

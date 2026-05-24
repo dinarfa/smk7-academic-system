@@ -70,11 +70,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('class', [SchoolClassController::class, 'index'])->name('class.index');
         Route::get('subjects', [SubjectController::class, 'index'])->name('subjects.index');
 
-        Route::get('students', [StudentController::class, 'index'])->name('students.index');
-        Route::post('students', [StudentController::class, 'store'])->name('students.store');
-        Route::put('students/{student}', [StudentController::class, 'update'])->name('students.update');
-        Route::delete('students/{student}', [StudentController::class, 'destroy'])->name('students.destroy');
-
         Route::post('attendance-sessions', [AttendanceSessionController::class, 'store'])->name('attendance-sessions.store');
         Route::patch('attendance-sessions/{attendanceSession}/close', [AttendanceSessionController::class, 'close'])->name('attendance-sessions.close');
         Route::post('attendance/manual', [AttendanceSessionController::class, 'storeManual'])->name('attendance.manual');
@@ -115,11 +110,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('excuses/{excuse}/reject', [TeacherExcuseController::class, 'reject'])->name('excuses.reject');
     });
 
+    Route::middleware('role:teacher,admin')->prefix('teacher')->name('teacher.')->group(function () {
+        Route::get('students', [StudentController::class, 'index'])->name('students.index');
+    });
+
+    Route::middleware('role:admin')->prefix('teacher')->name('teacher.')->group(function () {
+        Route::post('students', [StudentController::class, 'store'])->name('students.store');
+        Route::put('students/{student}', [StudentController::class, 'update'])->name('students.update');
+        Route::delete('students/{student}', [StudentController::class, 'destroy'])->name('students.destroy');
+    });
+
     Route::middleware('role:student')->prefix('student')->name('student.')->group(function () {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
         Route::get('attendance', [StudentAttendanceController::class, 'index'])->name('attendance.index');
         Route::get('attendance/scan', [StudentAttendanceController::class, 'scanPage'])->name('attendance.scan.page');
-        Route::post('attendance/scan', [StudentAttendanceController::class, 'scan'])->name('attendance.scan');
+        Route::post('attendance/scan', [StudentAttendanceController::class, 'scan'])->name('attendance.scan')->middleware('throttle:15,1');
         Route::get('exams', [StudentExamController::class, 'index'])->name('exams.index');
         // Student exam attempts
         Route::post('exams/{exam}/attempts', [ExamAttemptController::class, 'store'])->name('exams.attempts.store');

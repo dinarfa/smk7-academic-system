@@ -26,6 +26,40 @@ class ExportAttendanceRequest extends FormRequest
             'startDate' => ['required', 'date'],
             'endDate' => ['required', 'date', 'after_or_equal:startDate'],
             'format' => ['nullable', 'string', 'in:csv,xlsx'],
+            'classId' => ['nullable', 'integer'],
+            'subjectId' => ['nullable', 'integer'],
+        ];
+    }
+
+    /**
+     * Get the "after" validation callables for the request.
+     *
+     * @return array<int, callable>
+     */
+    public function after(): array
+    {
+        return [
+            function ($validator) {
+                $teacher = auth()->user();
+
+                $allowedClassIds = $teacher->homeroomClasses()->pluck('id')
+                    ->merge($teacher->subjects()->pluck('school_class_id')->filter()->unique())
+                    ->unique()
+                    ->values()
+                    ->toArray();
+
+                $classId = $this->input('classId');
+                if ($classId !== null && ! in_array((int) $classId, $allowedClassIds)) {
+                    $validator->errors()->add('classId', 'Anda tidak memiliki akses ke kelas yang dipilih.');
+                }
+
+                $allowedSubjectIds = $teacher->subjects()->pluck('id')->toArray();
+
+                $subjectId = $this->input('subjectId');
+                if ($subjectId !== null && ! in_array((int) $subjectId, $allowedSubjectIds)) {
+                    $validator->errors()->add('subjectId', 'Anda tidak memiliki akses ke mata pelajaran yang dipilih.');
+                }
+            },
         ];
     }
 }

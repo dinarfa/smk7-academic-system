@@ -64,6 +64,17 @@ export default function TeacherAttendanceQr({ active_session: activeSession, cur
     const [selectedSubjectKey, setSelectedSubjectKey] = useState('');
     const popupExpiredRef = useRef(false);
 
+    // Poll for live attendance count updates every 5 seconds
+    useEffect(() => {
+        if (!activeSession?.is_active) return;
+
+        const pollInterval = setInterval(() => {
+            router.reload({ only: ['active_session'] });
+        }, 5000);
+
+        return () => clearInterval(pollInterval);
+    }, [activeSession?.is_active]);
+
     const selectedSubject = subjectGroups.find((group) => group.key === selectedSubjectKey) ?? null;
     const selectedClasses = selectedSubject?.classes ?? accessibleClasses ?? [];
     const canOpenSession = selectedClasses.length > 0;

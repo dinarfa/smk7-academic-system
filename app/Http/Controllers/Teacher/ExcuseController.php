@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Teacher;
 use App\Http\Controllers\Controller;
 use App\Models\Excuse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
@@ -58,16 +59,21 @@ class ExcuseController extends Controller
     {
         Gate::authorize('update', $excuse);
 
-        $excuse->update([
-            'status' => 'approved',
-            'reviewed_by' => auth()->id(),
-            'review_notes' => request('review_notes'),
+        $validated = request()->validate([
+            'review_notes' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        // Mark attendance record as excused
-        if ($excuse->attendance_record_id) {
-            $excuse->attendanceRecord->update(['excused' => true]);
-        }
+        DB::transaction(function () use ($excuse, $validated) {
+            $excuse->update([
+                'status' => 'approved',
+                'reviewed_by' => auth()->id(),
+                'review_notes' => $validated['review_notes'] ?? null,
+            ]);
+
+            if ($excuse->attendance_record_id) {
+                $excuse->attendanceRecord->update(['excused' => true]);
+            }
+        });
 
         Inertia::flash('toast', [
             'type' => 'success',
@@ -84,10 +90,14 @@ class ExcuseController extends Controller
     {
         Gate::authorize('update', $excuse);
 
+        $validated = request()->validate([
+            'review_notes' => ['nullable', 'string', 'max:1000'],
+        ]);
+
         $excuse->update([
             'status' => 'rejected',
             'reviewed_by' => auth()->id(),
-            'review_notes' => request('review_notes'),
+            'review_notes' => $validated['review_notes'] ?? null,
         ]);
 
         Inertia::flash('toast', [

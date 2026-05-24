@@ -27,6 +27,7 @@ class ManualAttendanceRequest extends FormRequest
     {
         return [
             'session_id' => ['sometimes', 'nullable', 'integer', 'exists:attendance_sessions,id'],
+            'class_id' => ['required_without:session_id', 'nullable', 'integer', 'exists:school_classes,id'],
             'phase' => ['required', Rule::enum(AttendanceQrType::class)],
             'students' => ['required', 'array', 'min:1'],
             'students.*.student_id' => ['required', 'integer', 'exists:users,id'],
@@ -57,10 +58,7 @@ class ManualAttendanceRequest extends FormRequest
             function ($validator) {
                 $teacher = auth()->user();
 
-                // Homeroom class IDs
                 $classIds = $teacher->homeroomClasses()->pluck('id')->toArray();
-
-                // Subject-taught class IDs
                 $subjectClassIds = $teacher->subjects()
                     ->pluck('school_class_id')
                     ->filter()
@@ -73,10 +71,25 @@ class ManualAttendanceRequest extends FormRequest
                     return;
                 }
 
+                $studentIds = collect($this->input('students', []))
+                    ->pluck('student_id')
+                    ->filter()
+                    ->unique()
+                    ->values()
+                    ->toArray();
+
+                if (empty($studentIds)) {
+                    return;
+                }
+
+                $studentsWithClasses = User::query()
+                    ->whereIn('id', $studentIds)
+                    ->pluck('school_class_id', 'id');
+
                 foreach ($this->input('students', []) as $index => $student) {
                     $studentId = $student['student_id'] ?? null;
                     if ($studentId) {
-                        $studentClass = User::find($studentId)?->school_class_id;
+                        $studentClass = $studentsWithClasses->get($studentId);
                         if (! $studentClass || ! in_array($studentClass, $allowedClassIds)) {
                             $validator->errors()->add(
                                 "students.{$index}.student_id",

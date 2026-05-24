@@ -12,7 +12,7 @@ class AttendanceSessionLifecycleService
      */
     public function open(int $teacherId, array $validated): AttendanceSession
     {
-        $this->closeActiveSessions($teacherId, $validated['type']);
+        $this->closeActiveSessions($teacherId, $validated['type'], $validated['class_id'] ?? null);
 
         return AttendanceSession::query()->create([
             'opened_by' => $teacherId,
@@ -45,29 +45,31 @@ class AttendanceSessionLifecycleService
      */
     public function closeExpiredSessions(): int
     {
-        $expiredSessions = AttendanceSession::query()
+        return AttendanceSession::query()
             ->where('is_active', true)
             ->whereNotNull('ends_at')
             ->where('ends_at', '<=', now())
-            ->get();
-
-        $expiredSessions->each(function (AttendanceSession $attendanceSession): void {
-            $this->close($attendanceSession);
-        });
-
-        return $expiredSessions->count();
+            ->update([
+                'is_active' => false,
+                'ends_at' => now(),
+            ]);
     }
 
     /**
      * Close active sessions for the given teacher and type.
      */
-    public function closeActiveSessions(int $teacherId, string $type): Collection
+    public function closeActiveSessions(int $teacherId, string $type, ?int $classId = null): Collection
     {
-        $activeSessions = AttendanceSession::query()
+        $query = AttendanceSession::query()
             ->where('opened_by', $teacherId)
             ->where('is_active', true)
-            ->where('type', $type)
-            ->get();
+            ->where('type', $type);
+
+        if ($classId) {
+            $query->where('class_id', $classId);
+        }
+
+        $activeSessions = $query->get();
 
         $activeSessions->each(function (AttendanceSession $attendanceSession): void {
             $this->close($attendanceSession);
