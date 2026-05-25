@@ -165,6 +165,61 @@ class AttendanceReportService
     }
 
     /**
+     * Build the data for admin attendance recap by class.
+     *
+     * @return array{
+     *     sessions: Collection<int, array<string, mixed>>,
+     *     summary: array{total_sessions: int, total_records: int, present: int, absent: int, excused: int}
+     * }
+     */
+    public function byClass(int $classId, ?string $startDate = null, ?string $endDate = null): array
+    {
+        $query = AttendanceSession::query()
+            ->with(['openedBy:id,name', 'subjectModel:id,name', 'records' => function ($q): void {
+                $q->select(['id', 'attendance_session_id', 'student_id', 'status', 'excused']);
+            }])
+            ->where(function ($q) use ($classId): void {
+                $q->where('class_id', $classId)
+                    ->orWhereHas('subjectModel.schoolClasses', fn ($sq) => $sq->where('school_classes.id', $classId));
+            })
+            ->latest('created_at');
+
+        if ($startDate !== null && $startDate !== '') {
+            $query->whereDate('created_at', '>=', $startDate);
+        }
+
+        if ($endDate !== null && $endDate !== '') {
+            $query->whereDate('created_at', '<=', $endDate);
+        }
+
+        $sessions = $query->get()->map(fn (AttendanceSession $session): array => [
+            'id' => $session->id,
+            'type' => $session->type?->value,
+            'subject' => $session->subject_name,
+            'opened_by' => $session->openedBy->name,
+            'created_at' => $session->created_at?->toIso8601String(),
+            'is_active' => $session->is_active,
+            'total' => $session->records->count(),
+            'present' => $session->records->where('status', 'present')->count(),
+            'absent' => $session->records->where('status', 'absent')->count(),
+            'excused' => $session->records->where('excused', true)->count(),
+        ])->values();
+
+        $totalRecords = $sessions->sum('total');
+
+        return [
+            'sessions' => $sessions,
+            'summary' => [
+                'total_sessions' => $sessions->count(),
+                'total_records' => $totalRecords,
+                'present' => $sessions->sum('present'),
+                'absent' => $sessions->sum('absent'),
+                'excused' => $sessions->sum('excused'),
+            ],
+        ];
+    }
+
+    /**
      * Build the CSV contents for attendance export.
      */
     public function exportCsv(): string
@@ -203,7 +258,7 @@ class AttendanceReportService
                 if ($classId !== null) {
                     $query->where(function ($q) use ($classId): void {
                         $q->where('class_id', $classId)
-                            ->orWhereHas('subjectModel', fn ($sq) => $sq->where('school_class_id', $classId));
+                            ->orWhereHas('subjectModel.schoolClasses', fn ($sq) => $sq->where('school_classes.id', $classId));
                     });
                 }
                 if ($subjectId !== null) {
@@ -269,7 +324,7 @@ class AttendanceReportService
                 if ($classId !== null) {
                     $query->where(function ($q) use ($classId): void {
                         $q->where('class_id', $classId)
-                            ->orWhereHas('subjectModel', fn ($sq) => $sq->where('school_class_id', $classId));
+                            ->orWhereHas('subjectModel.schoolClasses', fn ($sq) => $sq->where('school_classes.id', $classId));
                     });
                 }
                 if ($subjectId !== null) {

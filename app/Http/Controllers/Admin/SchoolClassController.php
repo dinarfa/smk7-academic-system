@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreSchoolClassRequest;
+use App\Http\Requests\Admin\UpdateSchoolClassRequest;
 use App\Models\SchoolClass;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -60,6 +61,30 @@ class SchoolClassController extends Controller
         SchoolClass::query()->create($request->validated());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Data kelas berhasil digenerate oleh admin.')]);
+
+        return back();
+    }
+
+    /**
+     * Update a school class.
+     */
+    public function update(UpdateSchoolClassRequest $request, SchoolClass $schoolClass): RedirectResponse
+    {
+        $schoolClass->update($request->validated());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Data kelas berhasil diperbarui.')]);
+
+        return back();
+    }
+
+    /**
+     * Delete a school class.
+     */
+    public function destroy(SchoolClass $schoolClass): RedirectResponse
+    {
+        $schoolClass->delete();
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Kelas berhasil dihapus.')]);
 
         return back();
     }

@@ -23,10 +23,7 @@ class SubjectScheduleSeeder extends Seeder
         }
 
         foreach ($classes as $class) {
-            $subjects = Subject::query()
-                ->where('school_class_id', $class->id)
-                ->orderBy('id')
-                ->get();
+            $subjects = $class->subjects()->orderBy('id')->get();
 
             if ($subjects->isEmpty()) {
                 continue;

@@ -34,6 +34,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Class generation
         Route::get('classes', [AdminSchoolClassController::class, 'index'])->name('classes.index');
         Route::post('classes', [AdminSchoolClassController::class, 'store'])->name('classes.store');
+        Route::put('classes/{schoolClass}', [AdminSchoolClassController::class, 'update'])->name('classes.update');
+        Route::delete('classes/{schoolClass}', [AdminSchoolClassController::class, 'destroy'])->name('classes.destroy');
 
         // Subject management
         Route::get('subjects', [AdminSubjectController::class, 'index'])->name('subjects.index');
@@ -52,6 +54,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('reports/overview', [AdminReportController::class, 'overview'])->name('reports.overview');
         Route::get('reports/by-session', [AdminReportController::class, 'bySession'])->name('reports.by-session');
         Route::get('reports/by-student', [AdminReportController::class, 'byStudent'])->name('reports.by-student');
+        Route::get('reports/by-class', [AdminReportController::class, 'byClass'])->name('reports.by-class');
         Route::get('reports/export', [AdminReportController::class, 'export'])->name('reports.export');
 
         // Audit logs

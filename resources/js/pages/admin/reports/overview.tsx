@@ -54,6 +54,9 @@ export default function AdminReportsOverview({ summary, topStudents, recentSessi
                             <Link href={admin.reports.bySession.url()}>Per Sesi</Link>
                         </Button>
                         <Button asChild size="sm" variant="secondary">
+                            <Link href={admin.reports.byClass.url()}>Per Kelas</Link>
+                        </Button>
+                        <Button asChild size="sm" variant="secondary">
                             <Link href={admin.reports.export.url()}>Ekspor CSV</Link>
                         </Button>
                     </div>
@@ -131,6 +134,9 @@ export default function AdminReportsOverview({ summary, topStudents, recentSessi
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                             <Button asChild variant="outline" className="justify-center">
                                 <Link href={admin.reports.byStudent.url()}>Per Siswa</Link>
+                            </Button>
+                            <Button asChild variant="outline" className="justify-center">
+                                <Link href={admin.reports.byClass.url()}>Per Kelas</Link>
                             </Button>
                             <Button asChild variant="outline" className="justify-center">
                                 <Link href={admin.users.index.url()}>Kelola Pengguna</Link>

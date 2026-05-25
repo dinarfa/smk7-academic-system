@@ -20,8 +20,8 @@ class SubjectController extends Controller
         $teacherId = $request->user()?->id;
 
         $subjects = Subject::query()
-            ->select(['id', 'code', 'name', 'school_class_id'])
-            ->with(['schoolClass:id,name'])
+            ->select(['id', 'code', 'name'])
+            ->with(['schoolClasses:id,name'])
             ->where('teacher_id', $teacherId)
             ->orderBy('name')
             ->get();
@@ -84,7 +84,7 @@ class SubjectController extends Controller
                 'id' => $subject->id,
                 'code' => $subject->code,
                 'name' => $subject->name,
-                'class' => $subject->schoolClass?->name,
+                'class' => $subject->schoolClasses->pluck('name')->join(', '),
                 'schedule_time' => $scheduleTime,
                 'schedule_day' => $scheduleDay ?? null,
             ];

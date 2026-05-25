@@ -1,6 +1,7 @@
 import { Link, useForm } from '@inertiajs/react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -17,6 +18,8 @@ type Subject = {
     id: number
     code: string
     name: string
+    school_classes: { id: number; name: string }[]
+    teacher: { id: number; name: string } | null
     created_at: string | null
     updated_at: string | null
 }
@@ -48,9 +51,17 @@ export default function AdminSubjectsIndex({ classes, teachers, subjects }: Prop
     const { data, setData, post, processing, errors, reset } = useForm({
         code: '',
         name: '',
-        school_class_id: '',
+        school_class_ids: [] as string[],
         teacher_id: '',
     })
+
+    function toggleClass(classId: string) {
+        setData('school_class_ids',
+            data.school_class_ids.includes(classId)
+                ? data.school_class_ids.filter((id) => id !== classId)
+                : [...data.school_class_ids, classId]
+        )
+    }
 
     function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
@@ -65,7 +76,7 @@ export default function AdminSubjectsIndex({ classes, teachers, subjects }: Prop
             <div className="space-y-6">
             <div>
                 <h1 className="text-3xl font-semibold text-foreground">Mata Pelajaran</h1>
-                <p className="text-muted-foreground">Buat dan kelola mata pelajaran untuk CBT.</p>
+                <p className="text-muted-foreground">Buat dan kelola mata pelajaran untuk setiap kelas.</p>
             </div>
 
             <div className="grid gap-6 lg:grid-cols-2">
@@ -90,24 +101,23 @@ export default function AdminSubjectsIndex({ classes, teachers, subjects }: Prop
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="school_class_id">Kelas</Label>
-                                <Select
-                                    value={data.school_class_id}
-                                    onValueChange={(value) => setData('school_class_id', value)}
-                                >
-                                    <SelectTrigger className="w-full" id="school_class_id">
-                                        <SelectValue placeholder="Pilih Kelas" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {classes.map((schoolClass) => (
-                                            <SelectItem key={schoolClass.id} value={String(schoolClass.id)}>
-                                                {schoolClass.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                {errors.school_class_id && (
-                                    <p className="text-sm text-destructive">{errors.school_class_id}</p>
+                                <Label>Kelas</Label>
+                                <div className="grid grid-cols-2 gap-2 rounded-lg border border-border p-3">
+                                    {classes.map((schoolClass) => (
+                                        <label
+                                            key={schoolClass.id}
+                                            className="flex items-center gap-2 text-sm cursor-pointer"
+                                        >
+                                            <Checkbox
+                                                checked={data.school_class_ids.includes(String(schoolClass.id))}
+                                                onCheckedChange={() => toggleClass(String(schoolClass.id))}
+                                            />
+                                            {schoolClass.name}
+                                        </label>
+                                    ))}
+                                </div>
+                                {errors.school_class_ids && (
+                                    <p className="text-sm text-destructive">{errors.school_class_ids}</p>
                                 )}
                             </div>
 
@@ -166,7 +176,17 @@ export default function AdminSubjectsIndex({ classes, teachers, subjects }: Prop
                                 <div key={subject.id} className="flex items-center justify-between rounded-lg border border-border p-4">
                                     <div>
                                         <p className="font-medium text-foreground">{subject.name}</p>
-                                        <p className="text-sm text-muted-foreground">Kode: {subject.code}</p>
+                                        <p className="text-sm text-muted-foreground">
+                                            Kode: {subject.code} &middot;{' '}
+                                            {subject.school_classes.length > 0
+                                                ? subject.school_classes.map((c) => c.name).join(', ')
+                                                : 'Belum ada kelas'}
+                                        </p>
+                                        {subject.teacher && (
+                                            <p className="text-xs text-muted-foreground">
+                                                Guru: {subject.teacher.name}
+                                            </p>
+                                        )}
                                     </div>
 
                                     <div className="flex items-center gap-2">

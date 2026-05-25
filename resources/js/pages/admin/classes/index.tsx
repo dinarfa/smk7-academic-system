@@ -1,7 +1,14 @@
-import { Link, useForm } from '@inertiajs/react';
+import { Link, useForm, router } from '@inertiajs/react';
 import SchoolClassController from '@/actions/App/Http/Controllers/Admin/SchoolClassController';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -13,6 +20,8 @@ import {
 } from '@/components/ui/select';
 import AdminLayout from '@/layouts/AdminLayout';
 import admin from '@/routes/admin';
+import { Pencil, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 
 type Teacher = {
     id: number;
@@ -46,6 +55,12 @@ export default function AdminSchoolClassesIndex({ classes, teachers }: Props) {
         teacher_id: '',
     });
 
+    const [editingClass, setEditingClass] = useState<SchoolClass | null>(null);
+    const editForm = useForm({
+        name: '',
+        homeroom_teacher_id: '',
+    });
+
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
@@ -53,6 +68,34 @@ export default function AdminSchoolClassesIndex({ classes, teachers }: Props) {
             onSuccess: () => reset(),
         });
     };
+
+    function openEdit(schoolClass: SchoolClass) {
+        setEditingClass(schoolClass);
+        editForm.setData({
+            name: schoolClass.name,
+            homeroom_teacher_id: schoolClass.homeroom_teacher ? String(schoolClass.homeroom_teacher.id) : '',
+        });
+    }
+
+    function handleEdit(e: React.FormEvent<HTMLFormElement>) {
+        e.preventDefault();
+        if (!editingClass) return;
+
+        editForm.put(SchoolClassController.update.url({ schoolClass: editingClass.id }), {
+            onSuccess: () => {
+                setEditingClass(null);
+                editForm.reset();
+            },
+        });
+    }
+
+    function handleDelete(schoolClass: SchoolClass) {
+        if (!confirm(`Hapus kelas "${schoolClass.name}"? Semua data terkait akan ikut terhapus.`)) {
+            return;
+        }
+
+        router.delete(SchoolClassController.destroy.url({ schoolClass: schoolClass.id }));
+    }
 
     return (
         <AdminLayout title="Kelola Kelas">
@@ -137,14 +180,24 @@ export default function AdminSchoolClassesIndex({ classes, teachers }: Props) {
                                         </p>
                                     </div>
 
-                                    <div className="flex items-center gap-2">
-                                        <Button asChild variant="link" className="h-auto p-0">
-                                            <Link href={`/admin/classes/${schoolClass.id}/edit`}>Edit</Link>
+                                    <div className="flex items-center gap-1">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8"
+                                            onClick={() => openEdit(schoolClass)}
+                                            aria-label="Edit kelas"
+                                        >
+                                            <Pencil className="h-3.5 w-3.5" />
                                         </Button>
-                                        <Button asChild variant="link" className="h-auto p-0 text-destructive">
-                                            <Link href={`/admin/classes/${schoolClass.id}`} method="delete" as="button">
-                                                Hapus
-                                            </Link>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 text-destructive hover:text-destructive"
+                                            onClick={() => handleDelete(schoolClass)}
+                                            aria-label="Hapus kelas"
+                                        >
+                                            <Trash2 className="h-3.5 w-3.5" />
                                         </Button>
                                     </div>
                                 </div>
@@ -187,6 +240,69 @@ export default function AdminSchoolClassesIndex({ classes, teachers }: Props) {
                 </CardContent>
             </Card>
             </div>
+
+            {/* Edit dialog */}
+            <Dialog open={editingClass !== null} onOpenChange={(open) => {
+                if (!open) {
+                    setEditingClass(null);
+                    editForm.reset();
+                }
+            }}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Edit Kelas</DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handleEdit} className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-name">Nama Kelas</Label>
+                            <Input
+                                id="edit-name"
+                                value={editForm.data.name}
+                                onChange={(e) => editForm.setData('name', e.target.value)}
+                                placeholder="Kelas 10A"
+                                aria-invalid={Boolean(editForm.errors.name)}
+                            />
+                            {editForm.errors.name && (
+                                <p className="text-sm text-destructive">{editForm.errors.name}</p>
+                            )}
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-teacher">Wali Kelas</Label>
+                            <Select
+                                value={editForm.data.homeroom_teacher_id}
+                                onValueChange={(value) => editForm.setData('homeroom_teacher_id', value)}
+                            >
+                                <SelectTrigger className="w-full" id="edit-teacher">
+                                    <SelectValue placeholder="Pilih Guru" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {teachers.map((teacher) => (
+                                        <SelectItem key={teacher.id} value={String(teacher.id)}>
+                                            {teacher.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {editForm.errors.homeroom_teacher_id && (
+                                <p className="text-sm text-destructive">{editForm.errors.homeroom_teacher_id}</p>
+                            )}
+                        </div>
+
+                        <DialogFooter>
+                            <Button type="button" variant="outline" onClick={() => {
+                                setEditingClass(null);
+                                editForm.reset();
+                            }}>
+                                Batal
+                            </Button>
+                            <Button type="submit" disabled={editForm.processing}>
+                                {editForm.processing ? 'Menyimpan...' : 'Simpan Perubahan'}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
         </AdminLayout>
     )
 }

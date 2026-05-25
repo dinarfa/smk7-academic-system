@@ -32,18 +32,18 @@ class SubjectController extends Controller
             ->get();
 
         $subjects = Subject::query()
-            ->with(['teacher:id,name', 'schoolClass:id,name'])
-            ->select(['id', 'code', 'name', 'school_class_id', 'teacher_id', 'created_at', 'updated_at'])
+            ->with(['teacher:id,name', 'schoolClasses:id,name'])
+            ->select(['id', 'code', 'name', 'teacher_id', 'created_at', 'updated_at'])
             ->latest('id')
             ->paginate(10)
             ->through(fn (Subject $subject): array => [
                 'id' => $subject->id,
                 'code' => $subject->code,
                 'name' => $subject->name,
-                'school_class' => $subject->schoolClass ? [
-                    'id' => $subject->schoolClass->id,
-                    'name' => $subject->schoolClass->name,
-                ] : null,
+                'school_classes' => $subject->schoolClasses->map(fn (SchoolClass $class): array => [
+                    'id' => $class->id,
+                    'name' => $class->name,
+                ])->values(),
                 'teacher' => $subject->teacher ? [
                     'id' => $subject->teacher->id,
                     'name' => $subject->teacher->name,
@@ -82,7 +82,7 @@ class SubjectController extends Controller
                 'id' => $subject->id,
                 'code' => $subject->code,
                 'name' => $subject->name,
-                'school_class_id' => $subject->school_class_id,
+                'school_class_ids' => $subject->schoolClasses->pluck('id')->toArray(),
                 'teacher_id' => $subject->teacher_id,
             ],
         ]);
@@ -93,7 +93,12 @@ class SubjectController extends Controller
      */
     public function store(StoreSubjectRequest $request): RedirectResponse
     {
-        Subject::query()->create($request->validated());
+        $validated = $request->validated();
+        $classIds = $validated['school_class_ids'];
+        unset($validated['school_class_ids']);
+
+        $subject = Subject::query()->create($validated);
+        $subject->schoolClasses()->attach($classIds);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Subject created successfully.')]);
 
@@ -105,7 +110,15 @@ class SubjectController extends Controller
      */
     public function update(UpdateSubjectRequest $request, Subject $subject): RedirectResponse
     {
-        $subject->update($request->validated());
+        $validated = $request->validated();
+        $classIds = $validated['school_class_ids'] ?? null;
+        unset($validated['school_class_ids']);
+
+        $subject->update($validated);
+
+        if ($classIds !== null) {
+            $subject->schoolClasses()->sync($classIds);
+        }
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Subject updated successfully.')]);
 
@@ -117,6 +130,7 @@ class SubjectController extends Controller
      */
     public function destroy(Subject $subject): RedirectResponse
     {
+        $subject->schoolClasses()->detach();
         $subject->delete();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Subject deleted successfully.')]);
