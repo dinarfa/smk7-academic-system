@@ -35,9 +35,18 @@ class StoreExamRequest extends FormRequest
             'class_id' => [
                 'required',
                 'integer',
-                Rule::exists('subjects', 'school_class_id')->where(fn ($query) => $query
-                    ->where('teacher_id', $teacherId)
-                    ->where('id', $this->input('subject_id'))),
+                function (string $attribute, mixed $value, \Closure $fail) use ($teacherId): void {
+                    $subjectId = $this->input('subject_id');
+                    $exists = \App\Models\Subject::query()
+                        ->where('id', $subjectId)
+                        ->where('teacher_id', $teacherId)
+                        ->whereHas('schoolClasses', fn ($q) => $q->where('school_classes.id', (int) $value))
+                        ->exists();
+
+                    if (! $exists) {
+                        $fail('The selected class is not valid for the selected subject.');
+                    }
+                },
             ],
             'duration_minutes' => ['required', 'integer', 'min:5', 'max:480'],
             'instructions' => ['nullable', 'string', 'max:2000'],

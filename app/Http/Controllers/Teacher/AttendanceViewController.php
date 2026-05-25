@@ -114,7 +114,8 @@ class AttendanceViewController extends Controller
 
         // Subject-taught classes (non-homeroom): access to students in those classes
         $subjectClassIds = $teacher->subjects()
-            ->pluck('school_class_id')
+            ->join('class_subjects', 'subjects.id', '=', 'class_subjects.subject_id')
+            ->pluck('class_subjects.school_class_id')
             ->filter()
             ->unique()
             ->diff($homeroomClasses->pluck('id'));
@@ -163,7 +164,8 @@ class AttendanceViewController extends Controller
 
         // Subject-taught classes (non-homeroom): access to students in those classes
         $subjectClassIds = $teacher->subjects()
-            ->pluck('school_class_id')
+            ->join('class_subjects', 'subjects.id', '=', 'class_subjects.subject_id')
+            ->pluck('class_subjects.school_class_id')
             ->filter()
             ->unique()
             ->diff($homeroomClasses->pluck('id'));

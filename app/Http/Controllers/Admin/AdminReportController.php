@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\SchoolClass;
 use App\Services\Attendance\AttendanceReportService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -45,6 +46,35 @@ class AdminReportController extends Controller
 
         return Inertia::render('admin/reports/by-student', [
             'students' => $students,
+        ]);
+    }
+
+    /**
+     * Display attendance recap by class.
+     */
+    public function byClass(Request $request, AttendanceReportService $attendanceReportService): Response
+    {
+        $classId = (int) $request->query('class_id', 0);
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
+
+        $classes = SchoolClass::query()->select(['id', 'name'])->orderBy('name')->get();
+
+        $data = ['sessions' => collect(), 'summary' => ['total_sessions' => 0, 'total_records' => 0, 'present' => 0, 'absent' => 0, 'excused' => 0]];
+
+        if ($classId > 0) {
+            $data = $attendanceReportService->byClass($classId, $startDate, $endDate);
+        }
+
+        return Inertia::render('admin/reports/by-class', [
+            'classes' => $classes,
+            'sessions' => $data['sessions'],
+            'summary' => $data['summary'],
+            'filters' => [
+                'class_id' => $classId ?: null,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+            ],
         ]);
     }
 

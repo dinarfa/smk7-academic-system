@@ -10,7 +10,7 @@ use Illuminate\Database\Seeder;
 class SubjectSeeder extends Seeder
 {
     /**
-     * Seed subjects for each existing class.
+     * Seed subjects and attach them to classes.
      */
     public function run(): void
     {
@@ -34,20 +34,18 @@ class SubjectSeeder extends Seeder
             return;
         }
 
-        foreach ($classes as $class) {
-            $classSubjects = collect($subjectNames)->random(rand(3, 4));
-            $subjCounter = 1;
+        foreach ($subjectNames as $index => $subjectName) {
+            $subject = Subject::query()->create([
+                'teacher_id' => $teachers->random()->id,
+                'name' => $subjectName,
+                'code' => 'MAP'.($index + 1),
+            ]);
 
-            foreach ($classSubjects as $subjectName) {
-                Subject::query()->create([
-                    'school_class_id' => $class->id,
-                    'teacher_id' => $teachers->random()->id,
-                    'name' => $subjectName,
-                    'code' => strtoupper(substr($subjectName, 0, 3)).'-'.$class->id.'-'.$subjCounter++,
-                ]);
-            }
+            // Attach subject to 2-4 random classes
+            $randomClasses = $classes->random(rand(2, min(4, $classes->count())));
+            $subject->schoolClasses()->attach($randomClasses->pluck('id'));
         }
 
-        $this->command?->info('Seeded subjects for '.$classes->count().' classes.');
+        $this->command?->info('Seeded '.count($subjectNames).' subjects across '.$classes->count().' classes.');
     }
 }

@@ -1,8 +1,9 @@
-import { Link, useForm } from '@inertiajs/react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Plus, Settings2, Pencil, Trash2, Library, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Link, useForm } from '@inertiajs/react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
     Select,
     SelectContent,
@@ -14,20 +15,14 @@ import AdminLayout from '@/layouts/AdminLayout';
 import admin from '@/routes/admin';
 
 type Subject = {
-    id: number;
-    code: string;
-    name: string;
-    school_class: {
-        id: number;
-        name: string;
-    } | null;
-    teacher: {
-        id: number;
-        name: string;
-    } | null;
-    created_at: string | null;
-    updated_at: string | null;
-};
+    id: number
+    code: string
+    name: string
+    school_classes: { id: number; name: string }[]
+    teacher: { id: number; name: string } | null
+    created_at: string | null
+    updated_at: string | null
+}
 
 type SchoolClass = {
     id: number;
@@ -56,9 +51,17 @@ export default function AdminSubjectsIndex({ classes, teachers, subjects }: Prop
     const { data, setData, post, processing, errors, reset } = useForm({
         code: '',
         name: '',
-        school_class_id: '',
+        school_class_ids: [] as string[],
         teacher_id: '',
     });
+
+    function toggleClass(classId: string) {
+        setData('school_class_ids',
+            data.school_class_ids.includes(classId)
+                ? data.school_class_ids.filter((id) => id !== classId)
+                : [...data.school_class_ids, classId]
+        )
+    }
 
     function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
@@ -70,18 +73,10 @@ export default function AdminSubjectsIndex({ classes, teachers, subjects }: Prop
 
     return (
         <AdminLayout title="Mata Pelajaran">
-            <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between mb-8">
-                <div>
-                    <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-indigo-500">
-                        Manajemen Mapel
-                    </p>
-                    <h1 className="text-4xl font-bold tracking-tight text-slate-900">
-                        Mata Pelajaran
-                    </h1>
-                    <p className="mt-1.5 text-slate-500">
-                        Buat dan kelola mata pelajaran untuk sistem CBT.
-                    </p>
-                </div>
+            <div className="space-y-6">
+            <div>
+                <h1 className="text-3xl font-semibold text-foreground">Mata Pelajaran</h1>
+                <p className="text-muted-foreground">Buat dan kelola mata pelajaran untuk setiap kelas.</p>
             </div>
 
             <div className="grid gap-6 lg:grid-cols-[1fr_2fr]">
@@ -114,24 +109,23 @@ export default function AdminSubjectsIndex({ classes, teachers, subjects }: Prop
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="school_class_id" className="text-xs font-semibold uppercase tracking-wide text-slate-500">Kelas</Label>
-                                <Select
-                                    value={data.school_class_id}
-                                    onValueChange={(value) => setData('school_class_id', value)}
-                                >
-                                    <SelectTrigger className="w-full rounded-xl border-slate-200 bg-slate-50 focus:border-indigo-400 focus:bg-white" id="school_class_id">
-                                        <SelectValue placeholder="Pilih Kelas" />
-                                    </SelectTrigger>
-                                    <SelectContent className="rounded-xl">
-                                        {classes.map((schoolClass) => (
-                                            <SelectItem key={schoolClass.id} value={String(schoolClass.id)} className="rounded-lg">
-                                                {schoolClass.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                {errors.school_class_id && (
-                                    <p className="text-xs text-red-500">{errors.school_class_id}</p>
+                                <Label>Kelas</Label>
+                                <div className="grid grid-cols-2 gap-2 rounded-lg border border-border p-3">
+                                    {classes.map((schoolClass) => (
+                                        <label
+                                            key={schoolClass.id}
+                                            className="flex items-center gap-2 text-sm cursor-pointer"
+                                        >
+                                            <Checkbox
+                                                checked={data.school_class_ids.includes(String(schoolClass.id))}
+                                                onCheckedChange={() => toggleClass(String(schoolClass.id))}
+                                            />
+                                            {schoolClass.name}
+                                        </label>
+                                    ))}
+                                </div>
+                                {errors.school_class_ids && (
+                                    <p className="text-sm text-destructive">{errors.school_class_ids}</p>
                                 )}
                             </div>
 
@@ -195,55 +189,39 @@ export default function AdminSubjectsIndex({ classes, teachers, subjects }: Prop
                         {subjects.data.length === 0 ? (
                             <p className="text-sm text-slate-500 text-center py-12">Belum ada mata pelajaran dibuat.</p>
                         ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left text-sm text-slate-600">
-                                    <thead className="border-b border-slate-200 bg-slate-50/50 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                                        <tr>
-                                            <th className="px-4 py-4 pl-6">Kode</th>
-                                            <th className="px-4 py-4">Nama Mata Pelajaran</th>
-                                            <th className="px-4 py-4">Kelas</th>
-                                            <th className="px-4 py-4">Guru</th>
-                                            <th className="px-4 py-4 pr-6 text-right">Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-100">
-                                        {subjects.data.map((subject) => (
-                                            <tr key={subject.id} className="hover:bg-slate-50/50 transition-colors">
-                                                <td className="px-4 py-4 pl-6 whitespace-nowrap font-medium text-slate-700">
-                                                    <span className="inline-flex items-center justify-center rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700 border border-slate-200">
-                                                        {subject.code}
-                                                    </span>
-                                                </td>
-                                                <td className="px-4 py-4 whitespace-nowrap font-medium text-slate-900">
-                                                    {subject.name}
-                                                </td>
-                                                <td className="px-4 py-4 whitespace-nowrap text-slate-700">
-                                                    {subject.school_class ? subject.school_class.name : '-'}
-                                                </td>
-                                                <td className="px-4 py-4 whitespace-nowrap text-slate-700">
-                                                    {subject.teacher ? subject.teacher.name : '-'}
-                                                </td>
-                                                <td className="px-4 py-4 pr-6 whitespace-nowrap text-right">
-                                                    <div className="flex items-center justify-end gap-1">
-                                                        <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50">
-                                                            <Link href={admin.subjects.edit.url({ subject: subject.id })}><Pencil className="h-4 w-4" /></Link>
-                                                        </Button>
-                                                        <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-rose-500 hover:text-rose-600 hover:bg-rose-50">
-                                                            <Link
-                                                                href={admin.subjects.destroy.url({ subject: subject.id })}
-                                                                method="delete"
-                                                                as="button"
-                                                            >
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </Link>
-                                                        </Button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
+                            subjects.data.map((subject) => (
+                                <div key={subject.id} className="flex items-center justify-between rounded-lg border border-border p-4">
+                                    <div>
+                                        <p className="font-medium text-foreground">{subject.name}</p>
+                                        <p className="text-sm text-muted-foreground">
+                                            Kode: {subject.code} &middot;{' '}
+                                            {subject.school_classes.length > 0
+                                                ? subject.school_classes.map((c) => c.name).join(', ')
+                                                : 'Belum ada kelas'}
+                                        </p>
+                                        {subject.teacher && (
+                                            <p className="text-xs text-muted-foreground">
+                                                Guru: {subject.teacher.name}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                        <Button asChild variant="link" className="h-auto p-0">
+                                            <Link href={admin.subjects.edit.url({ subject: subject.id })}>Edit</Link>
+                                        </Button>
+                                        <Button asChild variant="link" className="h-auto p-0 text-destructive">
+                                            <Link
+                                                href={admin.subjects.destroy.url({ subject: subject.id })}
+                                                method="delete"
+                                                as="button"
+                                            >
+                                                Hapus
+                                            </Link>
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))
                         )}
                     </div>
                     {/* Pagination */}
@@ -265,5 +243,5 @@ export default function AdminSubjectsIndex({ classes, teachers, subjects }: Prop
                 </div>
             </div>
         </AdminLayout>
-    );
+    )
 }

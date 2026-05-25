@@ -16,6 +16,13 @@ class StoreSubjectScheduleRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('subject_id') && $this->input('subject_id') === '') {
+            $this->merge(['subject_id' => null]);
+        }
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *

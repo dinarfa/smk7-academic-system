@@ -47,7 +47,7 @@ class OpenAttendanceSessionRequest extends FormRequest
                         $subjectQuery = Subject::query()
                             ->where('teacher_id', $teacherId)
                             ->where('name', $subjectName)
-                            ->where('school_class_id', (int) $value);
+                            ->whereHas('schoolClasses', fn ($q) => $q->where('school_classes.id', (int) $value));
 
                         if ($subjectCode === '') {
                             $subjectQuery->whereNull('code');
@@ -67,7 +67,7 @@ class OpenAttendanceSessionRequest extends FormRequest
                     // No specific subject chosen. Allow if teacher is homeroom or teaches in that class.
                     $teachesInClass = Subject::query()
                         ->where('teacher_id', $teacherId)
-                        ->where('school_class_id', (int) $value)
+                        ->whereHas('schoolClasses', fn ($q) => $q->where('school_classes.id', (int) $value))
                         ->exists();
 
                     if ($teachesInClass) {

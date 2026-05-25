@@ -6,9 +6,10 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['code', 'name', 'school_class_id', 'teacher_id'])]
+#[Fillable(['code', 'name', 'teacher_id'])]
 class Subject extends Model
 {
     use HasFactory;
@@ -22,11 +23,11 @@ class Subject extends Model
     }
 
     /**
-     * The class this subject belongs to.
+     * The classes this subject belongs to.
      */
-    public function schoolClass(): BelongsTo
+    public function schoolClasses(): BelongsToMany
     {
-        return $this->belongsTo(SchoolClass::class);
+        return $this->belongsToMany(SchoolClass::class, 'class_subjects')->withTimestamps();
     }
 
     /**

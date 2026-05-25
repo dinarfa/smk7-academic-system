@@ -37,17 +37,23 @@ type Props = {
 export default function AdminReportsOverview({ summary, topStudents, recentSessions }: Props) {
     return (
         <AdminLayout title="Ringkasan Laporan">
-            <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between mb-8">
-                <div>
-                    <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-indigo-500">
-                        Statistik & Analitik
-                    </p>
-                    <h1 className="text-4xl font-bold tracking-tight text-slate-900">
-                        Ringkasan Laporan
-                    </h1>
-                    <p className="mt-1.5 text-slate-500">
-                        Statistik sistem dan data kehadiran secara keseluruhan.
-                    </p>
+            <div className="space-y-6">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-semibold text-foreground">Ringkasan Laporan</h1>
+                        <p className="text-muted-foreground">Statistik sistem dan data kehadiran</p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        <Button asChild size="sm">
+                            <Link href={admin.reports.bySession.url()}>Per Sesi</Link>
+                        </Button>
+                        <Button asChild size="sm" variant="secondary">
+                            <Link href={admin.reports.byClass.url()}>Per Kelas</Link>
+                        </Button>
+                        <Button asChild size="sm" variant="secondary">
+                            <Link href={admin.reports.export.url()}>Ekspor CSV</Link>
+                        </Button>
+                    </div>
                 </div>
                 <div className="flex gap-2 mt-4 sm:mt-0">
                     <Button asChild variant="outline" className="rounded-xl border-slate-200">
@@ -156,27 +162,31 @@ export default function AdminReportsOverview({ summary, topStudents, recentSessi
                 </div>
             </div>
 
-            <div className="mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-slate-50/50 px-6 py-4">
-                    <p className="font-semibold text-slate-800">Akses Cepat</p>
-                    <p className="text-xs text-slate-500">Langkah ke bagian admin yang sering digunakan.</p>
-                </div>
-                <div className="p-6">
-                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                        <Button asChild variant="outline" className="rounded-xl border-slate-200 bg-slate-50 hover:bg-slate-100">
-                            <Link href={admin.reports.byStudent.url()}>Per Siswa</Link>
-                        </Button>
-                        <Button asChild variant="outline" className="rounded-xl border-slate-200 bg-slate-50 hover:bg-slate-100">
-                            <Link href={admin.users.index.url()}>Kelola Pengguna</Link>
-                        </Button>
-                        <Button asChild variant="outline" className="rounded-xl border-slate-200 bg-slate-50 hover:bg-slate-100">
-                            <Link href={admin.auditLogs.index.url()}>Log Audit</Link>
-                        </Button>
-                        <Button asChild variant="outline" className="rounded-xl border-slate-200 bg-slate-50 hover:bg-slate-100">
-                            <Link href={admin.dashboard.url()}>Dashboard</Link>
-                        </Button>
-                    </div>
-                </div>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Akses Cepat</CardTitle>
+                        <CardDescription>Langkah ke bagian admin yang sering digunakan.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                            <Button asChild variant="outline" className="justify-center">
+                                <Link href={admin.reports.byStudent.url()}>Per Siswa</Link>
+                            </Button>
+                            <Button asChild variant="outline" className="justify-center">
+                                <Link href={admin.reports.byClass.url()}>Per Kelas</Link>
+                            </Button>
+                            <Button asChild variant="outline" className="justify-center">
+                                <Link href={admin.users.index.url()}>Kelola Pengguna</Link>
+                            </Button>
+                            <Button asChild variant="outline" className="justify-center">
+                                <Link href={admin.auditLogs.index.url()}>Log Audit</Link>
+                            </Button>
+                            <Button asChild variant="outline" className="justify-center">
+                                <Link href={admin.dashboard.url()}>Dashboard</Link>
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
         </AdminLayout>
     )

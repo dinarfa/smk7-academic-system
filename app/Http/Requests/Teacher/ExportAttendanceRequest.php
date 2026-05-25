@@ -42,8 +42,14 @@ class ExportAttendanceRequest extends FormRequest
             function ($validator) {
                 $teacher = auth()->user();
 
+                $subjectClassIds = $teacher->subjects()
+                    ->join('class_subjects', 'subjects.id', '=', 'class_subjects.subject_id')
+                    ->pluck('class_subjects.school_class_id')
+                    ->filter()
+                    ->unique();
+
                 $allowedClassIds = $teacher->homeroomClasses()->pluck('id')
-                    ->merge($teacher->subjects()->pluck('school_class_id')->filter()->unique())
+                    ->merge($subjectClassIds)
                     ->unique()
                     ->values()
                     ->toArray();

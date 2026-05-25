@@ -1,6 +1,14 @@
-import { Link, useForm } from '@inertiajs/react';
+import { Link, useForm, router } from '@inertiajs/react';
 import SchoolClassController from '@/actions/App/Http/Controllers/Admin/SchoolClassController';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { BookOpen, Plus, Settings2, Trash2, Pencil } from 'lucide-react';
@@ -13,6 +21,8 @@ import {
 } from '@/components/ui/select';
 import AdminLayout from '@/layouts/AdminLayout';
 import admin from '@/routes/admin';
+import { Pencil, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 
 type Teacher = {
     id: number;
@@ -46,6 +56,12 @@ export default function AdminSchoolClassesIndex({ classes, teachers }: Props) {
         teacher_id: '',
     });
 
+    const [editingClass, setEditingClass] = useState<SchoolClass | null>(null);
+    const editForm = useForm({
+        name: '',
+        homeroom_teacher_id: '',
+    });
+
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
@@ -53,6 +69,34 @@ export default function AdminSchoolClassesIndex({ classes, teachers }: Props) {
             onSuccess: () => reset(),
         });
     };
+
+    function openEdit(schoolClass: SchoolClass) {
+        setEditingClass(schoolClass);
+        editForm.setData({
+            name: schoolClass.name,
+            homeroom_teacher_id: schoolClass.homeroom_teacher ? String(schoolClass.homeroom_teacher.id) : '',
+        });
+    }
+
+    function handleEdit(e: React.FormEvent<HTMLFormElement>) {
+        e.preventDefault();
+        if (!editingClass) return;
+
+        editForm.put(SchoolClassController.update.url({ schoolClass: editingClass.id }), {
+            onSuccess: () => {
+                setEditingClass(null);
+                editForm.reset();
+            },
+        });
+    }
+
+    function handleDelete(schoolClass: SchoolClass) {
+        if (!confirm(`Hapus kelas "${schoolClass.name}"? Semua data terkait akan ikut terhapus.`)) {
+            return;
+        }
+
+        router.delete(SchoolClassController.destroy.url({ schoolClass: schoolClass.id }));
+    }
 
     return (
         <AdminLayout title="Kelola Kelas">
@@ -145,55 +189,137 @@ export default function AdminSchoolClassesIndex({ classes, teachers }: Props) {
                         {classes.data.length === 0 ? (
                             <p className="text-sm text-slate-500 text-center py-12">Belum ada kelas dibuat.</p>
                         ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left text-sm text-slate-600">
-                                    <thead className="border-b border-slate-200 bg-slate-50/50 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                                        <tr>
-                                            <th className="px-4 py-4 pl-6">Nama Kelas</th>
-                                            <th className="px-4 py-4">Wali Kelas</th>
-                                            <th className="px-4 py-4">Tahun Ajaran</th>
-                                            <th className="px-4 py-4 text-center">Total Siswa</th>
-                                            <th className="px-4 py-4 pr-6 text-right">Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-100">
-                                        {classes.data.map((schoolClass) => (
-                                            <tr key={schoolClass.id} className="hover:bg-slate-50/50 transition-colors">
-                                                <td className="px-4 py-4 pl-6 font-medium text-slate-900 whitespace-nowrap">
-                                                    {schoolClass.name}
-                                                </td>
-                                                <td className="px-4 py-4 whitespace-nowrap font-medium text-slate-700">
-                                                    {schoolClass.homeroom_teacher?.name ?? '-'}
-                                                </td>
-                                                <td className="px-4 py-4 whitespace-nowrap">
-                                                    {schoolClass.academic_year ?? '-'}
-                                                </td>
-                                                <td className="px-4 py-4 whitespace-nowrap text-center">
-                                                    <span className="inline-flex items-center justify-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-700">
-                                                        {schoolClass.students_count}
-                                                    </span>
-                                                </td>
-                                                <td className="px-4 py-4 pr-6 whitespace-nowrap text-right">
-                                                    <div className="flex items-center justify-end gap-1">
-                                                        <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50">
-                                                            <Link href={`/admin/classes/${schoolClass.id}/edit`}><Pencil className="h-4 w-4" /></Link>
-                                                        </Button>
-                                                        <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-rose-500 hover:text-rose-600 hover:bg-rose-50">
-                                                            <Link href={`/admin/classes/${schoolClass.id}`} method="delete" as="button">
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </Link>
-                                                        </Button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                            classes.data.map((schoolClass) => (
+                                <div key={schoolClass.id} className="flex items-center justify-between rounded-lg border border-border p-4">
+                                    <div>
+                                        <p className="font-medium text-foreground">{schoolClass.name}</p>
+                                        <p className="text-sm text-muted-foreground">
+                                            Wali Kelas: {schoolClass.homeroom_teacher?.name ?? '-'}
+                                        </p>
+                                    </div>
+
+                                    <div className="flex items-center gap-1">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8"
+                                            onClick={() => openEdit(schoolClass)}
+                                            aria-label="Edit kelas"
+                                        >
+                                            <Pencil className="h-3.5 w-3.5" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 text-destructive hover:text-destructive"
+                                            onClick={() => handleDelete(schoolClass)}
+                                            aria-label="Hapus kelas"
+                                        >
+                                            <Trash2 className="h-3.5 w-3.5" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Daftar Kelas</CardTitle>
+                    <CardDescription>Semua kelas yang sudah digenerate admin.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                    {classes.data.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">Belum ada kelas.</p>
+                    ) : (
+                        classes.data.map((schoolClass) => (
+                            <div key={schoolClass.id} className="grid gap-2 rounded-lg border border-border p-4 md:grid-cols-4">
+                                <div>
+                                    <p className="text-sm text-muted-foreground">Nama</p>
+                                    <p className="font-medium">{schoolClass.name}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-muted-foreground">Wali Kelas</p>
+                                    <p className="font-medium">{schoolClass.homeroom_teacher?.name ?? '-'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-muted-foreground">Tahun Ajaran</p>
+                                    <p className="font-medium">{schoolClass.academic_year ?? '-'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-muted-foreground">Siswa</p>
+                                    <p className="font-medium">{schoolClass.students_count}</p>
+                                </div>
                             </div>
                         )}
                     </div>
                 </div>
             </div>
+
+            {/* Edit dialog */}
+            <Dialog open={editingClass !== null} onOpenChange={(open) => {
+                if (!open) {
+                    setEditingClass(null);
+                    editForm.reset();
+                }
+            }}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Edit Kelas</DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handleEdit} className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-name">Nama Kelas</Label>
+                            <Input
+                                id="edit-name"
+                                value={editForm.data.name}
+                                onChange={(e) => editForm.setData('name', e.target.value)}
+                                placeholder="Kelas 10A"
+                                aria-invalid={Boolean(editForm.errors.name)}
+                            />
+                            {editForm.errors.name && (
+                                <p className="text-sm text-destructive">{editForm.errors.name}</p>
+                            )}
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-teacher">Wali Kelas</Label>
+                            <Select
+                                value={editForm.data.homeroom_teacher_id}
+                                onValueChange={(value) => editForm.setData('homeroom_teacher_id', value)}
+                            >
+                                <SelectTrigger className="w-full" id="edit-teacher">
+                                    <SelectValue placeholder="Pilih Guru" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {teachers.map((teacher) => (
+                                        <SelectItem key={teacher.id} value={String(teacher.id)}>
+                                            {teacher.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {editForm.errors.homeroom_teacher_id && (
+                                <p className="text-sm text-destructive">{editForm.errors.homeroom_teacher_id}</p>
+                            )}
+                        </div>
+
+                        <DialogFooter>
+                            <Button type="button" variant="outline" onClick={() => {
+                                setEditingClass(null);
+                                editForm.reset();
+                            }}>
+                                Batal
+                            </Button>
+                            <Button type="submit" disabled={editForm.processing}>
+                                {editForm.processing ? 'Menyimpan...' : 'Simpan Perubahan'}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
         </AdminLayout>
     );
 }
