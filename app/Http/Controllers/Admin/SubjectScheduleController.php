@@ -25,7 +25,7 @@ class SubjectScheduleController extends Controller
             ->get();
 
         $subjects = Subject::query()
-            ->select(['id', 'name', 'school_class_id'])
+            ->select(['id', 'name'])
             ->orderBy('name')
             ->get();
 

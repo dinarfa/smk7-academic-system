@@ -1,7 +1,6 @@
-import { Link, useForm, router } from '@inertiajs/react';
+import { useForm, router } from '@inertiajs/react';
 import SchoolClassController from '@/actions/App/Http/Controllers/Admin/SchoolClassController';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Dialog,
     DialogContent,
@@ -11,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { BookOpen, Plus, Settings2, Trash2, Pencil } from 'lucide-react';
+import { BookOpen, Plus, Trash2, Pencil } from 'lucide-react';
 import {
     Select,
     SelectContent,
@@ -20,8 +19,6 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import AdminLayout from '@/layouts/AdminLayout';
-import admin from '@/routes/admin';
-import { Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 type Teacher = {
@@ -221,44 +218,10 @@ export default function AdminSchoolClassesIndex({ classes, teachers }: Props) {
                                 </div>
                             ))
                         )}
-                    </CardContent>
-                </Card>
-            </div>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle>Daftar Kelas</CardTitle>
-                    <CardDescription>Semua kelas yang sudah digenerate admin.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                    {classes.data.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">Belum ada kelas.</p>
-                    ) : (
-                        classes.data.map((schoolClass) => (
-                            <div key={schoolClass.id} className="grid gap-2 rounded-lg border border-border p-4 md:grid-cols-4">
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Nama</p>
-                                    <p className="font-medium">{schoolClass.name}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Wali Kelas</p>
-                                    <p className="font-medium">{schoolClass.homeroom_teacher?.name ?? '-'}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Tahun Ajaran</p>
-                                    <p className="font-medium">{schoolClass.academic_year ?? '-'}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Siswa</p>
-                                    <p className="font-medium">{schoolClass.students_count}</p>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </div>
             </div>
 
-            {/* Edit dialog */}
             <Dialog open={editingClass !== null} onOpenChange={(open) => {
                 if (!open) {
                     setEditingClass(null);

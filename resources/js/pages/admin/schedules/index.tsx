@@ -37,7 +37,7 @@ const SCHEDULE_TYPE_COLORS: Record<string, string> = {
 };
 
 type SchoolClass = { id: number; name: string };
-type Subject = { id: number; name: string; school_class_id: number | null };
+type Subject = { id: number; name: string };
 type Schedule = {
     id: number;
     school_class_id: number;
@@ -129,13 +129,8 @@ export default function AdminSchedulesIndex({ classes, subjects, schedules }: Pr
         editForm.delete(AdminSubjectScheduleController.destroy.url({ subjectSchedule: schedule.id }));
     }
 
-    const filteredSubjectsForCreate = subjects.filter(
-        (s) => !createForm.data.school_class_id || String(s.school_class_id) === createForm.data.school_class_id,
-    );
-
-    const filteredSubjectsForEdit = subjects.filter(
-        (s) => !editForm.data.school_class_id || String(s.school_class_id) === editForm.data.school_class_id,
-    );
+    const filteredSubjectsForCreate = subjects;
+    const filteredSubjectsForEdit = subjects;
 
     const filteredSchedules = selectedClass === 'all'
         ? schedules
