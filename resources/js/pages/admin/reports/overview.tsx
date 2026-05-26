@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react'
-import { FileBarChart2, Users, CalendarDays, ChevronRight, Activity, UsersRound, Calendar, Download } from 'lucide-react'
+import { FileBarChart2, Users, CalendarDays, Activity, UsersRound, Calendar, Download } from 'lucide-react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import AdminLayout from '@/layouts/AdminLayout'
 import admin from '@/routes/admin'
@@ -146,11 +147,10 @@ export default function AdminReportsOverview({ summary, topStudents, recentSessi
                                             </div>
                                         </div>
                                         <div>
-                                            <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
-                                                session.is_active 
-                                                    ? 'bg-emerald-50 border-emerald-200 text-emerald-700' 
-                                                    : 'bg-slate-100 border-slate-200 text-slate-600'
-                                            }`}>
+                                            <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${session.is_active
+                                                ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                                                : 'bg-slate-100 border-slate-200 text-slate-600'
+                                                }`}>
                                                 {session.is_active ? 'Aktif' : 'Ditutup'}
                                             </span>
                                         </div>
@@ -162,33 +162,32 @@ export default function AdminReportsOverview({ summary, topStudents, recentSessi
                 </div>
             </div>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Akses Cepat</CardTitle>
-                        <CardDescription>Langkah ke bagian admin yang sering digunakan.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                            <Button asChild variant="outline" className="justify-center">
-                                <Link href={admin.reports.byStudent.url()}>Per Siswa</Link>
-                            </Button>
-                            <Button asChild variant="outline" className="justify-center">
-                                <Link href={admin.reports.byClass.url()}>Per Kelas</Link>
-                            </Button>
-                            <Button asChild variant="outline" className="justify-center">
-                                <Link href={admin.users.index.url()}>Kelola Pengguna</Link>
-                            </Button>
-                            <Button asChild variant="outline" className="justify-center">
-                                <Link href={admin.auditLogs.index.url()}>Log Audit</Link>
-                            </Button>
-                            <Button asChild variant="outline" className="justify-center">
-                                <Link href={admin.dashboard.url()}>Dashboard</Link>
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-        </AdminLayout>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Akses Cepat</CardTitle>
+                    <CardDescription>Langkah ke bagian admin yang sering digunakan.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        <Button asChild variant="outline" className="justify-center">
+                            <Link href={admin.reports.byStudent.url()}>Per Siswa</Link>
+                        </Button>
+                        <Button asChild variant="outline" className="justify-center">
+                            <Link href={admin.reports.byClass.url()}>Per Kelas</Link>
+                        </Button>
+                        <Button asChild variant="outline" className="justify-center">
+                            <Link href={admin.users.index.url()}>Kelola Pengguna</Link>
+                        </Button>
+                        <Button asChild variant="outline" className="justify-center">
+                            <Link href={admin.auditLogs.index.url()}>Log Audit</Link>
+                        </Button>
+                        <Button asChild variant="outline" className="justify-center">
+                            <Link href={admin.dashboard.url()}>Dashboard</Link>
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+        </AdminLayout >
     )
 }
 

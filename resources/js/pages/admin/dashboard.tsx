@@ -128,7 +128,7 @@ export default function AdminDashboard({ summary }: Props) {
                         </div>
                     </div>
                     <div className="p-6">
-                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                        <div className="flex flex-row flex-wrap sm:flex-nowrap gap-3">
                             <Button asChild className="rounded-xl bg-indigo-600 hover:bg-indigo-700 w-full">
                                 <Link href={admin.users.index.url()}>Kelola Pengguna</Link>
                             </Button>
@@ -140,9 +140,6 @@ export default function AdminDashboard({ summary }: Props) {
                             </Button>
                             <Button asChild className="rounded-xl w-full text-slate-700 border-slate-200 hover:bg-slate-50" variant="outline">
                                 <Link href={admin.reports.bySession.url()}>Per Sesi</Link>
-                            </Button>
-                            <Button asChild className="rounded-xl w-full text-slate-700 border-slate-200 hover:bg-slate-50" variant="outline">
-                                <Link href={admin.auditLogs.index.url()}>Log Audit</Link>
                             </Button>
                             <Button asChild className="rounded-xl w-full text-slate-700 border-slate-200 hover:bg-slate-50" variant="outline">
                                 <Link href={admin.subjects.index.url()}>Mata Pelajaran</Link>
