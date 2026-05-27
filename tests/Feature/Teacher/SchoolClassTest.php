@@ -3,6 +3,7 @@
 use App\Enums\UserRole;
 use App\Models\SchoolClass;
 use App\Models\User;
+use Inertia\Testing\AssertableInertia as Assert;
 
 test('admin can add students to a class', function () {
     $admin = User::factory()->admin()->create();
@@ -107,4 +108,28 @@ test('teacher cannot mutate student accounts', function () {
 
     $this->actingAs($teacher)->delete(route('teacher.students.destroy', $student))
         ->assertForbidden();
+});
+
+test('teacher without homeroom class does not see kelas wali menu', function () {
+    $teacher = User::factory()->teacher()->create();
+
+    $this->actingAs($teacher)
+        ->get(route('teacher.dashboard'))
+        ->assertOk()
+        ->assertDontSee('Kelas Wali')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('auth.user.homeroom_classes_count', 0));
+});
+
+test('teacher with homeroom class sees kelas wali menu', function () {
+    $teacher = User::factory()->teacher()->create();
+
+    SchoolClass::factory()->create(['homeroom_teacher_id' => $teacher->id]);
+
+    $this->actingAs($teacher)
+        ->get(route('teacher.dashboard'))
+        ->assertOk()
+        ->assertSee('Kelas Wali')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('auth.user.homeroom_classes_count', 1));
 });

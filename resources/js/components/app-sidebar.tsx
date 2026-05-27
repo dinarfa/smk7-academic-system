@@ -21,7 +21,11 @@ import type { NavItem } from '@/types';
 
 export function AppSidebar() {
     const { auth } = usePage().props;
-    const role = auth.user?.role;
+    const user = auth.user as {
+        role?: 'admin' | 'teacher' | 'student';
+        homeroom_classes_count?: number;
+    } | undefined;
+    const role = user?.role;
     const dashboardHref = role === 'teacher'
         ? teacher.dashboard.url()
         : role === 'student'
@@ -39,12 +43,17 @@ export function AppSidebar() {
     ];
 
     if (role === 'teacher') {
-        mainNavItems.push(
-            {
+        const canSeeHomeroomClassMenu = (user?.homeroom_classes_count ?? 0) > 0;
+
+        if (canSeeHomeroomClassMenu) {
+            mainNavItems.push({
                 title: 'Kelas Wali',
                 href: teacher.class.index.url(),
                 icon: School,
-            },
+            });
+        }
+
+        mainNavItems.push(
             {
                 title: 'Rekap Absensi',
                 href: teacher.attendance.recap.url(),

@@ -63,12 +63,20 @@ export default function AdminUsersIndex({ users }: Props) {
                     </p>
                 </div>
                 <div className="mt-4 sm:mt-0">
-                    <Button asChild className="gap-2 rounded-xl bg-indigo-600 px-6 hover:bg-indigo-700 shadow-sm">
-                        <Link href={admin.reports.overview.url()}>
-                            <FileText className="h-4 w-4" />
-                            Lihat Laporan
-                        </Link>
-                    </Button>
+                    <div className="flex flex-wrap gap-3">
+                        <Button asChild variant="outline" className="gap-2 rounded-xl border-slate-200 px-6 text-slate-700 hover:bg-slate-50">
+                            <Link href={admin.users.create.url()}>
+                                <Users className="h-4 w-4" />
+                                Tambah Pengguna
+                            </Link>
+                        </Button>
+                        <Button asChild className="gap-2 rounded-xl bg-indigo-600 px-6 hover:bg-indigo-700 shadow-sm">
+                            <Link href={admin.reports.overview.url()}>
+                                <FileText className="h-4 w-4" />
+                                Lihat Laporan
+                            </Link>
+                        </Button>
+                    </div>
                 </div>
             </div>
 

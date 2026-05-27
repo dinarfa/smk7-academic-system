@@ -17,6 +17,38 @@ test('admin can view users list', function () {
         );
 });
 
+test('admin can view create user form', function () {
+    $admin = User::factory()->create(['role' => UserRole::Admin]);
+
+    $this->actingAs($admin)
+        ->get('/admin/users/create')
+        ->assertStatus(200)
+        ->assertSee('Tambah Pengguna')
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('admin/users/create'));
+});
+
+test('admin can create a user', function () {
+    $admin = User::factory()->create(['role' => UserRole::Admin]);
+
+    $response = $this->actingAs($admin)
+        ->post('/admin/users', [
+            'name' => 'Guru Baru',
+            'email' => 'guru-baru@example.com',
+            'role' => UserRole::Teacher->value,
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+        ]);
+
+    $response->assertRedirect('/admin/users');
+
+    $this->assertDatabaseHas('users', [
+        'name' => 'Guru Baru',
+        'email' => 'guru-baru@example.com',
+        'role' => UserRole::Teacher->value,
+    ]);
+});
+
 test('non-admin cannot view users list', function () {
     $user = User::factory()->create(['role' => UserRole::Student]);
 
