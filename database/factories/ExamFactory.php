@@ -24,9 +24,9 @@ class ExamFactory extends Factory
         $teacher = User::factory()->create(['role' => UserRole::Teacher]);
         $class = SchoolClass::factory()->create();
         $subject = Subject::factory()->create([
-            'school_class_id' => $class->id,
             'teacher_id' => $teacher->id,
         ]);
+        $subject->schoolClasses()->attach($class->id);
 
         return [
             'subject_id' => $subject->id,

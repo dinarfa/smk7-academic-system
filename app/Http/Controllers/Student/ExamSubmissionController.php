@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Student\SubmitExamAttemptRequest;
 use App\Models\Exam;
 use App\Models\ExamAttempt;
+use App\Services\ExamScorer;
 use Illuminate\Http\RedirectResponse;
 
 class ExamSubmissionController extends Controller
@@ -20,25 +21,13 @@ class ExamSubmissionController extends Controller
             return response()->json(['message' => 'Attempt does not belong to this exam.'], 400);
         }
 
-        // Calculate score
-        $examModel = $exam;
+        // Score the attempt using the shared scorer
+        $scorer = app(ExamScorer::class);
+        $scorer->scoreAttempt($attempt);
 
-        $totalPointsAwarded = $attempt->responses()->sum('points_awarded');
-
-        // Get total possible points from both direct questions and attached question bank questions
-        $directPoints = $examModel->questions()->sum('points');
-        $attachedPoints = $examModel->attachedQuestions()->sum('points');
-        $totalPossiblePoints = $directPoints + $attachedPoints;
-
-        $normalizedScore = 0;
-        if ($totalPossiblePoints > 0) {
-            $normalizedScore = ($totalPointsAwarded / $totalPossiblePoints) * 100;
-        }
-
-        // Mark submitted, store timestamp, and store score
+        // Mark submitted and store timestamp
         $attempt->status = 'submitted';
         $attempt->submitted_at = now();
-        $attempt->score = $normalizedScore;
         $attempt->save();
 
         // After submission, further `SaveExamResponseRequest` will be rejected

@@ -44,12 +44,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('subjects/{subject}', [AdminSubjectController::class, 'update'])->name('subjects.update');
         Route::delete('subjects/{subject}', [AdminSubjectController::class, 'destroy'])->name('subjects.destroy');
 
-        // User management
-        Route::get('users', [AdminUserController::class, 'index'])->name('users.index');
-        Route::get('users/{user}', [AdminUserController::class, 'show'])->name('users.show');
-        Route::get('users/{user}/reset-password', [AdminUserController::class, 'showResetForm'])->name('users.reset-password');
-        Route::post('users/{user}/reset-password', [AdminUserController::class, 'resetPassword'])->name('users.reset-password.store');
-
         // Reports
         Route::get('reports/overview', [AdminReportController::class, 'overview'])->name('reports.overview');
         Route::get('reports/by-session', [AdminReportController::class, 'bySession'])->name('reports.by-session');
@@ -62,6 +56,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('audit-logs/{auditLog}', [AdminAuditLogController::class, 'show'])->name('audit-logs.show');
 
         // User management
+        Route::get('users', [AdminUserController::class, 'index'])->name('users.index');
         Route::get('users/create', [AdminUserController::class, 'create'])->name('users.create');
         Route::post('users', [AdminUserController::class, 'store'])->name('users.store');
             Route::get('users/{user}', [AdminUserController::class, 'show'])
@@ -88,6 +83,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::post('attendance-sessions', [AttendanceSessionController::class, 'store'])->name('attendance-sessions.store');
         Route::patch('attendance-sessions/{attendanceSession}/close', [AttendanceSessionController::class, 'close'])->name('attendance-sessions.close');
+        Route::post('attendance-sessions/{attendanceSession}/rotate-qr', [AttendanceSessionController::class, 'rotateQr'])->name('attendance-sessions.rotate-qr');
         Route::post('attendance/manual', [AttendanceSessionController::class, 'storeManual'])->name('attendance.manual');
         Route::get('attendance/manual', [AttendanceViewController::class, 'manual'])->name('attendance.manual.page');
         Route::get('attendance/qr', [AttendanceViewController::class, 'qr'])->name('attendance.qr');

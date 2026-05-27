@@ -1,4 +1,5 @@
 import { Head, Link, useForm } from '@inertiajs/react';
+import DOMPurify from 'dompurify';
 import type { FormEventHandler } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -115,7 +116,7 @@ export default function ExamCorrection({ exam, attempt, questions }: Props) {
                                 <CardContent className="space-y-4">
                                     <div 
                                         className="rounded-md bg-muted p-4 prose prose-sm max-w-none dark:prose-invert"
-                                        dangerouslySetInnerHTML={{ __html: question.prompt }}
+                                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(question.prompt) }}
                                     />
 
                                     <div>
@@ -125,7 +126,7 @@ export default function ExamCorrection({ exam, attempt, questions }: Props) {
                                                 {question.type === 'multiple_choice' || question.type === 'true_false' ? (
                                                     <div 
                                                         className="prose prose-sm max-w-none dark:prose-invert"
-                                                        dangerouslySetInnerHTML={{ __html: question.answer_options.find((opt) => opt.id === question.response?.answer_option_id)?.option_text ?? '-' }}
+                                                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(question.answer_options.find((opt) => opt.id === question.response?.answer_option_id)?.option_text ?? '-') }}
                                                     />
                                                 ) : (
                                                     <p className="whitespace-pre-wrap">{question.response.response_text ?? '-'}</p>
@@ -142,7 +143,7 @@ export default function ExamCorrection({ exam, attempt, questions }: Props) {
                                             <ul className="list-disc list-inside text-sm">
                                                 {question.answer_options.filter((opt) => opt.is_correct).map((opt) => (
                                                     <li key={opt.id} className="text-green-600 dark:text-green-500">
-                                                        <div dangerouslySetInnerHTML={{ __html: opt.option_text }} className="inline-block prose-sm prose dark:prose-invert" />
+                                                        <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(opt.option_text) }} className="inline-block prose-sm prose dark:prose-invert" />
                                                     </li>
                                                 ))}
                                             </ul>

@@ -10,6 +10,7 @@ use App\Models\Exam;
 use App\Models\Question;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -75,7 +76,7 @@ class QuestionController extends Controller
      */
     public function store(StoreQuestionRequest $request, Exam $exam): RedirectResponse
     {
-        $this->authorize('view', $exam);
+        $this->authorize('update', $exam);
 
         $validated = $request->validated();
 
@@ -83,17 +84,19 @@ class QuestionController extends Controller
         $answerOptionsData = $validated['answer_options'] ?? [];
         unset($validated['answer_options']);
 
-        // Create the question
-        $question = $exam->questions()->create($validated);
+        DB::transaction(function () use ($exam, $validated, $answerOptionsData): void {
+            // Create the question
+            $question = $exam->questions()->create($validated);
 
-        // Create answer options
-        foreach ($answerOptionsData as $index => $optionData) {
-            $question->answerOptions()->create([
-                'option_text' => $optionData['option_text'],
-                'is_correct' => $optionData['is_correct'],
-                'sort_order' => $index,
-            ]);
-        }
+            // Create answer options
+            foreach ($answerOptionsData as $index => $optionData) {
+                $question->answerOptions()->create([
+                    'option_text' => $optionData['option_text'],
+                    'is_correct' => $optionData['is_correct'],
+                    'sort_order' => $index,
+                ]);
+            }
+        });
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Question created successfully.')]);
 
@@ -138,7 +141,7 @@ class QuestionController extends Controller
      */
     public function update(UpdateQuestionRequest $request, Exam $exam, Question $question): RedirectResponse
     {
-        $this->authorize('view', $exam);
+        $this->authorize('update', $exam);
 
         if ($question->exam_id !== $exam->id) {
             abort(404);
@@ -150,18 +153,20 @@ class QuestionController extends Controller
         $answerOptionsData = $validated['answer_options'] ?? [];
         unset($validated['answer_options']);
 
-        // Update the question
-        $question->update($validated);
+        DB::transaction(function () use ($question, $validated, $answerOptionsData): void {
+            // Update the question
+            $question->update($validated);
 
-        // Sync answer options (delete old ones and create new ones)
-        $question->answerOptions()->delete();
-        foreach ($answerOptionsData as $index => $optionData) {
-            $question->answerOptions()->create([
-                'option_text' => $optionData['option_text'],
-                'is_correct' => $optionData['is_correct'],
-                'sort_order' => $index,
-            ]);
-        }
+            // Sync answer options (delete old ones and create new ones)
+            $question->answerOptions()->delete();
+            foreach ($answerOptionsData as $index => $optionData) {
+                $question->answerOptions()->create([
+                    'option_text' => $optionData['option_text'],
+                    'is_correct' => $optionData['is_correct'],
+                    'sort_order' => $index,
+                ]);
+            }
+        });
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Question updated successfully.')]);
 
@@ -173,7 +178,7 @@ class QuestionController extends Controller
      */
     public function destroy(Exam $exam, Question $question): RedirectResponse
     {
-        $this->authorize('view', $exam);
+        $this->authorize('update', $exam);
 
         if ($question->exam_id !== $exam->id) {
             abort(404);

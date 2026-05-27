@@ -18,6 +18,8 @@ class ExamResponseController extends Controller
      */
     public function store(SaveExamResponseRequest $request, Exam $exam, ExamAttempt $attempt): RedirectResponse
     {
+        abort_unless($attempt->student_id === auth()->id(), 403);
+
         $data = $request->validated();
         $attemptModel = $attempt;
 

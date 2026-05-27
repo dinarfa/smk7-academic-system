@@ -20,29 +20,15 @@ class ExamAttemptController extends Controller
     {
         $user = $request->user();
 
-        // Check for any existing attempt for this student and exam.
-        $existing = ExamAttempt::where('exam_id', $exam->id)
-            ->where('student_id', $user->id)
-            ->first();
+        $attempt = ExamAttempt::firstOrCreate(
+            ['exam_id' => $exam->id, 'student_id' => $user->id],
+            ['started_at' => now(), 'status' => 'in_progress'],
+        );
 
-        if ($existing) {
-            if ($existing->status === 'in_progress') {
-                return redirect()->route('student.exams.attempts.show', [
-                    'exam' => $exam,
-                    'attempt' => $existing,
-                ]);
-            }
-
+        if ($attempt->status !== 'in_progress') {
             return redirect()->route('student.exams.index')
-                ->with('error', 'You have already completed this exam.');
+                ->with('error', 'Anda sudah menyelesaikan ujian ini.');
         }
-
-        $attempt = ExamAttempt::create([
-            'exam_id' => $exam->id,
-            'student_id' => $user->id,
-            'started_at' => now(),
-            'status' => 'in_progress',
-        ]);
 
         return redirect()->route('student.exams.attempts.show', [
             'exam' => $exam,

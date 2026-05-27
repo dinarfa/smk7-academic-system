@@ -92,7 +92,7 @@ class SubjectSchedule extends Model
 
     /**
      * Find the closest schedule slot to the given time for a class.
-     * Used when a student scans outside any active slot window.
+     * Uses DB-level queries instead of loading all slots into PHP.
      */
     public static function findClosestSlot(int $schoolClassId, ?CarbonInterface $at = null): ?self
     {
@@ -111,57 +111,39 @@ class SubjectSchedule extends Model
             return $exact;
         }
 
-        // Second: find the closest slot by comparing end times (past slots) and start times (future slots)
-        $allSlots = static::query()
+        // Find the nearest future slot (starts after current time)
+        $future = static::query()
             ->where('school_class_id', $schoolClassId)
             ->where('day_of_week', $at->dayOfWeek)
+            ->whereTime('starts_at', '>=', $timeString)
             ->orderBy('starts_at')
-            ->get();
+            ->first();
 
-        if ($allSlots->isEmpty()) {
+        // Find the nearest past slot (ends before current time)
+        $past = static::query()
+            ->where('school_class_id', $schoolClassId)
+            ->where('day_of_week', $at->dayOfWeek)
+            ->whereTime('ends_at', '<=', $timeString)
+            ->orderByDesc('ends_at')
+            ->first();
+
+        if (! $future && ! $past) {
             return null;
         }
 
-        $closest = null;
-        $smallestDiff = PHP_INT_MAX;
-
-        foreach ($allSlots as $slot) {
-            // Normalize stored time strings to H:i:s so Carbon parsing is safe
-            $starts = $slot->starts_at;
-            $ends = $slot->ends_at;
-
-            if (is_string($starts) && strlen($starts) === 5) { // H:i -> append seconds
-                $starts = $starts.':00';
-            }
-
-            if (is_string($ends) && strlen($ends) === 5) { // H:i -> append seconds
-                $ends = $ends.':00';
-            }
-
-            try {
-                $slotStart = Carbon::createFromFormat('H:i:s', $starts, $at->timezone);
-            } catch (\Exception $e) {
-                $slotStart = Carbon::parse($starts, $at->timezone);
-            }
-
-            try {
-                $slotEnd = Carbon::createFromFormat('H:i:s', $ends, $at->timezone);
-            } catch (\Exception $e) {
-                $slotEnd = Carbon::parse($ends, $at->timezone);
-            }
-
-            // Use the nearest edge of the slot
-            $diffToStart = abs($at->diffInSeconds($slotStart->copy()->setDate($at->year, $at->month, $at->day)));
-            $diffToEnd = abs($at->diffInSeconds($slotEnd->copy()->setDate($at->year, $at->month, $at->day)));
-            $diff = min($diffToStart, $diffToEnd);
-
-            if ($diff < $smallestDiff) {
-                $smallestDiff = $diff;
-                $closest = $slot;
-            }
+        if (! $future) {
+            return $past;
         }
 
-        return $closest;
+        if (! $past) {
+            return $future;
+        }
+
+        // Both exist — pick the closest by time difference
+        $futureDiff = abs($at->copy()->setTimeFromTimeString($future->starts_at)->diffInSeconds($at));
+        $pastDiff = abs($at->copy()->setTimeFromTimeString($past->ends_at)->diffInSeconds($at));
+
+        return $futureDiff <= $pastDiff ? $future : $past;
     }
 
     /**
@@ -196,40 +178,48 @@ class SubjectSchedule extends Model
     public static function activeForTeacherNow(User $teacher, ?CarbonInterface $at = null): Collection
     {
         $at ??= now();
+        $version = cache()->get('teacher_schedules_version', 1);
+        $cacheKey = "teacher_schedules:{$version}:{$teacher->id}:day_{$at->dayOfWeek}:hour_{$at->format('H')}";
 
-        // 1. Homeroom classes: teacher sees ALL active slots
-        $homeroomClassIds = $teacher->homeroomClasses()->pluck('school_classes.id');
+        return cache()->remember($cacheKey, 300, function () use ($teacher, $at) {
+            // 1. Homeroom classes: teacher sees ALL active slots
+            $homeroomClassIds = $teacher->homeroomClasses()->pluck('school_classes.id');
 
-        $homeroomSlots = collect();
-        if ($homeroomClassIds->isNotEmpty()) {
-            $homeroomSlots = static::query()
-                ->whereIn('school_class_id', $homeroomClassIds->all())
-                ->activeNow($at)
-                ->with(['subject:id,code,name', 'schoolClass:id,name'])
-                ->get();
-        }
+            $homeroomSlots = collect();
+            if ($homeroomClassIds->isNotEmpty()) {
+                $homeroomSlots = static::query()
+                    ->whereIn('school_class_id', $homeroomClassIds->all())
+                    ->activeNow($at)
+                    ->with(['subject:id,code,name', 'schoolClass:id,name'])
+                    ->get();
+            }
 
-        // 2. Subject-taught classes (non-homeroom): only teacher's own subjects + morning/dismissal
-        $subjectClassIds = $teacher->subjects()->pluck('school_class_id')->filter()->unique();
-        $teacherSubjectIds = $teacher->subjects()->pluck('subjects.id');
-        $nonHomeroomSubjectClassIds = $subjectClassIds->diff($homeroomClassIds);
+            // 2. Subject-taught classes (non-homeroom): only teacher's own subjects + morning/dismissal
+            $subjectClassIds = $teacher->subjects()
+                ->join('class_subjects', 'subjects.id', '=', 'class_subjects.subject_id')
+                ->pluck('class_subjects.school_class_id')
+                ->filter()
+                ->unique();
+            $teacherSubjectIds = $teacher->subjects()->pluck('subjects.id');
+            $nonHomeroomSubjectClassIds = $subjectClassIds->diff($homeroomClassIds);
 
-        $subjectSlots = collect();
-        if ($nonHomeroomSubjectClassIds->isNotEmpty()) {
-            $subjectSlots = static::query()
-                ->whereIn('school_class_id', $nonHomeroomSubjectClassIds->all())
-                ->activeNow($at)
-                ->where(function ($q) use ($teacherSubjectIds) {
-                    $q->whereNull('subject_id')
-                        ->orWhereIn('subject_id', $teacherSubjectIds->all());
-                })
-                ->with(['subject:id,code,name', 'schoolClass:id,name'])
-                ->get();
-        }
+            $subjectSlots = collect();
+            if ($nonHomeroomSubjectClassIds->isNotEmpty()) {
+                $subjectSlots = static::query()
+                    ->whereIn('school_class_id', $nonHomeroomSubjectClassIds->all())
+                    ->activeNow($at)
+                    ->where(function ($q) use ($teacherSubjectIds) {
+                        $q->whereNull('subject_id')
+                            ->orWhereIn('subject_id', $teacherSubjectIds->all());
+                    })
+                    ->with(['subject:id,code,name', 'schoolClass:id,name'])
+                    ->get();
+            }
 
-        return $homeroomSlots->merge($subjectSlots)
-            ->sortBy('starts_at')
-            ->values();
+            return $homeroomSlots->merge($subjectSlots)
+                ->sortBy('starts_at')
+                ->values();
+        });
     }
 
     /**

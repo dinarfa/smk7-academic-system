@@ -19,9 +19,9 @@ test('student sees only active exams for their class', function () {
     $teacher = User::factory()->create(['role' => UserRole::Teacher]);
 
     $subject = Subject::factory()->create([
-        'school_class_id' => $class->id,
         'teacher_id' => $teacher->id,
     ]);
+    $subject->schoolClasses()->attach($class->id);
 
     $activeExam = Exam::query()->create([
         'title' => 'Ujian Aktif',
@@ -47,9 +47,9 @@ test('student sees only active exams for their class', function () {
 
     $otherClass = SchoolClass::factory()->create();
     $otherSubject = Subject::factory()->create([
-        'school_class_id' => $otherClass->id,
         'teacher_id' => $teacher->id,
     ]);
+    $otherSubject->schoolClasses()->attach($otherClass->id);
 
     Exam::query()->create([
         'title' => 'Ujian Kelas Lain',

@@ -28,6 +28,7 @@ class AttendanceSession extends Model
         'subject',
         'subject_id',
         'qr_token',
+        'qr_expires_at',
         'starts_at',
         'ends_at',
         'is_active',
@@ -40,6 +41,7 @@ class AttendanceSession extends Model
     {
         return [
             'type' => AttendanceQrType::class,
+            'qr_expires_at' => 'datetime',
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
             'is_active' => 'boolean',
@@ -83,7 +85,15 @@ class AttendanceSession extends Model
      */
     public function resolvedClassId(): ?int
     {
-        return $this->class_id ?? $this->subjectModel?->school_class_id;
+        if ($this->class_id) {
+            return $this->class_id;
+        }
+
+        if ($this->subjectModel) {
+            return $this->subjectModel->schoolClasses()->first()?->id;
+        }
+
+        return null;
     }
 
     /**

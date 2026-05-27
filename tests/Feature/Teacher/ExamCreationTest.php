@@ -10,12 +10,12 @@ use Inertia\Testing\AssertableInertia as Assert;
 test('teacher can view exam creation form', function () {
     $teacher = User::factory()->create(['role' => UserRole::Teacher]);
     $schoolClass = SchoolClass::factory()->create();
-    Subject::factory()->create([
-        'school_class_id' => $schoolClass->id,
+    $subject = Subject::factory()->create([
         'teacher_id' => $teacher->id,
         'code' => 'MTK',
         'name' => 'Matematika',
     ]);
+    $subject->schoolClasses()->attach($schoolClass->id);
 
     $response = $this->actingAs($teacher)
         ->get('/teacher/exams/create')
@@ -32,7 +32,8 @@ test('teacher can view exam creation form', function () {
 test('teacher can create exam with valid data', function () {
     $teacher = User::factory()->create(['role' => UserRole::Teacher]);
     $schoolClass = SchoolClass::factory()->create();
-    $subject = Subject::factory()->create(['school_class_id' => $schoolClass->id, 'teacher_id' => $teacher->id]);
+    $subject = Subject::factory()->create(['teacher_id' => $teacher->id]);
+    $subject->schoolClasses()->attach($schoolClass->id);
 
     $this->actingAs($teacher)
         ->post('/teacher/exams', [
@@ -71,7 +72,8 @@ test('subject must exist validation', function () {
 test('class must exist validation', function () {
     $teacher = User::factory()->create(['role' => UserRole::Teacher]);
     $schoolClass = SchoolClass::factory()->create();
-    $subject = Subject::factory()->create(['school_class_id' => $schoolClass->id, 'teacher_id' => $teacher->id]);
+    $subject = Subject::factory()->create(['teacher_id' => $teacher->id]);
+    $subject->schoolClasses()->attach($schoolClass->id);
 
     $this->actingAs($teacher)
         ->post('/teacher/exams', [
@@ -89,9 +91,9 @@ test('teacher cannot create exam with foreign subject', function () {
     $schoolClass = SchoolClass::factory()->create();
 
     $foreignSubject = Subject::factory()->create([
-        'school_class_id' => $schoolClass->id,
         'teacher_id' => $otherTeacher->id,
     ]);
+    $foreignSubject->schoolClasses()->attach($schoolClass->id);
 
     $this->actingAs($teacher)
         ->post('/teacher/exams', [
@@ -109,9 +111,9 @@ test('teacher cannot create exam with mismatched class and subject', function ()
     $otherClass = SchoolClass::factory()->create();
 
     $subject = Subject::factory()->create([
-        'school_class_id' => $schoolClass->id,
         'teacher_id' => $teacher->id,
     ]);
+    $subject->schoolClasses()->attach($schoolClass->id);
 
     $this->actingAs($teacher)
         ->post('/teacher/exams', [
@@ -126,7 +128,8 @@ test('teacher cannot create exam with mismatched class and subject', function ()
 test('duration validation min 5 max 480 minutes', function () {
     $teacher = User::factory()->create(['role' => UserRole::Teacher]);
     $schoolClass = SchoolClass::factory()->create();
-    $subject = Subject::factory()->create(['school_class_id' => $schoolClass->id, 'teacher_id' => $teacher->id]);
+    $subject = Subject::factory()->create(['teacher_id' => $teacher->id]);
+    $subject->schoolClasses()->attach($schoolClass->id);
 
     // Test minimum duration (less than 5)
     $this->actingAs($teacher)
@@ -160,7 +163,8 @@ test('duration validation min 5 max 480 minutes', function () {
 
     // Test valid duration (480 minutes)
     $schoolClass2 = SchoolClass::factory()->create();
-    $subject2 = Subject::factory()->create(['school_class_id' => $schoolClass2->id, 'teacher_id' => $teacher->id]);
+    $subject2 = Subject::factory()->create(['teacher_id' => $teacher->id]);
+    $subject2->schoolClasses()->attach($schoolClass2->id);
 
     $this->actingAs($teacher)
         ->post('/teacher/exams', [
@@ -175,7 +179,8 @@ test('duration validation min 5 max 480 minutes', function () {
 test('created exam is associated with creator', function () {
     $teacher = User::factory()->create(['role' => UserRole::Teacher]);
     $schoolClass = SchoolClass::factory()->create();
-    $subject = Subject::factory()->create(['school_class_id' => $schoolClass->id, 'teacher_id' => $teacher->id]);
+    $subject = Subject::factory()->create(['teacher_id' => $teacher->id]);
+    $subject->schoolClasses()->attach($schoolClass->id);
 
     $this->actingAs($teacher)
         ->post('/teacher/exams', [
@@ -195,7 +200,8 @@ test('created exam is associated with creator', function () {
 test('only teachers can create exams', function () {
     $student = User::factory()->create(['role' => UserRole::Student]);
     $schoolClass = SchoolClass::factory()->create();
-    $subject = Subject::factory()->create(['school_class_id' => $schoolClass->id]);
+    $subject = Subject::factory()->create();
+    $subject->schoolClasses()->attach($schoolClass->id);
 
     $this->actingAs($student)
         ->post('/teacher/exams', [
@@ -222,7 +228,8 @@ test('teacher can list their own exams', function () {
     $teacher = User::factory()->create(['role' => UserRole::Teacher]);
     $otherTeacher = User::factory()->create(['role' => UserRole::Teacher]);
     $schoolClass = SchoolClass::factory()->create();
-    $subject = Subject::factory()->create(['school_class_id' => $schoolClass->id, 'teacher_id' => $teacher->id]);
+    $subject = Subject::factory()->create(['teacher_id' => $teacher->id]);
+    $subject->schoolClasses()->attach($schoolClass->id);
 
     // Create exams for both teachers
     $teacherExam = Exam::factory()->create(['created_by' => $teacher->id, 'subject_id' => $subject->id, 'class_id' => $schoolClass->id, 'title' => 'Teacher Exam']);
@@ -242,7 +249,8 @@ test('teacher can list their own exams', function () {
 test('teacher can publish and unpublish an exam', function () {
     $teacher = User::factory()->create(['role' => UserRole::Teacher]);
     $schoolClass = SchoolClass::factory()->create();
-    $subject = Subject::factory()->create(['school_class_id' => $schoolClass->id, 'teacher_id' => $teacher->id]);
+    $subject = Subject::factory()->create(['teacher_id' => $teacher->id]);
+    $subject->schoolClasses()->attach($schoolClass->id);
 
     $exam = Exam::factory()->create([
         'created_by' => $teacher->id,

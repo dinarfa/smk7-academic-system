@@ -1,4 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
+import DOMPurify from 'dompurify';
 import type { FormEvent} from 'react';
 import { useEffect, useState, useCallback } from 'react';
 import ExamResponseController from '@/actions/App/Http/Controllers/Student/ExamResponseController';
@@ -96,9 +97,9 @@ function QuestionCard({ examId, attemptId, question }: { examId: number; attempt
         <Card>
             <CardHeader>
                 <CardDescription>Poin {question.points}</CardDescription>
-                <div 
+                <div
                     className="text-lg leading-7 font-medium prose prose-sm max-w-none dark:prose-invert"
-                    dangerouslySetInnerHTML={{ __html: question.prompt }} 
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(question.prompt) }}
                 />
             </CardHeader>
             <CardContent className="space-y-4">
@@ -116,9 +117,9 @@ function QuestionCard({ examId, attemptId, question }: { examId: number; attempt
                                     onChange={() => saveChoice(option.id)}
                                     className="mt-1"
                                 />
-                                <div 
+                                <div
                                     className="prose prose-sm max-w-none dark:prose-invert"
-                                    dangerouslySetInnerHTML={{ __html: option.option_text }}
+                                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(option.option_text) }}
                                 />
                             </label>
                         ))}

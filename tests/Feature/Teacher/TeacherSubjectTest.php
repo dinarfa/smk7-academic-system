@@ -15,15 +15,15 @@ test('teacher sees only their subjects', function () {
         'code' => 'MTK',
         'name' => 'Mathematics',
         'teacher_id' => $teacher->id,
-        'school_class_id' => $class->id,
     ]);
+    $visibleSubject->schoolClasses()->attach($class->id);
 
-    Subject::factory()->create([
+    $otherSubject = Subject::factory()->create([
         'code' => 'BIO',
         'name' => 'Biology',
         'teacher_id' => $otherTeacher->id,
-        'school_class_id' => $class->id,
     ]);
+    $otherSubject->schoolClasses()->attach($class->id);
 
     $this->actingAs($teacher)
         ->get('/teacher/subjects')

@@ -6,7 +6,8 @@ use App\Models\User;
 
 test('teacher can create manual attendance', function () {
     $teacher = User::factory()->create(['role' => 'teacher']);
-    $student = User::factory()->create(['role' => 'student']);
+    $class = \App\Models\SchoolClass::factory()->create(['homeroom_teacher_id' => $teacher->id]);
+    $student = User::factory()->create(['role' => 'student', 'school_class_id' => $class->id]);
     $session = AttendanceSession::factory()->create(['opened_by' => $teacher->id]);
 
     $this->actingAs($teacher);
