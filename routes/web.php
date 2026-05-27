@@ -61,6 +61,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('audit-logs', [AdminAuditLogController::class, 'index'])->name('audit-logs.index');
         Route::get('audit-logs/{auditLog}', [AdminAuditLogController::class, 'show'])->name('audit-logs.show');
 
+        // User management
+        Route::get('users/create', [AdminUserController::class, 'create'])->name('users.create');
+        Route::post('users', [AdminUserController::class, 'store'])->name('users.store');
+            Route::get('users/{user}', [AdminUserController::class, 'show'])
+                ->whereNumber('user')
+                ->name('users.show');
+            Route::get('users/{user}/reset-password', [AdminUserController::class, 'showResetForm'])
+                ->whereNumber('user')
+                ->name('users.reset-password');
+            Route::post('users/{user}/reset-password', [AdminUserController::class, 'resetPassword'])
+                ->whereNumber('user')
+                ->name('users.reset-password.store');
+
         // Subject schedules (timetable)
         Route::get('schedules', [AdminSubjectScheduleController::class, 'index'])->name('schedules.index');
         Route::post('schedules', [AdminSubjectScheduleController::class, 'store'])->name('schedules.store');
