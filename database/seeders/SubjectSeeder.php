@@ -11,6 +11,10 @@ class SubjectSeeder extends Seeder
 {
     /**
      * Seed subjects and attach them to classes.
+     *
+     * 10 subjects (1 per teacher), each → 3 classes via round-robin.
+     * Result: each class gets exactly 3 subjects, no teacher overlap within a class.
+     * Schedule conflicts across classes handled by SubjectScheduleSeeder.
      */
     public function run(): void
     {
@@ -23,6 +27,8 @@ class SubjectSeeder extends Seeder
             'Biologi',
             'Ekonomi',
             'Sejarah',
+            'Pendidikan Agama',
+            'PJOK',
         ];
 
         $classes = SchoolClass::query()->orderBy('id')->get();
@@ -34,16 +40,25 @@ class SubjectSeeder extends Seeder
             return;
         }
 
+        // Round-robin: each subject → 3 classes, cycling through class list.
+        // With 10 subjects × 3 classes = 30 pairs and 10 classes, each class gets exactly 3.
+        $classIds = $classes->pluck('id')->toArray();
+        $classesPerSubject = 3;
+        $pairIndex = 0;
+
         foreach ($subjectNames as $index => $subjectName) {
             $subject = Subject::query()->create([
-                'teacher_id' => $teachers->random()->id,
+                'teacher_id' => $teachers[$index % $teachers->count()]->id,
                 'name' => $subjectName,
                 'code' => 'MAP'.($index + 1),
             ]);
 
-            // Attach subject to 2-4 random classes
-            $randomClasses = $classes->random(rand(2, min(4, $classes->count())));
-            $subject->schoolClasses()->attach($randomClasses->pluck('id'));
+            $assignedClasses = [];
+            for ($j = 0; $j < $classesPerSubject; $j++) {
+                $assignedClasses[] = $classIds[$pairIndex % count($classIds)];
+                $pairIndex++;
+            }
+            $subject->schoolClasses()->attach($assignedClasses);
         }
 
         $this->command?->info('Seeded '.count($subjectNames).' subjects across '.$classes->count().' classes.');
