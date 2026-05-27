@@ -13,9 +13,9 @@ it('teacher can attach questions to an exam in order', function (): void {
     $teacher = User::factory()->create(['role' => UserRole::Teacher]);
     $class = SchoolClass::factory()->create();
     $subject = Subject::factory()->create([
-        'school_class_id' => $class->id,
         'teacher_id' => $teacher->id,
     ]);
+    $subject->schoolClasses()->attach($class->id);
 
     $exam = Exam::factory()->create([
         'created_by' => $teacher->id,
@@ -70,9 +70,9 @@ it('teacher cannot attach another teachers questions', function (): void {
     $otherTeacher = User::factory()->create(['role' => UserRole::Teacher]);
     $class = SchoolClass::factory()->create();
     $subject = Subject::factory()->create([
-        'school_class_id' => $class->id,
         'teacher_id' => $teacher->id,
     ]);
+    $subject->schoolClasses()->attach($class->id);
 
     $exam = Exam::factory()->create([
         'created_by' => $teacher->id,
@@ -103,9 +103,9 @@ it('only teachers can attach questions to exams', function (): void {
     $teacher = User::factory()->create(['role' => UserRole::Teacher]);
     $class = SchoolClass::factory()->create();
     $subject = Subject::factory()->create([
-        'school_class_id' => $class->id,
         'teacher_id' => $teacher->id,
     ]);
+    $subject->schoolClasses()->attach($class->id);
 
     $exam = Exam::factory()->create([
         'created_by' => $teacher->id,

@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify';
 import { useEffect, useRef, useState } from 'react';
 
 interface QRDisplayProps {
@@ -47,7 +48,7 @@ export default function QRDisplay({ qrSvg, endTime, sessionType, onExpire }: QRD
         <div className="qr-display text-center">
             <div className="inline-block p-6 bg-white border-2 border-gray-200 rounded-lg shadow-lg">
                 <div
-                    dangerouslySetInnerHTML={{ __html: qrSvg }}
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(qrSvg) }}
                     className="w-64 h-64 mx-auto"
                 />
             </div>

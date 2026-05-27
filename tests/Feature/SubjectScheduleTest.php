@@ -10,7 +10,8 @@ use Illuminate\Support\Carbon;
 
 beforeEach(function () {
     $this->class = SchoolClass::factory()->create();
-    $this->subject = Subject::factory()->create(['school_class_id' => $this->class->id]);
+    $this->subject = Subject::factory()->create();
+    $this->subject->schoolClasses()->attach($this->class->id);
 });
 
 // ── activeNow scope ────────────────────────────────────────────────────────

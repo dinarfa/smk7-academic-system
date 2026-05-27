@@ -8,11 +8,12 @@ use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
 use App\Models\SubjectSchedule;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 
 class AttendanceScanService
 {
     /** @var array<int, AttendanceQrType> */
-    private static array $phaseCache = [];
+    private array $phaseCache = [];
     /**
      * Resolve a QR token from a raw scanned payload.
      */
@@ -92,20 +93,33 @@ class AttendanceScanService
     {
         $phase = $this->attendancePhase($student)->toRecordPhase()->value;
 
-        $record = AttendanceRecord::query()->firstOrCreate(
-            [
-                'attendance_session_id' => $session->id,
-                'student_id' => $student->id,
-            ],
-            [
-                'status' => $this->resolveStatus($session)->value,
-                'scanned_at' => now(),
-                'phase' => $phase,
-                'source' => 'qr_scan',
-            ],
-        );
+        try {
+            $record = AttendanceRecord::query()->firstOrCreate(
+                [
+                    'attendance_session_id' => $session->id,
+                    'student_id' => $student->id,
+                ],
+                [
+                    'status' => $this->resolveStatus($session)->value,
+                    'scanned_at' => now(),
+                    'phase' => $phase,
+                    'source' => 'qr_scan',
+                ],
+            );
+            $created = $record->wasRecentlyCreated;
+        } catch (QueryException $e) {
+            if ((int) $e->getCode() === 23000) {
+                // Unique constraint violation — concurrent insert won the race
+                $record = AttendanceRecord::where('attendance_session_id', $session->id)
+                    ->where('student_id', $student->id)
+                    ->first();
+                $created = false;
+            } else {
+                throw $e;
+            }
+        }
 
-        if ($record->status === AttendanceStatus::Bolos || $record->status === AttendanceStatus::Absent) {
+        if (! $created && $record && ($record->status === AttendanceStatus::Bolos || $record->status === AttendanceStatus::Absent)) {
             $record->update([
                 'status' => $this->resolveStatus($session)->value,
                 'scanned_at' => now(),
@@ -132,8 +146,8 @@ class AttendanceScanService
             return AttendanceQrType::Morning;
         }
 
-        if (isset(self::$phaseCache[$classId])) {
-            return self::$phaseCache[$classId];
+        if (isset($this->phaseCache[$classId])) {
+            return $this->phaseCache[$classId];
         }
 
         // 1. Active slot right now
@@ -143,17 +157,17 @@ class AttendanceScanService
             ->first();
 
         if ($active) {
-            return self::$phaseCache[$classId] = $active->resolveQrType();
+            return $this->phaseCache[$classId] = $active->resolveQrType();
         }
 
         // 2. Closest slot for today
         $closest = SubjectSchedule::findClosestSlot($classId);
 
         if ($closest) {
-            return self::$phaseCache[$classId] = $closest->resolveQrType();
+            return $this->phaseCache[$classId] = $closest->resolveQrType();
         }
 
         // 3. No schedule at all — default
-        return self::$phaseCache[$classId] = AttendanceQrType::Morning;
+        return $this->phaseCache[$classId] = AttendanceQrType::Morning;
     }
 }

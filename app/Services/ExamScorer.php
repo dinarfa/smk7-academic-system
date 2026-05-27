@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\ExamAttempt;
 use App\Models\ExamResponse;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Service responsible for auto-scoring objective questions on an attempt.
@@ -22,31 +23,33 @@ class ExamScorer
      */
     public function scoreAttempt(ExamAttempt $attempt): ExamAttempt
     {
-        $attempt->loadMissing(['responses.question', 'responses.answerOption']);
+        return DB::transaction(function () use ($attempt): ExamAttempt {
+            $attempt->loadMissing(['responses.question', 'responses.answerOption']);
 
-        $total = 0.0;
+            $total = 0.0;
 
-        /** @var ExamResponse $response */
-        foreach ($attempt->responses as $response) {
-            $question = $response->question;
+            /** @var ExamResponse $response */
+            foreach ($attempt->responses as $response) {
+                $question = $response->question;
 
-            // Only auto-grade objective responses that reference an answer option
-            if ($response->answer_option_id) {
-                $option = $response->answerOption;
-                $isCorrect = (bool) ($option->is_correct ?? false);
-                $points = $isCorrect ? (float) ($question->points ?? 0) : 0.0;
+                // Only auto-grade objective responses that reference an answer option
+                if ($response->answer_option_id) {
+                    $option = $response->answerOption;
+                    $isCorrect = (bool) ($option->is_correct ?? false);
+                    $points = $isCorrect ? (float) ($question->points ?? 0) : 0.0;
 
-                $response->is_correct = $isCorrect;
-                $response->points_awarded = $points;
-                $response->save();
+                    $response->is_correct = $isCorrect;
+                    $response->points_awarded = $points;
+                    $response->save();
 
-                $total += (float) $points;
+                    $total += (float) $points;
+                }
             }
-        }
 
-        $attempt->score = $total;
-        $attempt->save();
+            $attempt->score = $total;
+            $attempt->save();
 
-        return $attempt;
+            return $attempt;
+        });
     }
 }

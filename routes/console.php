@@ -2,6 +2,7 @@
 
 use App\Jobs\DetectAbsencesJob;
 use App\Services\Attendance\AbsenceDetectionService;
+use App\Services\Attendance\AttendanceSessionLifecycleService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -19,4 +20,6 @@ Artisan::command('attendance:detect-absences {date?}', function (?string $date =
     $this->info("Records created: {$result['created']}.");
 })->purpose('Detect missing attendance and mark bolos records for teacher sessions.');
 
-Schedule::command('attendance:close-expired-sessions')->everyMinute();
+Schedule::call(function () {
+    app(AttendanceSessionLifecycleService::class)->closeExpiredSessions();
+})->everyFiveMinutes();

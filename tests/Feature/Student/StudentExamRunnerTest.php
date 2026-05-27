@@ -22,9 +22,9 @@ test('student can start an exam and see the question runner', function () {
     $teacher = User::factory()->create(['role' => UserRole::Teacher]);
 
     $subject = Subject::factory()->create([
-        'school_class_id' => $class->id,
         'teacher_id' => $teacher->id,
     ]);
+    $subject->schoolClasses()->attach($class->id);
 
     $exam = Exam::query()->create([
         'title' => 'Ujian Runner',
@@ -176,5 +176,5 @@ test('submitting exam calculates score correctly', function () {
 
     $attempt->refresh();
     expect($attempt->status)->toBe('submitted');
-    expect((float) $attempt->score)->toEqual(50.0); // 10/20 * 100
+    expect((float) $attempt->score)->toEqual(10.0); // 10 points awarded (Q1 correct)
 });

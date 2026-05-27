@@ -23,7 +23,8 @@ return new class extends Migration
         });
 
         // Step 2: Migrate existing data from subjects.school_class_id to pivot
-        DB::statement('INSERT INTO class_subjects (subject_id, school_class_id, created_at, updated_at) SELECT id, school_class_id, NOW(), NOW() FROM subjects WHERE school_class_id IS NOT NULL');
+        $now = now()->toDateTimeString();
+        DB::statement("INSERT INTO class_subjects (subject_id, school_class_id, created_at, updated_at) SELECT id, school_class_id, '{$now}', '{$now}' FROM subjects WHERE school_class_id IS NOT NULL");
 
         // Step 3: Drop foreign key, unique constraint, and column from subjects
         Schema::table('subjects', function (Blueprint $table) {

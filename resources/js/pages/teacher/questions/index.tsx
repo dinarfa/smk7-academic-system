@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react'
+import DOMPurify from 'dompurify'
 import ExamController from '@/actions/App/Http/Controllers/Teacher/ExamController'
 import QuestionController from '@/actions/App/Http/Controllers/Teacher/QuestionController'
 import { Button } from '@/components/ui/button'
@@ -70,7 +71,7 @@ export default function Index({ exam, questions }: Props) {
                           <p className="text-sm text-muted-foreground">Urutan {question.sort_order}</p>
                           <div 
                             className="font-medium text-foreground prose prose-sm max-w-none dark:prose-invert mt-1"
-                            dangerouslySetInnerHTML={{ __html: question.prompt }}
+                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(question.prompt) }}
                           />
                         </div>
                         <p className="text-sm text-muted-foreground">
@@ -110,7 +111,7 @@ export default function Index({ exam, questions }: Props) {
                             <div className="flex items-center justify-between gap-2">
                               <div 
                                 className="prose prose-sm max-w-none dark:prose-invert"
-                                dangerouslySetInnerHTML={{ __html: option.option_text }}
+                                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(option.option_text) }}
                               />
                               {option.is_correct && (
                                 <span className="text-xs font-medium text-emerald-600 dark:text-emerald-300">

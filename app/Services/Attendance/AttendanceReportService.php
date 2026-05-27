@@ -11,6 +11,18 @@ use Illuminate\Support\Collection;
 
 class AttendanceReportService
 {
+    private static function sanitizeCsvCell(?string $value): string
+    {
+        if ($value === null) {
+            return '';
+        }
+
+        if (preg_match('/^[=+\-@\t\r]/', $value)) {
+            return "'".$value;
+        }
+
+        return $value;
+    }
     /**
      * Build the data for the admin attendance overview.
      *
@@ -29,12 +41,16 @@ class AttendanceReportService
      */
     public function overview(): array
     {
-        $totalUsers = User::count();
-        $totalTeachers = User::where('role', 'teacher')->count();
-        $totalStudents = User::where('role', 'student')->count();
+        $userCounts = User::query()->selectRaw("
+            COUNT(*) as total_users,
+            SUM(CASE WHEN role = 'teacher' THEN 1 ELSE 0 END) as total_teachers,
+            SUM(CASE WHEN role = 'student' THEN 1 ELSE 0 END) as total_students
+        ")->first();
+
         $totalSessions = AttendanceSession::count();
+
         $totalRecords = AttendanceRecord::count();
-        $todayRecords = AttendanceRecord::whereDate('scanned_at', now()->toDateString())->count();
+        $todayRecords = AttendanceRecord::query()->whereDate('scanned_at', now())->count();
 
         $topStudents = AttendanceRecord::query()
             ->select('student_id')
@@ -67,9 +83,9 @@ class AttendanceReportService
 
         return [
             'summary' => [
-                'total_users' => $totalUsers,
-                'total_teachers' => $totalTeachers,
-                'total_students' => $totalStudents,
+                'total_users' => $userCounts->total_users,
+                'total_teachers' => $userCounts->total_teachers,
+                'total_students' => $userCounts->total_students,
                 'total_sessions' => $totalSessions,
                 'total_records' => $totalRecords,
                 'today_records' => $todayRecords,
@@ -140,7 +156,7 @@ class AttendanceReportService
                 $q->with(['session' => function ($sq): void {
                     $sq->select('id', 'type', 'subject', 'subject_id', 'opened_by')
                         ->with('subjectModel:id,name');
-                }])->latest('scanned_at');
+                }])->latest('scanned_at')->limit(50);
             }])
             ->withCount('attendanceRecords')
             ->paginate(10);
@@ -220,58 +236,45 @@ class AttendanceReportService
     }
 
     /**
-     * Build the CSV contents for attendance export.
+     * Build the CSV contents for attendance export using chunked processing.
      */
     public function exportCsv(): string
     {
-        $records = AttendanceRecord::query()
+        $stream = fopen('php://temp', 'r+');
+
+        fputcsv($stream, ['Student Name', 'Email', 'Session Type', 'Subject', 'Phase', 'Source', 'Status', 'Excused', 'Scanned At']);
+
+        AttendanceRecord::query()
             ->with(['student:id,name,email', 'session', 'session.subjectModel:id,name'])
-            ->get();
+            ->orderBy('id')
+            ->chunk(500, function ($records) use ($stream): void {
+                foreach ($records as $record) {
+                    fputcsv($stream, [
+                        self::sanitizeCsvCell($record->student?->name),
+                        self::sanitizeCsvCell($record->student?->email),
+                        $record->session?->type?->value,
+                        $record->session?->subject_name,
+                        $record->phase?->value ?? $record->phase,
+                        $record->source,
+                        $record->status?->value,
+                        $record->excused ? 'yes' : 'no',
+                        $record->scanned_at?->toIso8601String(),
+                    ]);
+                }
+            });
 
-        $csv = "Student Name,Email,Session Type,Subject,Status,Scanned At\n";
-
-        foreach ($records as $record) {
-            $csv .= sprintf(
-                '"%s","%s","%s","%s","%s","%s"%s',
-                $record->student->name,
-                $record->student->email,
-                $record->session->type?->value,
-                $record->session->subject_name,
-                $record->status?->value,
-                $record->scanned_at,
-                "\n",
-            );
-        }
+        rewind($stream);
+        $csv = stream_get_contents($stream);
+        fclose($stream);
 
         return $csv;
     }
 
     /**
-     * Build the CSV contents for a teacher attendance export within a date range.
+     * Build the CSV contents for a teacher attendance export within a date range using chunked processing.
      */
     public function exportCsvForTeacher(int $teacherId, string $startDate, string $endDate, ?int $classId = null, ?int $subjectId = null): string
     {
-        $records = AttendanceRecord::query()
-            ->with(['student:id,name,email', 'session', 'session.subjectModel:id,name'])
-            ->whereHas('session', function ($query) use ($teacherId, $classId, $subjectId): void {
-                $query->where('opened_by', $teacherId);
-                if ($classId !== null) {
-                    $query->where(function ($q) use ($classId): void {
-                        $q->where('class_id', $classId)
-                            ->orWhereHas('subjectModel.schoolClasses', fn ($sq) => $sq->where('school_classes.id', $classId));
-                    });
-                }
-                if ($subjectId !== null) {
-                    $query->where('subject_id', $subjectId);
-                }
-            })
-            ->whereBetween('scanned_at', [
-                Carbon::parse($startDate)->startOfDay(),
-                Carbon::parse($endDate)->endOfDay(),
-            ])
-            ->orderBy('scanned_at')
-            ->get();
-
         $stream = fopen('php://temp', 'r+');
 
         fputcsv($stream, [
@@ -286,38 +289,7 @@ class AttendanceReportService
             'Scanned At',
         ]);
 
-        foreach ($records as $record) {
-            fputcsv($stream, [
-                $record->student?->name,
-                $record->student?->email,
-                $record->session?->type?->value,
-                $record->session?->subject_name,
-                $record->phase?->value ?? $record->phase,
-                $record->source,
-                $record->status?->value,
-                $record->excused ? 'yes' : 'no',
-                $record->scanned_at?->toIso8601String(),
-            ]);
-        }
-
-        rewind($stream);
-
-        $csv = stream_get_contents($stream) ?: '';
-
-        fclose($stream);
-
-        return $csv;
-    }
-
-    /**
-     * Build an array of rows for attendance export for a teacher.
-     * First row is the header, following rows are data arrays.
-     *
-     * @return array<int, array<int, mixed>>
-     */
-    public function exportArrayForTeacher(int $teacherId, string $startDate, string $endDate, ?int $classId = null, ?int $subjectId = null): array
-    {
-        $records = AttendanceRecord::query()
+        AttendanceRecord::query()
             ->with(['student:id,name,email', 'session', 'session.subjectModel:id,name'])
             ->whereHas('session', function ($query) use ($teacherId, $classId, $subjectId): void {
                 $query->where('opened_by', $teacherId);
@@ -335,9 +307,40 @@ class AttendanceReportService
                 Carbon::parse($startDate)->startOfDay(),
                 Carbon::parse($endDate)->endOfDay(),
             ])
-            ->orderBy('scanned_at')
-            ->get();
+            ->orderBy('id')
+            ->chunk(500, function ($records) use ($stream): void {
+                foreach ($records as $record) {
+                    fputcsv($stream, [
+                        self::sanitizeCsvCell($record->student?->name),
+                        self::sanitizeCsvCell($record->student?->email),
+                        $record->session?->type?->value,
+                        $record->session?->subject_name,
+                        $record->phase?->value ?? $record->phase,
+                        $record->source,
+                        $record->status?->value,
+                        $record->excused ? 'yes' : 'no',
+                        $record->scanned_at?->toIso8601String(),
+                    ]);
+                }
+            });
 
+        rewind($stream);
+
+        $csv = stream_get_contents($stream) ?: '';
+
+        fclose($stream);
+
+        return $csv;
+    }
+
+    /**
+     * Build an array of rows for attendance export for a teacher using chunked processing.
+     * First row is the header, following rows are data arrays.
+     *
+     * @return array<int, array<int, mixed>>
+     */
+    public function exportArrayForTeacher(int $teacherId, string $startDate, string $endDate, ?int $classId = null, ?int $subjectId = null): array
+    {
         $rows = [];
 
         $rows[] = [
@@ -352,19 +355,40 @@ class AttendanceReportService
             'Scanned At',
         ];
 
-        foreach ($records as $record) {
-            $rows[] = [
-                $record->student?->name,
-                $record->student?->email,
-                $record->session?->type?->value,
-                $record->session?->subject_name,
-                $record->phase?->value ?? $record->phase,
-                $record->source,
-                $record->status?->value,
-                $record->excused ? 'yes' : 'no',
-                $record->scanned_at?->toIso8601String(),
-            ];
-        }
+        AttendanceRecord::query()
+            ->with(['student:id,name,email', 'session', 'session.subjectModel:id,name'])
+            ->whereHas('session', function ($query) use ($teacherId, $classId, $subjectId): void {
+                $query->where('opened_by', $teacherId);
+                if ($classId !== null) {
+                    $query->where(function ($q) use ($classId): void {
+                        $q->where('class_id', $classId)
+                            ->orWhereHas('subjectModel.schoolClasses', fn ($sq) => $sq->where('school_classes.id', $classId));
+                    });
+                }
+                if ($subjectId !== null) {
+                    $query->where('subject_id', $subjectId);
+                }
+            })
+            ->whereBetween('scanned_at', [
+                Carbon::parse($startDate)->startOfDay(),
+                Carbon::parse($endDate)->endOfDay(),
+            ])
+            ->orderBy('id')
+            ->chunk(500, function ($records) use (&$rows): void {
+                foreach ($records as $record) {
+                    $rows[] = [
+                        self::sanitizeCsvCell($record->student?->name),
+                        self::sanitizeCsvCell($record->student?->email),
+                        $record->session?->type?->value,
+                        $record->session?->subject_name,
+                        $record->phase?->value ?? $record->phase,
+                        $record->source,
+                        $record->status?->value,
+                        $record->excused ? 'yes' : 'no',
+                        $record->scanned_at?->toIso8601String(),
+                    ];
+                }
+            });
 
         return $rows;
     }

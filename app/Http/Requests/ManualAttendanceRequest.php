@@ -69,6 +69,8 @@ class ManualAttendanceRequest extends FormRequest
                 $allowedClassIds = array_unique(array_merge($classIds, $subjectClassIds));
 
                 if (empty($allowedClassIds)) {
+                    $validator->errors()->add('class_id', 'Anda tidak memiliki kelas yang ditugaskan.');
+
                     return;
                 }
 

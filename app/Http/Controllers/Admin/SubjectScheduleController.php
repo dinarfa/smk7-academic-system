@@ -9,6 +9,7 @@ use App\Models\SchoolClass;
 use App\Models\Subject;
 use App\Models\SubjectSchedule;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -69,6 +70,8 @@ class SubjectScheduleController extends Controller
 
         SubjectSchedule::query()->create($validated);
 
+        Cache::increment('teacher_schedules_version');
+
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Jadwal berhasil ditambahkan.')]);
 
         return back();
@@ -87,6 +90,8 @@ class SubjectScheduleController extends Controller
 
         $subjectSchedule->update($validated);
 
+        Cache::increment('teacher_schedules_version');
+
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Jadwal berhasil diperbarui.')]);
 
         return back();
@@ -98,6 +103,8 @@ class SubjectScheduleController extends Controller
     public function destroy(SubjectSchedule $subjectSchedule): RedirectResponse
     {
         $subjectSchedule->delete();
+
+        Cache::increment('teacher_schedules_version');
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Jadwal berhasil dihapus.')]);
 

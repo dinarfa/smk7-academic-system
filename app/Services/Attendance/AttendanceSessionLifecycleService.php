@@ -41,6 +41,24 @@ class AttendanceSessionLifecycleService
     }
 
     /**
+     * Rotate the QR token for an active session.
+     *
+     * Returns the new token string. The token is valid for 30 seconds.
+     */
+    public function rotateToken(AttendanceSession $session): string
+    {
+        $newToken = (string) str()->ulid();
+        $expiresAt = now()->addSeconds(30);
+
+        $session->update([
+            'qr_token' => $newToken,
+            'qr_expires_at' => $expiresAt,
+        ]);
+
+        return $newToken;
+    }
+
+    /**
      * Close all active sessions that have already expired.
      */
     public function closeExpiredSessions(): int

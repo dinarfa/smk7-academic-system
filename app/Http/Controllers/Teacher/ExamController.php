@@ -286,9 +286,14 @@ class ExamController extends Controller
             fputcsv($file, ['No', 'Nama Siswa', 'Status', 'Waktu Mulai', 'Waktu Selesai', 'Nilai']);
 
             foreach ($attempts as $index => $attempt) {
+                $name = $attempt->student?->name ?? 'Unknown';
+                if (preg_match('/^[=+\-@\t\r]/', $name)) {
+                    $name = "'".$name;
+                }
+
                 fputcsv($file, [
                     $index + 1,
-                    $attempt->student?->name ?? 'Unknown',
+                    $name,
                     $attempt->status,
                     $attempt->started_at?->format('Y-m-d H:i:s') ?? '-',
                     $attempt->submitted_at?->format('Y-m-d H:i:s') ?? '-',

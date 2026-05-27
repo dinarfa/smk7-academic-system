@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify';
 import { useEffect, useRef, useState } from 'react';
 
 interface QRDisplayProps {
@@ -61,7 +62,7 @@ export default function QRDisplayV2({ qrSvg, startTime, endTime, sessionType, on
                 <div
                     className="[&_svg]:h-full [&_svg]:w-full"
                     style={{ width: 200, height: 200 }}
-                    dangerouslySetInnerHTML={{ __html: qrSvg }}
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(qrSvg) }}
                 />
             </div>
 

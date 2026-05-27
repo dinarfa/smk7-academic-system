@@ -10,6 +10,7 @@ use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
 use App\Models\SubjectSchedule;
 use App\Services\Attendance\AttendanceSessionLifecycleService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
@@ -44,8 +45,8 @@ class AttendanceSessionController extends Controller
 
             if (! $teacherOwnsSubject) {
                 $teacherSubjectIds = $teacher->subjects()
-                    ->where('school_class_id', $classId)
-                    ->pluck('id');
+                    ->whereHas('schoolClasses', fn ($q) => $q->where('school_classes.id', $classId))
+                    ->pluck('subjects.id');
 
                 $teacherSchedule = SubjectSchedule::query()
                     ->where('school_class_id', $classId)
@@ -95,6 +96,30 @@ class AttendanceSessionController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Sesi QR ditutup.')]);
 
         return back();
+    }
+
+    /**
+     * Rotate the QR token for an active attendance session.
+     */
+    public function rotateQr(
+        AttendanceSession $attendanceSession,
+        AttendanceSessionLifecycleService $attendanceSessionLifecycleService,
+    ): JsonResponse {
+        Gate::authorize('close', $attendanceSession);
+
+        if (! $attendanceSession->is_active) {
+            return response()->json(['message' => 'Sesi tidak aktif.'], 422);
+        }
+
+        $attendanceSessionLifecycleService->rotateToken($attendanceSession);
+
+        $attendanceSession->refresh();
+
+        return response()->json([
+            'qr_payload' => $attendanceSession->qrPayload(),
+            'qr_svg' => $attendanceSession->qrSvg(),
+            'qr_expires_at' => $attendanceSession->qr_expires_at?->toIso8601String(),
+        ]);
     }
 
     /**

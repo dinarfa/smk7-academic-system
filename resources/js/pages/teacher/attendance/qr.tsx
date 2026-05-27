@@ -1,4 +1,5 @@
 import { Head, Link, Form, router } from '@inertiajs/react';
+import DOMPurify from 'dompurify';
 import { Maximize2, Minimize2, CalendarClock, AlertTriangle, Scan } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import AttendanceSessionController from '@/actions/App/Http/Controllers/Teacher/AttendanceSessionController';
@@ -28,6 +29,7 @@ type ActiveSession = {
     records_count: number;
     qr_payload: string;
     qr_svg: string;
+    qr_expires_at: string | null;
 };
 
 type CurrentSchedule = {
@@ -64,16 +66,78 @@ export default function TeacherAttendanceQr({ active_session: activeSession, cur
     const [selectedSubjectKey, setSelectedSubjectKey] = useState('');
     const popupExpiredRef = useRef(false);
 
-    // Poll for live attendance count updates every 5 seconds
+    // Local QR state for rotation updates (avoids full page reload)
+    const [qrPayload, setQrPayload] = useState(activeSession?.qr_payload ?? '');
+    const [qrSvg, setQrSvg] = useState(activeSession?.qr_svg ?? '');
+    const [rotationCountdown, setRotationCountdown] = useState<number | null>(null);
+
+    // Sync local QR state when activeSession prop changes
+    useEffect(() => {
+        if (activeSession) {
+            setQrPayload(activeSession.qr_payload);
+            setQrSvg(activeSession.qr_svg);
+        }
+    }, [activeSession?.qr_payload, activeSession?.qr_svg]);
+
+    // Poll for token rotation and attendance count updates every 3 seconds
     useEffect(() => {
         if (!activeSession?.is_active) return;
 
-        const pollInterval = setInterval(() => {
+        const pollInterval = setInterval(async () => {
+            // Check if the QR token has expired and needs rotation
+            const expiresAt = activeSession.qr_expires_at ? new Date(activeSession.qr_expires_at) : null;
+            const now = new Date();
+
+            if (expiresAt && now >= expiresAt) {
+                // Token expired — request rotation via API
+                try {
+                    const response = await fetch(`/teacher/attendance-sessions/${activeSession.id}/rotate-qr`, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+                        },
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        setQrPayload(data.qr_payload);
+                        setQrSvg(data.qr_svg);
+                        // Update the expires_at in the active session for countdown
+                        activeSession.qr_expires_at = data.qr_expires_at;
+                    }
+                } catch {
+                    // Silently fail — will retry on next poll
+                }
+            }
+
+            // Also reload record count from server
             router.reload({ only: ['active_session'] });
-        }, 5000);
+        }, 3000);
 
         return () => clearInterval(pollInterval);
-    }, [activeSession?.is_active]);
+    }, [activeSession?.is_active, activeSession?.id, activeSession?.qr_expires_at]);
+
+    // Rotation countdown timer (updates every 500ms)
+    useEffect(() => {
+        if (!activeSession?.is_active || !activeSession?.qr_expires_at) {
+            setRotationCountdown(null);
+            return;
+        }
+
+        const updateCountdown = () => {
+            const expiresAt = new Date(activeSession.qr_expires_at!);
+            const now = new Date();
+            const remaining = Math.max(0, Math.ceil((expiresAt.getTime() - now.getTime()) / 1000));
+            setRotationCountdown(remaining);
+        };
+
+        updateCountdown();
+        const interval = setInterval(updateCountdown, 500);
+
+        return () => clearInterval(interval);
+    }, [activeSession?.is_active, activeSession?.qr_expires_at]);
 
     const selectedSubject = subjectGroups.find((group) => group.key === selectedSubjectKey) ?? null;
     const selectedClasses = selectedSubject?.classes ?? accessibleClasses ?? [];
@@ -149,7 +213,7 @@ return;
                             {activeSession ? (
                                 <>
                                     <QRDisplay
-                                        qrSvg={activeSession.qr_svg}
+                                        qrSvg={qrSvg}
                                         startTime={activeSession.starts_at ?? ''}
                                         endTime={activeSession.ends_at ?? ''}
                                         sessionType={typeLabel(activeSession.type)}
@@ -157,6 +221,14 @@ return;
                                             router.reload({ only: ['active_session'] });
                                         }}
                                     />
+                                    {rotationCountdown !== null && (
+                                        <div className="mt-2 text-center">
+                                            <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-600 dark:text-blue-400">
+                                                <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-blue-500" />
+                                                Rotasi QR dalam {rotationCountdown}s
+                                            </span>
+                                        </div>
+                                    )}
                                     <div className="mt-4 flex justify-center">
                                         <Button
                                             onClick={() => setShowQrPopup(true)}
@@ -329,7 +401,12 @@ return;
 
                                         <div className="space-y-2">
                                             <Label htmlFor="token">Token QR</Label>
-                                            <Input id="token" readOnly value={activeSession.qr_payload} />
+                                            <Input id="token" readOnly value={qrPayload} />
+                                            {rotationCountdown !== null && (
+                                                <p className="text-xs text-blue-500">
+                                                    Rotasi otomatis dalam {rotationCountdown} detik
+                                                </p>
+                                            )}
                                         </div>
                                     </>
                                 ) : (
@@ -362,7 +439,7 @@ return;
                                         <div
                                             className="[&_svg]:h-full [&_svg]:w-full"
                                             style={{ width: 220, height: 220 }}
-                                            dangerouslySetInnerHTML={{ __html: activeSession.qr_svg }}
+                                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(qrSvg) }}
                                         />
                                     </div>
                                     <div className="text-center">
@@ -427,8 +504,13 @@ return;
                                     <div className="rounded-xl bg-white/10 px-4 py-2.5 text-center backdrop-blur-sm">
                                         <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Token QR</p>
                                         <p className="mt-0.5 break-all font-mono text-xs font-medium text-white/90">
-                                            {activeSession.qr_payload}
+                                            {qrPayload}
                                         </p>
+                                        {rotationCountdown !== null && (
+                                            <p className="mt-1 text-[10px] text-blue-300">
+                                                Rotasi dalam {rotationCountdown}s
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
                             </div>

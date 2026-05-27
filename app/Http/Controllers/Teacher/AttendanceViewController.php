@@ -262,6 +262,7 @@ class AttendanceViewController extends Controller
             'records_count' => $session->records()->count(),
             'qr_payload' => $session->qrPayload(),
             'qr_svg' => $session->qrSvg(),
+            'qr_expires_at' => $session->qr_expires_at?->toIso8601String(),
         ];
     }
 
