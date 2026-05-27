@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpenCheck, CalendarDays, LayoutGrid, QrCode, School, Users } from 'lucide-react';
+import { BookOpenCheck, CalendarDays, LayoutGrid, QrCode, School, Users, BookText } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -89,6 +89,23 @@ export function AppSidebar() {
                 href: admin.classes.index.url(),
                 icon: School,
             },
+            {
+                title: 'Kelola Mapel',
+                href: admin.subjects.index.url(),
+                icon: BookOpenCheck,
+            },
+            {
+                title: 'Kelola Jadwal',
+                href: admin.schedules.index.url(),
+                icon: CalendarDays,
+            },
+            {
+                title: 'Laporan',
+                href: admin.reports.overview.url(),
+                icon: BookText,
+            }
+
+
         );
     }
 

@@ -99,6 +99,7 @@ export default function AdminSchedulesIndex({ classes, subjects, schedules }: Pr
 
     function openEdit(schedule: Schedule) {
         setEditingSchedule(schedule);
+        editForm.clearErrors();
         editForm.setData({
             school_class_id: String(schedule.school_class_id),
             subject_id: schedule.subject_id ? String(schedule.subject_id) : '',
@@ -487,6 +488,9 @@ export default function AdminSchedulesIndex({ classes, subjects, schedules }: Pr
                                     ))}
                                 </SelectContent>
                             </Select>
+                            {editForm.errors.school_class_id && (
+                                <p className="text-xs text-red-500">{editForm.errors.school_class_id}</p>
+                            )}
                         </div>
 
                         {/* Schedule type */}
@@ -510,6 +514,9 @@ export default function AdminSchedulesIndex({ classes, subjects, schedules }: Pr
                                     <SelectItem value="dismissal" className="rounded-lg">Pulang</SelectItem>
                                 </SelectContent>
                             </Select>
+                            {editForm.errors.schedule_type && (
+                                <p className="text-xs text-red-500">{editForm.errors.schedule_type}</p>
+                            )}
                         </div>
 
                         {editForm.data.schedule_type === 'subject' && (
@@ -528,6 +535,9 @@ export default function AdminSchedulesIndex({ classes, subjects, schedules }: Pr
                                         ))}
                                     </SelectContent>
                                 </Select>
+                                {editForm.errors.subject_id && (
+                                    <p className="text-xs text-red-500">{editForm.errors.subject_id}</p>
+                                )}
                             </div>
                         )}
 
@@ -547,6 +557,9 @@ export default function AdminSchedulesIndex({ classes, subjects, schedules }: Pr
                                     ))}
                                 </SelectContent>
                             </Select>
+                            {editForm.errors.day_of_week && (
+                                <p className="text-xs text-red-500">{editForm.errors.day_of_week}</p>
+                            )}
                         </div>
 
                         {/* Time */}
@@ -559,7 +572,11 @@ export default function AdminSchedulesIndex({ classes, subjects, schedules }: Pr
                                     value={editForm.data.starts_at}
                                     onChange={(e) => editForm.setData('starts_at', e.target.value)}
                                     className="rounded-xl border-slate-200"
+                                    aria-invalid={Boolean(editForm.errors.starts_at)}
                                 />
+                                {editForm.errors.starts_at && (
+                                    <p className="text-xs text-red-500">{editForm.errors.starts_at}</p>
+                                )}
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="edit-ends" className="text-xs font-semibold uppercase tracking-wide text-slate-500">Selesai</Label>
@@ -569,7 +586,11 @@ export default function AdminSchedulesIndex({ classes, subjects, schedules }: Pr
                                     value={editForm.data.ends_at}
                                     onChange={(e) => editForm.setData('ends_at', e.target.value)}
                                     className="rounded-xl border-slate-200"
+                                    aria-invalid={Boolean(editForm.errors.ends_at)}
                                 />
+                                {editForm.errors.ends_at && (
+                                    <p className="text-xs text-red-500">{editForm.errors.ends_at}</p>
+                                )}
                             </div>
                         </div>
 

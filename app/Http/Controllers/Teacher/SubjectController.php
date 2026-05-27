@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Teacher;
 use App\Http\Controllers\Controller;
 use App\Models\Subject;
 use App\Models\SubjectSchedule;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -26,58 +25,46 @@ class SubjectController extends Controller
             ->orderBy('name')
             ->get();
 
-        // Load schedules for these subjects to avoid N+1 queries and
-        // pick the earliest schedule as the representative "waktu pelajaran".
+        // Load all schedule slots for these subjects, grouped by day.
         $schedules = SubjectSchedule::query()
+            ->with('schoolClass:id,name')
             ->whereIn('subject_id', $subjects->pluck('id')->all())
+            ->orderBy('day_of_week')
             ->orderBy('starts_at')
             ->get()
             ->groupBy('subject_id');
 
-        $subjects = $subjects->map(function (Subject $subject) use ($schedules): array {
+        $dayNames = [
+            0 => 'Minggu',
+            1 => 'Senin',
+            2 => 'Selasa',
+            3 => 'Rabu',
+            4 => 'Kamis',
+            5 => 'Jumat',
+            6 => 'Sabtu',
+        ];
+
+        $subjects = $subjects->map(function (Subject $subject) use ($schedules, $dayNames): array {
             $group = $schedules->get($subject->id);
-            if (! $group || $group->isEmpty()) {
-                $scheduleTime = null;
-            } else {
-                $slot = $group->first();
-                $starts = $slot->starts_at;
-                $ends = $slot->ends_at;
+            $scheduleDays = [];
 
-                if (is_string($starts) && strlen($starts) === 5) {
-                    $starts = $starts.':00';
+            if ($group && $group->isNotEmpty()) {
+                $byDay = $group->groupBy('day_of_week');
+
+                foreach ($byDay as $day => $slots) {
+                    $dayName = $dayNames[$day] ?? "Day {$day}";
+                    $slotList = $slots->map(function ($slot) {
+                        return [
+                            'time' => substr($slot->starts_at, 0, 5).'–'.substr($slot->ends_at, 0, 5),
+                            'class' => $slot->schoolClass?->name ?? '-',
+                        ];
+                    })->values()->all();
+
+                    $scheduleDays[] = [
+                        'day' => $dayName,
+                        'slots' => $slotList,
+                    ];
                 }
-                if (is_string($ends) && strlen($ends) === 5) {
-                    $ends = $ends.':00';
-                }
-
-                try {
-                    $s = Carbon::createFromFormat('H:i:s', $starts)->format('H:i');
-                } catch (\Exception $e) {
-                    $s = $starts;
-                }
-
-                try {
-                    $e = Carbon::createFromFormat('H:i:s', $ends)->format('H:i');
-                } catch (\Exception $e2) {
-                    $e = $ends;
-                }
-
-                $scheduleTime = sprintf('%s – %s', $s, $e);
-
-                // Map day_of_week (0=Sunday) to Indonesian day name
-                $dayMap = [
-                    0 => 'Minggu',
-                    1 => 'Senin',
-                    2 => 'Selasa',
-                    3 => 'Rabu',
-                    4 => 'Kamis',
-                    5 => 'Jumat',
-                    6 => 'Sabtu',
-                ];
-
-                $scheduleDay = isset($slot->day_of_week) && array_key_exists($slot->day_of_week, $dayMap)
-                    ? $dayMap[$slot->day_of_week]
-                    : null;
             }
 
             return [
@@ -85,8 +72,7 @@ class SubjectController extends Controller
                 'code' => $subject->code,
                 'name' => $subject->name,
                 'class' => $subject->schoolClasses->pluck('name')->join(', '),
-                'schedule_time' => $scheduleTime,
-                'schedule_day' => $scheduleDay ?? null,
+                'schedule_days' => $scheduleDays,
             ];
         });
 

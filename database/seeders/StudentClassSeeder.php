@@ -10,9 +10,9 @@ class StudentClassSeeder extends Seeder
 {
     public function run(): void
     {
-        // 5 teachers
+        // 10 teachers (1 per class for homeroom)
         $teachers = User::factory()
-            ->count(5)
+            ->count(10)
             ->teacher()
             ->create()
             ->each(fn (User $t, int $i) => $t->update([
@@ -38,15 +38,15 @@ class StudentClassSeeder extends Seeder
             $class = SchoolClass::factory()->create([
                 'name' => $name,
                 'code' => str_replace(' ', '-', $name),
-                'homeroom_teacher_id' => $teachers[$i % count($teachers)]->id,
+                'homeroom_teacher_id' => $teachers[$i]->id,
                 'academic_year' => '2025/2026',
             ]);
 
             return $class;
         });
 
-        /* $this->call(SubjectSeeder::class); */
-        /* $this->call(SubjectScheduleSeeder::class); */
+        $this->call(SubjectSeeder::class);
+        $this->call(SubjectScheduleSeeder::class);
 
         // 120 students distributed across classes
         $studentNum = 1;

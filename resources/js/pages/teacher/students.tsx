@@ -28,7 +28,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import admin from '@/routes/admin';
+import teacher from '@/routes/teacher';
 import {
     Users,
     BookOpen,
@@ -624,7 +624,7 @@ export default function TeacherStudents({ canManageStudents, schoolClasses, stud
 
 TeacherStudents.layout = {
     breadcrumbs: [
-        { title: 'Dashboard Admin', href: admin.dashboard.url() },
+        { title: 'Dashboard Guru', href: teacher.dashboard.url() },
         { title: 'Data Siswa', href: StudentController.index() },
     ],
 };
