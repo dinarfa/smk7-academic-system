@@ -1,6 +1,7 @@
 import { Head, Form, router } from '@inertiajs/react';
 import { Clock, Users, Zap } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import AttendanceSessionController from '@/actions/App/Http/Controllers/Teacher/AttendanceSessionController';
 import { StatCard } from '@/components/stat-card';
 import { Badge } from '@/components/ui/badge';
@@ -35,6 +36,13 @@ type Subject = {
     code: string;
 };
 
+type WeeklyData = {
+    day: string;
+    date: string;
+    hadir: number;
+    terlambat: number;
+};
+
 type Props = {
     subjects: Subject[];
     summary: {
@@ -44,6 +52,7 @@ type Props = {
     };
     activeSessions: ActiveSession[];
     recentRecords: RecentRecord[];
+    weeklyAttendance: WeeklyData[];
 };
 
 function typeLabel(type: ActiveSession['type']): string {
@@ -61,6 +70,7 @@ function typeLabel(type: ActiveSession['type']): string {
 export default function TeacherDashboard({
     summary,
     activeSessions,
+    weeklyAttendance,
 }: Props) {
     const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -122,6 +132,32 @@ export default function TeacherDashboard({
                     <StatCard icon={Zap} label="Sesi Aktif" value={summary.active_sessions_count} />
                     <StatCard icon={Clock} label="Absensi Hari Ini" value={summary.today_records_count} />
                 </div>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Absensi Mingguan</CardTitle>
+                        <p className="text-sm text-muted-foreground">Jumlah kehadiran 7 hari terakhir</p>
+                    </CardHeader>
+                    <CardContent>
+                        <ResponsiveContainer width="100%" height={250}>
+                            <BarChart data={weeklyAttendance}>
+                                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                                <XAxis dataKey="day" className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                                <YAxis className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                                <Tooltip
+                                    contentStyle={{
+                                        backgroundColor: 'hsl(var(--card))',
+                                        border: '1px solid hsl(var(--border))',
+                                        borderRadius: '8px',
+                                        fontSize: '12px',
+                                    }}
+                                />
+                                <Bar dataKey="hadir" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Hadir" />
+                                <Bar dataKey="terlambat" fill="hsl(var(--chart-4))" radius={[4, 4, 0, 0]} name="Terlambat" />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </CardContent>
+                </Card>
 
                 {visibleSessions.length > 0 && (
                     <div className="space-y-4">

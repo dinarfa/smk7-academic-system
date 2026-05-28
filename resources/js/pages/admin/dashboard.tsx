@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { Users, BookOpen, UserCheck, Zap, Clock, ScrollText } from 'lucide-react';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { StatCard } from '@/components/stat-card';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,12 +23,20 @@ type Activity = {
     scanned_at: string;
 }
 
+type WeeklyData = {
+    day: string;
+    date: string;
+    hadir: number;
+    terlambat: number;
+};
+
 type Props = {
     summary: Summary;
     recentActivities: Activity[];
+    weeklyAttendance: WeeklyData[];
 }
 
-export default function AdminDashboard({ summary, recentActivities }: Props) {
+export default function AdminDashboard({ summary, recentActivities, weeklyAttendance }: Props) {
     return (
         <>
             <Head title="Dashboard Admin" />
@@ -44,6 +53,32 @@ export default function AdminDashboard({ summary, recentActivities }: Props) {
                     <StatCard icon={UserCheck} label="Siswa" value={summary.total_students} />
                     <StatCard icon={Zap} label="Sesi Aktif" value={summary.active_sessions} />
                 </div>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Absensi Mingguan</CardTitle>
+                        <p className="text-sm text-muted-foreground">Jumlah kehadiran 7 hari terakhir</p>
+                    </CardHeader>
+                    <CardContent>
+                        <ResponsiveContainer width="100%" height={250}>
+                            <BarChart data={weeklyAttendance}>
+                                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                                <XAxis dataKey="day" className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                                <YAxis className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                                <Tooltip
+                                    contentStyle={{
+                                        backgroundColor: 'hsl(var(--card))',
+                                        border: '1px solid hsl(var(--border))',
+                                        borderRadius: '8px',
+                                        fontSize: '12px',
+                                    }}
+                                />
+                                <Bar dataKey="hadir" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Hadir" />
+                                <Bar dataKey="terlambat" fill="hsl(var(--chart-4))" radius={[4, 4, 0, 0]} name="Terlambat" />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </CardContent>
+                </Card>
 
                 <Card>
                     <CardHeader>

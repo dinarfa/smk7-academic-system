@@ -40,6 +40,24 @@ class DashboardController extends Controller
                     'scanned_at' => $record->scanned_at?->toIso8601String(),
                 ])->values();
 
+            // Weekly attendance data for chart (last 7 days)
+            $weeklyData = collect(range(6, 0))->map(function ($daysAgo) {
+                $date = now()->subDays($daysAgo);
+                $dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+
+                return [
+                    'day' => $dayNames[$date->dayOfWeek],
+                    'date' => $date->toDateString(),
+                    'hadir' => AttendanceRecord::query()
+                        ->whereDate('scanned_at', $date->toDateString())
+                        ->count(),
+                    'terlambat' => AttendanceRecord::query()
+                        ->whereDate('scanned_at', $date->toDateString())
+                        ->where('status', 'late')
+                        ->count(),
+                ];
+            });
+
             return Inertia::render('admin/dashboard', [
                 'summary' => [
                     'total_users' => $totalUsers,
@@ -50,6 +68,7 @@ class DashboardController extends Controller
                     'active_sessions' => $activeSessions,
                 ],
                 'recentActivities' => $recentActivities,
+                'weeklyAttendance' => $weeklyData,
             ]);
         }
 
@@ -69,6 +88,24 @@ class DashboardController extends Controller
                 ->orderBy('name')
                 ->get();
 
+            // Weekly attendance data for chart (last 7 days)
+            $weeklyData = collect(range(6, 0))->map(function ($daysAgo) {
+                $date = now()->subDays($daysAgo);
+                $dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+
+                return [
+                    'day' => $dayNames[$date->dayOfWeek],
+                    'date' => $date->toDateString(),
+                    'hadir' => AttendanceRecord::query()
+                        ->whereDate('scanned_at', $date->toDateString())
+                        ->count(),
+                    'terlambat' => AttendanceRecord::query()
+                        ->whereDate('scanned_at', $date->toDateString())
+                        ->where('status', 'late')
+                        ->count(),
+                ];
+            });
+
             return Inertia::render('teacher/dashboard', [
                 'subjects' => $subjects,
                 'summary' => [
@@ -79,6 +116,7 @@ class DashboardController extends Controller
                     'active_sessions_count' => AttendanceSession::query()->where('is_active', true)->count(),
                     'today_records_count' => AttendanceRecord::query()->whereDate('scanned_at', now()->toDateString())->count(),
                 ],
+                'weeklyAttendance' => $weeklyData,
                 'activeSessions' => $activeSessions->map(fn (AttendanceSession $session): array => [
                     'id' => $session->id,
                     'type' => $session->type?->value,
