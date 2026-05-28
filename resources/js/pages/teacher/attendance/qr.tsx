@@ -1,6 +1,6 @@
 import { Head, Link, Form, router } from '@inertiajs/react';
 import DOMPurify from 'dompurify';
-import { Maximize2, Minimize2, CalendarClock, AlertTriangle, Scan } from 'lucide-react';
+import { Maximize2, CalendarClock, AlertTriangle, Scan } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import AttendanceSessionController from '@/actions/App/Http/Controllers/Teacher/AttendanceSessionController';
 import QRDisplay from '@/components/QRDisplayV2';
@@ -62,7 +62,6 @@ function typeLabel(type: ActiveSession['type']): string {
 export default function TeacherAttendanceQr({ active_session: activeSession, current_schedule: currentSchedule, subject_groups: subjectGroups = [], accessible_classes: accessibleClasses = [] }: Props) {
     const [showQrPopup, setShowQrPopup] = useState(false);
     const [popupTimeRemaining, setPopupTimeRemaining] = useState('');
-    const [popupPercent, setPopupPercent] = useState(100);
     const [selectedSubjectKey, setSelectedSubjectKey] = useState('');
     const popupExpiredRef = useRef(false);
 
@@ -159,7 +158,6 @@ return;
 
             if (remaining <= 0) {
                 setPopupTimeRemaining('KADALUARSA');
-                setPopupPercent(0);
 
                 if (!popupExpiredRef.current) {
                     popupExpiredRef.current = true;
@@ -171,8 +169,6 @@ return;
             const minutes = Math.floor(remaining / 60000);
             const seconds = Math.floor((remaining % 60000) / 1000);
             setPopupTimeRemaining(`${minutes}:${seconds.toString().padStart(2, '0')}`);
-            const p = Math.max(0, Math.min(100, Math.round((remaining / total) * 100)));
-            setPopupPercent(p);
         };
 
         updateTimer();
@@ -181,9 +177,6 @@ return;
         return () => clearInterval(interval);
     }, [showQrPopup, activeSession?.ends_at, activeSession?.starts_at]);
 
-    const popupRadius = 50;
-    const popupCircumference = 2 * Math.PI * popupRadius;
-    const popupStrokeDashoffset = popupCircumference * (1 - popupPercent / 100);
     const popupIsExpired = popupTimeRemaining === 'KADALUARSA';
 
     return (
@@ -191,11 +184,8 @@ return;
             <Head title="QR Absensi Guru" />
 
             <div className="space-y-6 p-4">
-                <div className="space-y-2">
-                    <p className="text-sm font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                        QR Absensi
-                    </p>
-                    <h1 className="text-3xl font-semibold text-foreground">QR Absensi Guru</h1>
+                <div className="space-y-1">
+                    <h1 className="text-2xl font-semibold tracking-tight text-foreground">QR Absensi Guru</h1>
                     <p className="max-w-2xl text-muted-foreground">
                         Hanya sesi yang sedang aktif sekarang yang bisa dibuka.
                     </p>
@@ -232,7 +222,7 @@ return;
                                     <div className="mt-4 flex justify-center">
                                         <Button
                                             onClick={() => setShowQrPopup(true)}
-                                            className="gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 font-semibold text-white shadow-lg shadow-blue-500/25 transition-all duration-200 hover:from-blue-700 hover:to-blue-600 hover:shadow-xl hover:shadow-blue-500/30"
+                                            className="gap-2"
                                         >
                                             <Maximize2 className="h-4 w-4" />
                                             Tampilkan QR Besar
@@ -240,7 +230,7 @@ return;
                                     </div>
                                 </>
                             ) : (
-                                <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-8 text-center">
+                                <div className="rounded-lg border border-dashed border-border bg-muted/30 p-8 text-center">
                                     <p className="text-sm text-muted-foreground">
                                         Tidak ada sesi aktif. Buka sesi baru dari panel kanan.
                                     </p>
@@ -250,20 +240,22 @@ return;
                     </Card>
 
                     <div className="space-y-6">
-                        {/* ── Detected schedule card ── */}
+                        {/* ── Session controls + schedule ── */}
                         <Card className="border-border/60 shadow-sm">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <CalendarClock className="h-4 w-4 text-muted-foreground" />
-                                        Sesi Tersedia Sekarang
+                                    Kontrol Sesi
                                 </CardTitle>
                                 <CardDescription>
-                                        Sesi yang boleh dibuka pada waktu ini.
+                                    {activeSession
+                                        ? 'Tutup sesi aktif atau refresh status QR.'
+                                        : 'Pilih sesi yang sedang aktif untuk membuka QR absensi.'}
                                 </CardDescription>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="space-y-4">
                                 {currentSchedule ? (
-                                    <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 space-y-1">
+                                    <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 space-y-1">
                                         <p className="text-sm font-semibold text-foreground">
                                             {SCHEDULE_TYPE_LABELS[currentSchedule.type] ?? currentSchedule.type}
                                             {currentSchedule.subject_name ? ` — ${currentSchedule.subject_name}` : ''}
@@ -274,32 +266,18 @@ return;
                                         </p>
                                     </div>
                                 ) : (
-                                    <div className="flex items-start gap-3 rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-3">
+                                    <div className="flex items-start gap-3 rounded-lg border border-amber-400/30 bg-amber-500/10 px-4 py-3">
                                         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
                                         <div>
                                             <p className="text-sm font-medium text-amber-700 dark:text-amber-300">
-                                                    Tidak ada sesi aktif sekarang
+                                                Tidak ada sesi aktif sekarang
                                             </p>
                                             <p className="mt-0.5 text-xs text-amber-600/80 dark:text-amber-400/80">
-                                                    Tunggu jam pelajaran aktif. Sesi tidak bisa dibuka di luar jam.
+                                                Tunggu jam pelajaran aktif. Sesi tidak bisa dibuka di luar jam.
                                             </p>
                                         </div>
                                     </div>
                                 )}
-                            </CardContent>
-                        </Card>
-
-                        {/* ── Session controls ── */}
-                        <Card className="border-border/60 shadow-sm">
-                            <CardHeader>
-                                <CardTitle>Kontrol Sesi</CardTitle>
-                                <CardDescription>
-                                    {activeSession
-                                        ? 'Tutup sesi aktif atau refresh status QR.'
-                                        : 'Pilih sesi yang sedang aktif untuk membuka QR absensi.'}
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-3">
                                 {activeSession ? (
                                     <Form {...AttendanceSessionController.close.form(activeSession.id)}>
                                         {({ processing }) => (
@@ -313,13 +291,13 @@ return;
                                         {({ processing }) => (
                                             <>
                                                 <div className="mb-2 space-y-2">
-                                                    <Label htmlFor="subject_key" className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">Pilih Mata Pelajaran</Label>
+                                                    <Label htmlFor="subject_key">Pilih Mata Pelajaran</Label>
                                                     <select
                                                         id="subject_key"
                                                         name="subject_key"
                                                         value={selectedSubjectKey}
                                                         onChange={(event) => setSelectedSubjectKey(event.target.value)}
-                                                        className="mt-1 block w-full rounded-xl border border-slate-200/80 bg-white/80 px-3 py-2 text-sm font-medium text-slate-700 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-white/10 dark:bg-white/5 dark:text-slate-200"
+                                                        className="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                                                     >
                                                         <option value="">Pilih Mata Pelajaran</option>
                                                         {subjectGroups.map((group) => (
@@ -329,13 +307,13 @@ return;
                                                 </div>
 
                                                 <div className="mb-2 space-y-2">
-                                                    <Label htmlFor="class_id" className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">Pilih Kelas</Label>
+                                                    <Label htmlFor="class_id">Pilih Kelas</Label>
                                                     <select
                                                         key={selectedSubjectKey || 'no-subject'}
                                                         id="class_id"
                                                         name="class_id"
                                                         defaultValue=""
-                                                        className="mt-1 block w-full rounded-xl border border-slate-200/80 bg-white/80 px-3 py-2 text-sm font-medium text-slate-700 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/10 dark:bg-white/5 dark:text-slate-200"
+                                                        className="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
                                                     >
                                                         <option value="">Pilih Kelas</option>
                                                         {selectedClasses.map((c) => (
@@ -345,7 +323,7 @@ return;
                                                 </div>
 
                                                 {subjectGroups.length === 0 && (
-                                                    <div className="rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-700 dark:text-amber-300">
+                                                    <div className="rounded-lg border border-amber-400/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-700 dark:text-amber-300">
                                                         Anda belum memiliki relasi mata pelajaran-kelas. Hubungi admin untuk penugasan mapel.
                                                     </div>
                                                 )}
@@ -353,7 +331,7 @@ return;
                                                 <Button
                                                     type="submit"
                                                     disabled={processing || !canOpenSession}
-                                                    className="w-full gap-2 bg-gradient-to-r from-emerald-600 to-emerald-500 font-semibold text-white shadow-lg shadow-emerald-500/25 hover:from-emerald-700 hover:to-emerald-600"
+                                                    className="w-full gap-2"
                                                 >
                                                     <Scan className="h-4 w-4" />
                                                     {processing ? 'Membuka...' : 'Buka QR Sesi Aktif'}
@@ -423,95 +401,42 @@ return;
             {/* QR Popup Dialog */}
             {activeSession && (
                 <Dialog open={showQrPopup} onOpenChange={setShowQrPopup}>
-                    <DialogContent className="max-w-2xl border-0 bg-gradient-to-br from-slate-900 to-slate-800 p-0 text-white shadow-2xl sm:rounded-2xl [&>button]:hidden">
-                        <div className="relative p-6 sm:p-8">
-                            <button
-                                onClick={() => setShowQrPopup(false)}
-                                className="absolute right-3 top-3 rounded-lg bg-white/10 p-2 transition-colors hover:bg-white/20"
-                            >
-                                <Minimize2 className="h-4 w-4" />
-                            </button>
-
-                            <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
-                                {/* Left: QR Code */}
-                                <div className="flex shrink-0 flex-col items-center gap-4">
-                                    <div className="rounded-2xl bg-white p-5 shadow-2xl shadow-black/20">
-                                        <div
-                                            className="[&_svg]:h-full [&_svg]:w-full"
-                                            style={{ width: 220, height: 220 }}
-                                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(qrSvg) }}
-                                        />
-                                    </div>
-                                    <div className="text-center">
-                                        <h2 className="text-lg font-extrabold tracking-tight">
-                                            {typeLabel(activeSession.type)}
-                                        </h2>
-                                        <p className="mt-0.5 text-xs text-slate-400">
-                                            {activeSession.subject ?? 'Tanpa mata pelajaran'}
-                                        </p>
-                                    </div>
+                    <DialogContent className="sm:max-w-md">
+                        <div className="flex flex-col items-center gap-4 py-4">
+                            <div className="rounded-lg border bg-background p-4">
+                                <div
+                                    className="[&_svg]:h-full [&_svg]:w-full"
+                                    style={{ width: 320, height: 320 }}
+                                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(qrSvg) }}
+                                />
+                            </div>
+                            <div className="text-center space-y-1">
+                                <h2 className="text-lg font-semibold">
+                                    {typeLabel(activeSession.type)}
+                                </h2>
+                                <p className="text-sm text-muted-foreground">
+                                    {activeSession.subject ?? 'Tanpa mata pelajaran'}
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-4 text-center">
+                                <div>
+                                    <p className="text-xs text-muted-foreground">Sisa Waktu</p>
+                                    <p className={`text-lg font-semibold tabular-nums ${popupIsExpired ? 'text-destructive' : 'text-foreground'}`}>
+                                        {popupIsExpired ? 'Kadaluarsa' : popupTimeRemaining}
+                                    </p>
                                 </div>
-
-                                {/* Right: Timer + Info */}
-                                <div className="flex flex-1 flex-col items-center gap-4 sm:items-stretch">
-                                    {/* Timer */}
-                                    <div className="flex flex-col items-center gap-2">
-                                        <div className="relative">
-                                            <svg className="h-24 w-24" viewBox="0 0 120 120">
-                                                <g transform="translate(60,60)">
-                                                    <circle r={popupRadius} fill="transparent" stroke="rgba(255,255,255,0.1)" strokeWidth="8" />
-                                                    <circle
-                                                        r={popupRadius}
-                                                        fill="transparent"
-                                                        stroke={popupIsExpired ? '#ef4444' : '#3b82f6'}
-                                                        strokeWidth="8"
-                                                        strokeLinecap="round"
-                                                        strokeDasharray={popupCircumference}
-                                                        strokeDashoffset={popupStrokeDashoffset}
-                                                        style={{ transition: 'stroke-dashoffset 0.35s linear' }}
-                                                        transform="rotate(-90)"
-                                                    />
-                                                </g>
-                                            </svg>
-                                            <div className="absolute inset-0 flex items-center justify-center">
-                                                <span className={`text-xl font-extrabold tabular-nums ${popupIsExpired ? 'text-red-400' : 'text-white'}`}>
-                                                    {popupIsExpired ? '0:00' : popupTimeRemaining}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        {popupIsExpired ? (
-                                            <div className="rounded-lg bg-red-500/20 px-3 py-1.5 text-xs font-medium text-red-300">
-                                                QR sudah kadaluarsa. Buka sesi baru.
-                                            </div>
-                                        ) : (
-                                            <p className="text-xs text-slate-400">Sisa waktu sesi absensi</p>
-                                        )}
-                                    </div>
-
-                                    {/* Stats */}
-                                    <div className="flex gap-3">
-                                        <div className="flex-1 rounded-xl bg-white/10 px-4 py-2.5 text-center backdrop-blur-sm">
-                                            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Tercatat</p>
-                                            <p className="mt-0.5 text-lg font-bold">{activeSession.records_count}</p>
-                                        </div>
-                                        <div className="flex-1 rounded-xl bg-white/10 px-4 py-2.5 text-center backdrop-blur-sm">
-                                            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Status</p>
-                                            <p className="mt-0.5 text-lg font-bold text-emerald-400">Aktif</p>
-                                        </div>
-                                    </div>
-
-                                    {/* Token */}
-                                    <div className="rounded-xl bg-white/10 px-4 py-2.5 text-center backdrop-blur-sm">
-                                        <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Token QR</p>
-                                        <p className="mt-0.5 break-all font-mono text-xs font-medium text-white/90">
-                                            {qrPayload}
-                                        </p>
-                                        {rotationCountdown !== null && (
-                                            <p className="mt-1 text-[10px] text-blue-300">
-                                                Rotasi dalam {rotationCountdown}s
-                                            </p>
-                                        )}
-                                    </div>
+                                <div className="h-8 w-px bg-border" />
+                                <div>
+                                    <p className="text-xs text-muted-foreground">Tercatat</p>
+                                    <p className="text-lg font-semibold">{activeSession.records_count}</p>
+                                </div>
+                                <div className="h-8 w-px bg-border" />
+                                <div>
+                                    <p className="text-xs text-muted-foreground">Token</p>
+                                    <p className="break-all font-mono text-xs">{qrPayload}</p>
+                                    {rotationCountdown !== null && (
+                                        <p className="text-xs text-muted-foreground">Rotasi dalam {rotationCountdown}s</p>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -524,8 +449,8 @@ return;
 
 function InfoRow({ label, value }: { label: string; value: string }) {
     return (
-        <div className="rounded-xl border border-border bg-muted/20 px-3 py-2">
-            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{label}</p>
+        <div className="rounded-lg border border-border bg-muted/30 px-3 py-2">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
             <p className="mt-1 font-medium text-foreground">{value}</p>
         </div>
     );

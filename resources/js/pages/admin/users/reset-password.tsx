@@ -1,10 +1,9 @@
-import { Link, useForm } from '@inertiajs/react'
+import { Head, Link, useForm } from '@inertiajs/react'
 import type { FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import AdminLayout from '@/layouts/AdminLayout'
 import admin from '@/routes/admin'
 
 type User = {
@@ -30,11 +29,13 @@ export default function AdminResetPassword({ user }: Props) {
     }
 
     return (
-        <AdminLayout title="Reset Password">
-            <div className="space-y-6">
+        <>
+            <Head title="Reset Password" />
+
+            <div className="space-y-6 p-4 sm:p-6 lg:p-8">
                 <div>
-                    <h1 className="text-3xl font-semibold text-foreground">Reset Password</h1>
-                    <p className="text-muted-foreground">Reset password untuk {user.name}</p>
+                    <h1 className="text-2xl font-semibold tracking-tight text-foreground">Reset Password</h1>
+                    <p className="text-sm text-muted-foreground">Reset password untuk {user.name}</p>
                 </div>
 
                 <Card className="max-w-md">
@@ -60,7 +61,7 @@ export default function AdminResetPassword({ user }: Props) {
                                     type="password"
                                     value={data.password}
                                     onChange={(e) => setData('password', e.target.value)}
-                                    placeholder="••••••••"
+                                    placeholder="********"
                                     aria-invalid={Boolean(errors.password)}
                                     required
                                 />
@@ -76,7 +77,7 @@ export default function AdminResetPassword({ user }: Props) {
                                     type="password"
                                     value={data.password_confirmation}
                                     onChange={(e) => setData('password_confirmation', e.target.value)}
-                                    placeholder="••••••••"
+                                    placeholder="********"
                                     aria-invalid={Boolean(errors.password_confirmation)}
                                     required
                                 />
@@ -97,6 +98,14 @@ export default function AdminResetPassword({ user }: Props) {
                     </CardContent>
                 </Card>
             </div>
-        </AdminLayout>
+        </>
     )
 }
+
+AdminResetPassword.layout = {
+    breadcrumbs: [
+        { title: 'Dashboard Admin', href: admin.dashboard.url() },
+        { title: 'Kelola Pengguna', href: admin.users.index.url() },
+        { title: 'Reset Password', href: '#' },
+    ],
+};

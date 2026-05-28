@@ -1,6 +1,8 @@
 import { Head } from '@inertiajs/react';
 import { Link } from '@inertiajs/react';
+import { FileText } from 'lucide-react';
 import { useState } from 'react';
+import { StatusBadge } from '@/components/status-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,19 +31,6 @@ interface Props {
 interface ExcuseTableProps {
     data: Excuse[];
 }
-
-const getStatusVariant = (status: string): 'default' | 'destructive' | 'outline' | 'secondary' => {
-    switch (status) {
-        case 'approved':
-            return 'default';
-        case 'rejected':
-            return 'destructive';
-        case 'pending':
-            return 'secondary';
-        default:
-            return 'outline';
-    }
-};
 
 const getTypeLabel = (type: string): string => {
     switch (type) {
@@ -87,11 +76,7 @@ function ExcuseTable({ data }: ExcuseTableProps) {
                             {new Date(excuse.created_at).toLocaleDateString('id-ID')}
                         </TableCell>
                         <TableCell>
-                            <Badge variant={getStatusVariant(excuse.status)}>
-                                {excuse.status === 'pending' ? 'Menunggu' :
-                                    excuse.status === 'approved' ? 'Disetujui' :
-                                        'Ditolak'}
-                            </Badge>
+                            <StatusBadge status={excuse.status} />
                         </TableCell>
                         <TableCell>
                             <Link href={teacher.excuses.show(excuse.id)}>
@@ -105,8 +90,12 @@ function ExcuseTable({ data }: ExcuseTableProps) {
             </TableBody>
         </Table>
     ) : (
-        <div className="py-12 text-center">
-            <p className="text-muted-foreground">Tidak ada ajuan izin</p>
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+            <FileText className="h-10 w-10 text-muted-foreground/50" />
+            <h3 className="mt-4 text-sm font-medium text-foreground">Tidak Ada Ajuan Izin</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+                Belum ada ajuan izin pada kategori ini.
+            </p>
         </div>
     );
 }
@@ -124,7 +113,7 @@ export default function Index({ excuses }: Props) {
 
             <div className="space-y-6 p-4">
                 <div>
-                    <h1 className="text-3xl font-semibold text-foreground">Manajemen Ajuan Izin</h1>
+                    <h1 className="text-2xl font-semibold tracking-tight text-foreground">Manajemen Ajuan Izin</h1>
                     <p className="mt-2 text-muted-foreground">Kelola ajuan izin dari siswa-siswa Anda</p>
                 </div>
 

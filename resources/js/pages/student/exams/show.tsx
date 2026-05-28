@@ -108,7 +108,7 @@ function QuestionCard({ examId, attemptId, question }: { examId: number; attempt
                         {question.answer_options.map((option) => (
                             <label
                                 key={option.id}
-                                className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-sm transition ${selectedAnswerId === option.id.toString() ? 'border-primary bg-primary/5' : 'border-border'}`}
+                                className={`flex min-h-10 cursor-pointer items-start gap-3 rounded-lg border p-3 text-sm transition ${selectedAnswerId === option.id.toString() ? 'border-primary bg-primary/5' : 'border-border'}`}
                             >
                                 <input
                                     type="radio"
@@ -212,7 +212,7 @@ return '00:00:00';
             <div className="space-y-6 p-4">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-semibold text-foreground">{exam.title}</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">{exam.title}</h1>
                         <p className="mt-2 text-muted-foreground">
                             {exam.subject ?? '-'} · Durasi {exam.duration_minutes} menit
                         </p>

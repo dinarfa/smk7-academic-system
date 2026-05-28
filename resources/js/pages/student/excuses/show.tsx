@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { StatusBadge } from '@/components/status-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,19 +25,6 @@ interface Props {
     excuse: Excuse;
 }
 
-const getStatusVariant = (status: string): 'default' | 'destructive' | 'outline' | 'secondary' => {
-    switch (status) {
-        case 'approved':
-            return 'default';
-        case 'rejected':
-            return 'destructive';
-        case 'pending':
-            return 'secondary';
-        default:
-            return 'outline';
-    }
-};
-
 const getTypeLabel = (type: string): string => {
     switch (type) {
         case 'sick':
@@ -58,14 +46,10 @@ export default function Show({ excuse }: Props) {
             <div className="space-y-6 p-4 max-w-2xl mx-auto">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-semibold text-foreground">Detail Ajuan Izin</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Detail Ajuan Izin</h1>
                         <p className="mt-2 text-muted-foreground">ID Ajuan: #{excuse.id}</p>
                     </div>
-                    <Badge variant={getStatusVariant(excuse.status)}>
-                        {excuse.status === 'pending' ? 'Menunggu' :
-                            excuse.status === 'approved' ? 'Disetujui' :
-                                'Ditolak'}
-                    </Badge>
+                    <StatusBadge status={excuse.status} />
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2">

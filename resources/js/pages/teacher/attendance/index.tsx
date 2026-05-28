@@ -146,7 +146,7 @@ return 'Expired';
 
             <div className="space-y-6 p-4">
                 <div>
-                    <h1 className="text-3xl font-semibold text-foreground">Absensi Harian</h1>
+                    <h1 className="text-2xl font-semibold tracking-tight text-foreground">Absensi Harian</h1>
                     <p className="mt-2 text-muted-foreground">Kelola absensi siswa untuk {date}</p>
                 </div>
 

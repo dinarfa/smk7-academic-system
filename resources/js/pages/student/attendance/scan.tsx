@@ -42,17 +42,14 @@ export default function StudentAttendanceScan() {
 
             <div className="space-y-6 p-4">
                 <div className="space-y-2">
-                    <p className="text-sm font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                        QR Attendance
-                    </p>
-                    <h1 className="text-3xl font-semibold text-foreground">Scan Kehadiran</h1>
+                    <h1 className="text-2xl font-semibold tracking-tight text-foreground">Scan Kehadiran</h1>
                     <p className="max-w-2xl text-muted-foreground">
                         Arahkan kamera ke QR dari guru, atau masukkan token secara manual jika kamera tidak tersedia.
                     </p>
                 </div>
 
                 {message && (
-                    <div className="rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm text-foreground">
+                    <div className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm text-foreground">
                         {message}
                     </div>
                 )}

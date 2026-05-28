@@ -1,4 +1,4 @@
-import { Link, useForm } from '@inertiajs/react'
+import { Head, Link, useForm } from '@inertiajs/react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -11,7 +11,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
-import AdminLayout from '@/layouts/AdminLayout'
 import admin from '@/routes/admin'
 
 type Subject = {
@@ -62,19 +61,21 @@ export default function AdminSubjectEdit({ subject, classes, teachers }: Props) 
     }
 
     return (
-        <AdminLayout title="Edit Mata Pelajaran">
-            <div className="mx-auto max-w-2xl space-y-6">
+        <>
+            <Head title="Edit Mata Pelajaran" />
+
+            <div className="space-y-6 p-4 sm:p-6 lg:p-8">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-semibold text-foreground">Edit Mata Pelajaran</h1>
-                        <p className="text-muted-foreground">Perbarui kode dan nama mata pelajaran.</p>
+                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Edit Mata Pelajaran</h1>
+                        <p className="text-sm text-muted-foreground">Perbarui kode dan nama mata pelajaran.</p>
                     </div>
                     <Button asChild variant="secondary">
                         <Link href={admin.subjects.index.url()}>Kembali</Link>
                     </Button>
                 </div>
 
-                <Card>
+                <Card className="max-w-2xl">
                     <CardHeader>
                         <CardTitle>Detail Mata Pelajaran</CardTitle>
                         <CardDescription>Perbarui informasi mata pelajaran.</CardDescription>
@@ -160,6 +161,14 @@ export default function AdminSubjectEdit({ subject, classes, teachers }: Props) 
                     </CardContent>
                 </Card>
             </div>
-        </AdminLayout>
+        </>
     )
+}
+
+AdminSubjectEdit.layout = {
+    breadcrumbs: [
+        { title: 'Dashboard Admin', href: admin.dashboard.url() },
+        { title: 'Mata Pelajaran', href: admin.subjects.index.url() },
+        { title: 'Edit', href: '#' },
+    ],
 }

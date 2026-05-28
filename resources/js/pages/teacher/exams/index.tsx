@@ -1,6 +1,8 @@
 import { Head, Link, router } from '@inertiajs/react';
+import { ClipboardList } from 'lucide-react';
 import ExamController from '@/actions/App/Http/Controllers/Teacher/ExamController';
 import QuestionController from '@/actions/App/Http/Controllers/Teacher/QuestionController';
+import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -39,7 +41,7 @@ export default function TeacherExamsIndex({ exams }: Props) {
             <div className="space-y-6 p-4">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-semibold text-foreground">
+                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
                             Daftar Ujian
                         </h1>
                         <p className="text-muted-foreground">
@@ -62,9 +64,13 @@ export default function TeacherExamsIndex({ exams }: Props) {
                     </CardHeader>
                     <CardContent>
                         {exams.data.length === 0 ? (
-                            <p className="text-sm text-muted-foreground">
-                                Belum ada ujian. Buat ujian baru untuk memulai.
-                            </p>
+                            <div className="flex flex-col items-center justify-center py-16 text-center">
+                                <ClipboardList className="h-10 w-10 text-muted-foreground/50" />
+                                <h3 className="mt-4 text-sm font-medium text-foreground">Belum Ada Ujian</h3>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    Buat ujian baru untuk memulai.
+                                </p>
+                            </div>
                         ) : (
                             <div className="space-y-3">
                                 {exams.data.map((exam) => (
@@ -94,9 +100,7 @@ export default function TeacherExamsIndex({ exams }: Props) {
                                             </div>
                                             <div className="text-right">
                                                 <div className="flex justify-end gap-2">
-                                                    <span className={exam.status !== 'draft' ? 'inline-block rounded-full bg-emerald-100 px-3 py-1 text-sm font-medium text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300' : 'inline-block rounded-full bg-muted px-3 py-1 text-sm font-medium text-muted-foreground'}>
-                                                        {exam.status !== 'draft' ? 'Published' : 'Draft'}
-                                                    </span>
+                                                    <StatusBadge status={exam.status === 'draft' ? 'draft' : 'published'} />
                                                 </div>
                                                 <p className="mt-2 text-xs text-muted-foreground">
                                                     {exam.created_at}

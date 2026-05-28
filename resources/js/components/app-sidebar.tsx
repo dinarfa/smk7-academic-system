@@ -1,7 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpenCheck, CalendarDays, LayoutGrid, QrCode, School, Users, BookText } from 'lucide-react';
+import { BookOpenCheck, CalendarDays, LayoutGrid, QrCode, School, Users, BookText, ScrollText } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
-import { NavMain } from '@/components/nav-main';
+import { NavMain, type NavSection } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import {
     Sidebar,
@@ -34,94 +34,90 @@ export function AppSidebar() {
                 ? admin.dashboard.url()
                 : dashboard();
 
-    const mainNavItems: NavItem[] = [
-        {
-            title: 'Dashboard',
-            href: dashboardHref,
-            icon: LayoutGrid,
-        },
-    ];
+    const dashboardItem: NavItem = {
+        title: 'Dashboard',
+        href: dashboardHref,
+        icon: LayoutGrid,
+    };
+
+    const sections: NavSection[] = [];
 
     if (role === 'teacher') {
         const canSeeHomeroomClassMenu = (user?.homeroom_classes_count ?? 0) > 0;
 
+        const classItems: NavItem[] = [];
         if (canSeeHomeroomClassMenu) {
-            mainNavItems.push({
+            classItems.push({
                 title: 'Kelas Wali',
                 href: teacher.class.index.url(),
                 icon: School,
             });
         }
+        classItems.push({
+            title: 'Data Siswa',
+            href: teacher.students.index.url(),
+            icon: Users,
+        });
 
-        mainNavItems.push(
+        sections.push(
+            { items: [dashboardItem] },
             {
-                title: 'Rekap Absensi',
-                href: teacher.attendance.recap.url(),
-                icon: CalendarDays,
+                label: 'Absensi',
+                items: [
+                    { title: 'QR Absensi', href: teacher.attendance.qr.url(), icon: QrCode },
+                    { title: 'Rekap Absensi', href: teacher.attendance.recap.url(), icon: CalendarDays },
+                ],
             },
             {
-                title: 'Data Siswa',
-                href: teacher.students.index.url(),
-                icon: Users,
+                label: 'Kelas',
+                items: classItems,
             },
             {
-                title: 'Subject Management',
-                href: teacher.subjects.index.url(),
-                icon: BookOpenCheck,
+                label: 'Akademik',
+                items: [
+                    { title: 'Mata Pelajaran', href: teacher.subjects.index.url(), icon: BookOpenCheck },
+                    // { title: 'Ujian', href: teacher.exams.index.url(), icon: ClipboardList },
+                ],
+            },
+        );
+    } else if (role === 'admin') {
+        sections.push(
+            { items: [dashboardItem] },
+            {
+                label: 'Kelola',
+                items: [
+                    { title: 'Pengguna', href: admin.users.index.url(), icon: Users },
+                    { title: 'Kelola Kelas', href: admin.classes.index.url(), icon: School },
+                    { title: 'Kelola Mapel', href: admin.subjects.index.url(), icon: BookOpenCheck },
+                    { title: 'Kelola Jadwal', href: admin.schedules.index.url(), icon: CalendarDays },
+                ],
+            },
+            {
+                label: 'Monitoring',
+                items: [
+                    { title: 'Laporan', href: admin.reports.overview.url(), icon: BookText },
+                    { title: 'Audit Log', href: admin.auditLogs.index.url(), icon: ScrollText },
+                ],
+            },
+        );
+    } else if (role === 'student') {
+        sections.push(
+            { items: [dashboardItem] },
+            {
+                label: 'Kehadiran',
+                items: [
+                    { title: 'Riwayat', href: student.attendance.index.url(), icon: QrCode },
+                ],
             },
             // {
-            //     title: 'Ujian',
-            //     href: teacher.exams.index.url(),
-            //     icon: ClipboardList,
+            //     label: 'Akademik',
+            //     items: [
+            //         { title: 'Ujian', href: student.exams.index.url(), icon: ClipboardList },
+            //     ],
             // },
         );
-    }
-
-    if (role === 'admin') {
-        mainNavItems.push(
-            {
-                title: 'Data Siswa',
-                href: teacher.students.index.url(),
-                icon: Users,
-            },
-            {
-                title: 'Kelola Kelas',
-                href: admin.classes.index.url(),
-                icon: School,
-            },
-            {
-                title: 'Kelola Mapel',
-                href: admin.subjects.index.url(),
-                icon: BookOpenCheck,
-            },
-            {
-                title: 'Kelola Jadwal',
-                href: admin.schedules.index.url(),
-                icon: CalendarDays,
-            },
-            {
-                title: 'Laporan',
-                href: admin.reports.overview.url(),
-                icon: BookText,
-            }
-
-
-        );
-    }
-
-    if (role === 'student') {
-        mainNavItems.push(
-            // {
-            //     title: 'Ujian',
-            //     href: student.exams.index.url(),
-            //     icon: ClipboardList,
-            // },
-            {
-                title: 'Kehadiran',
-                href: student.attendance.index.url(),
-                icon: QrCode,
-            },
-        );
+    } else {
+        sections.push({ items: [dashboardItem] });
     }
 
     return (
@@ -139,7 +135,7 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain sections={sections} />
             </SidebarContent>
 
             <SidebarFooter>

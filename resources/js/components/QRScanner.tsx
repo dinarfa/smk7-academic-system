@@ -166,7 +166,7 @@ export default function QRScanner({
 
     return (
         <div className={`qr-scanner ${className}`}>
-            <div className="relative overflow-hidden rounded-2xl bg-black/40 backdrop-blur-xl">
+            <div className="relative overflow-hidden rounded-lg bg-black/40 backdrop-blur-xl">
                 <video
                     ref={videoRef}
                     className="mx-auto block w-full max-w-md object-cover"
@@ -179,7 +179,7 @@ export default function QRScanner({
                 {/* Scanner Overlay */}
                 <div className="pointer-events-none absolute inset-0">
                     <div className="absolute left-1/2 top-1/2 h-40 w-64 -translate-x-1/2 -translate-y-1/2">
-                        <div className="absolute inset-0 rounded-xl border-2 border-dashed border-white/30" />
+                        <div className="absolute inset-0 rounded-lg border-2 border-dashed border-white/30" />
 
                         <div className="animate-scan absolute left-0 right-0 top-1/2 h-0.5 bg-gradient-to-r from-transparent via-emerald-400 to-transparent" />
                     </div>
@@ -216,7 +216,7 @@ export default function QRScanner({
                             void startCamera();
                         }
                     }}
-                    className="rounded-xl bg-blue-600 px-5 py-2.5 text-white transition-all duration-300 hover:scale-[1.02] hover:bg-blue-700"
+                    className="rounded-lg bg-blue-600 px-5 py-2.5 text-white transition-colors duration-200 hover:bg-blue-700"
                 >
                     {isScanning ? 'Stop Scanning' : 'Start Camera'}
                 </button>
