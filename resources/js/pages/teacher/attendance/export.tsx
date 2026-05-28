@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { dashboard } from '@/routes';
 
 interface SchoolClass {
@@ -103,36 +104,28 @@ export default function ExportAttendance({ schoolClasses, subjects }: Props) {
             <Head title="Ekspor Absensi" />
 
             <div className="space-y-6 p-4">
-                <div className="space-y-2">
-                    <p className="text-sm font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                        Ekspor Data
-                    </p>
-                    <h1 className="text-3xl font-semibold text-foreground">Ekspor Absensi</h1>
-                    <p className="max-w-2xl text-muted-foreground">
+                <div className="space-y-1">
+                    <h1 className="text-2xl font-semibold tracking-tight text-foreground">Ekspor Absensi</h1>
+                    <p className="text-sm text-muted-foreground">
                         Unduh data absensi siswa dalam format CSV atau XLSX berdasarkan rentang tanggal, kelas, dan mata pelajaran.
                     </p>
                 </div>
 
                 <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
                     {/* Export Form */}
-                    <div className="rounded-2xl border border-white/60 bg-white/70 p-6 shadow-lg shadow-slate-900/5 backdrop-blur-xl dark:border-white/10 dark:bg-white/5">
-                        <div className="mb-5 flex items-center gap-3">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-cyan-400 text-white shadow-md shadow-blue-500/25">
-                                <Download className="h-4 w-4" />
-                            </div>
-                            <div>
-                                <h2 className="text-base font-bold tracking-tight text-slate-900 dark:text-white">
-                                    Filter Ekspor
-                                </h2>
-                                <p className="text-sm text-slate-500 dark:text-slate-400">
-                                    Pilih kelas, mata pelajaran, dan rentang tanggal
-                                </p>
-                            </div>
+                    <div className="rounded-lg border border-border bg-card p-6">
+                        <div className="mb-5">
+                            <h2 className="text-base font-semibold text-foreground">
+                                Filter Ekspor
+                            </h2>
+                            <p className="text-sm text-muted-foreground">
+                                Pilih kelas, mata pelajaran, dan rentang tanggal
+                            </p>
                         </div>
 
                         <div className="grid gap-4 sm:grid-cols-2">
                             <div className="space-y-2">
-                                <Label htmlFor="startDate" className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                                <Label htmlFor="startDate">
                                     Tanggal Mulai
                                 </Label>
                                 <Input
@@ -140,11 +133,11 @@ export default function ExportAttendance({ schoolClasses, subjects }: Props) {
                                     type="date"
                                     value={startDate}
                                     onChange={(e) => setStartDate(e.target.value)}
-                                    className="h-10 rounded-xl border-slate-200/80 bg-white/80 font-medium backdrop-blur-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:border-white/10 dark:bg-white/5"
+                                    className="h-10"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="endDate" className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                                <Label htmlFor="endDate">
                                     Tanggal Akhir
                                 </Label>
                                 <Input
@@ -152,30 +145,30 @@ export default function ExportAttendance({ schoolClasses, subjects }: Props) {
                                     type="date"
                                     value={endDate}
                                     onChange={(e) => setEndDate(e.target.value)}
-                                    className="h-10 rounded-xl border-slate-200/80 bg-white/80 font-medium backdrop-blur-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:border-white/10 dark:bg-white/5"
+                                    className="h-10"
                                 />
                             </div>
                         </div>
 
                         {schoolClasses.length > 0 && (
                             <div className="mt-4 space-y-2">
-                                <Label htmlFor="classId" className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                                <Label htmlFor="classId">
                                     Kelas
                                 </Label>
-                                <select
-                                    id="classId"
-                                    value={classId}
-                                    onChange={(e) => handleClassChange(e.target.value)}
-                                    className="h-10 w-full rounded-xl border border-slate-200/80 bg-white/80 px-3 font-medium text-sm backdrop-blur-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-white"
-                                >
-                                    <option value="">Semua Kelas</option>
-                                    {schoolClasses.map((cls) => (
-                                        <option key={cls.id} value={cls.id}>
-                                            {cls.name}
-                                        </option>
-                                    ))}
-                                </select>
-                                <p className="text-xs text-slate-400 dark:text-slate-500">
+                                <Select value={classId || 'all'} onValueChange={(v) => handleClassChange(v === 'all' ? '' : v)}>
+                                    <SelectTrigger id="classId" className="w-full">
+                                        <SelectValue placeholder="Semua Kelas" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Semua Kelas</SelectItem>
+                                        {schoolClasses.map((cls) => (
+                                            <SelectItem key={cls.id} value={String(cls.id)}>
+                                                {cls.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <p className="text-xs text-muted-foreground">
                                     Kosongkan untuk mengekspor semua kelas
                                 </p>
                             </div>
@@ -183,23 +176,23 @@ export default function ExportAttendance({ schoolClasses, subjects }: Props) {
 
                         {filteredSubjects.length > 0 && (
                             <div className="mt-4 space-y-2">
-                                <Label htmlFor="subjectId" className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                                <Label htmlFor="subjectId">
                                     Mata Pelajaran
                                 </Label>
-                                <select
-                                    id="subjectId"
-                                    value={subjectId}
-                                    onChange={(e) => setSubjectId(e.target.value)}
-                                    className="h-10 w-full rounded-xl border border-slate-200/80 bg-white/80 px-3 font-medium text-sm backdrop-blur-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-white"
-                                >
-                                    <option value="">Semua Mata Pelajaran</option>
-                                    {filteredSubjects.map((subject) => (
-                                        <option key={subject.id} value={subject.id}>
-                                            {subject.name}
-                                        </option>
-                                    ))}
-                                </select>
-                                <p className="text-xs text-slate-400 dark:text-slate-500">
+                                <Select value={subjectId || 'all'} onValueChange={(v) => setSubjectId(v === 'all' ? '' : v)}>
+                                    <SelectTrigger id="subjectId" className="w-full">
+                                        <SelectValue placeholder="Semua Mata Pelajaran" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Semua Mata Pelajaran</SelectItem>
+                                        {filteredSubjects.map((subject) => (
+                                            <SelectItem key={subject.id} value={String(subject.id)}>
+                                                {subject.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <p className="text-xs text-muted-foreground">
                                     {classId ? 'Mata pelajaran untuk kelas yang dipilih' : 'Kosongkan untuk mengekspor semua mata pelajaran'}
                                 </p>
                             </div>
@@ -209,7 +202,7 @@ export default function ExportAttendance({ schoolClasses, subjects }: Props) {
                             <Button
                                 onClick={() => handleExport('csv')}
                                 disabled={processing}
-                                className="gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 font-semibold text-white shadow-lg shadow-blue-500/25 transition-all duration-200 hover:from-blue-700 hover:to-blue-600 hover:shadow-xl hover:shadow-blue-500/30"
+                                className="gap-2"
                             >
                                 <FileText className="h-4 w-4" />
                                 {processing ? 'Mengekspor...' : 'Ekspor CSV'}
@@ -218,7 +211,7 @@ export default function ExportAttendance({ schoolClasses, subjects }: Props) {
                                 variant="outline"
                                 onClick={() => handleExport('xlsx')}
                                 disabled={processing}
-                                className="gap-2 rounded-xl border-slate-200/80 font-semibold backdrop-blur-sm dark:border-white/10"
+                                className="gap-2"
                             >
                                 <FileSpreadsheet className="h-4 w-4" />
                                 {processing ? 'Mengekspor...' : 'Ekspor XLSX'}
@@ -228,42 +221,42 @@ export default function ExportAttendance({ schoolClasses, subjects }: Props) {
 
                     {/* Info Panel */}
                     <div className="space-y-6">
-                        <div className="rounded-2xl border border-white/60 bg-white/70 p-6 shadow-lg shadow-slate-900/5 backdrop-blur-xl dark:border-white/10 dark:bg-white/5">
-                            <h3 className="text-base font-bold tracking-tight text-slate-900 dark:text-white">
+                        <div className="rounded-lg border border-border bg-card p-6">
+                            <h3 className="text-base font-semibold text-foreground">
                                 Format Tersedia
                             </h3>
                             <div className="mt-4 space-y-3">
-                                <div className="flex items-center gap-3 rounded-xl border border-slate-200/60 bg-white/60 px-4 py-3 backdrop-blur-sm dark:border-white/10 dark:bg-white/5">
-                                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
-                                        <FileText className="h-4 w-4" />
+                                <div className="flex items-center gap-3 rounded-lg border border-border px-4 py-3">
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
+                                        <FileText className="h-4 w-4 text-muted-foreground" />
                                     </div>
                                     <div>
-                                        <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">CSV</p>
-                                        <p className="text-xs text-slate-400 dark:text-slate-500">Kompatibel dengan Excel, Google Sheets</p>
+                                        <p className="text-sm font-medium text-foreground">CSV</p>
+                                        <p className="text-xs text-muted-foreground">Kompatibel dengan Excel, Google Sheets</p>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-3 rounded-xl border border-slate-200/60 bg-white/60 px-4 py-3 backdrop-blur-sm dark:border-white/10 dark:bg-white/5">
-                                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400">
-                                        <FileSpreadsheet className="h-4 w-4" />
+                                <div className="flex items-center gap-3 rounded-lg border border-border px-4 py-3">
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
+                                        <FileSpreadsheet className="h-4 w-4 text-muted-foreground" />
                                     </div>
                                     <div>
-                                        <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">XLSX</p>
-                                        <p className="text-xs text-slate-400 dark:text-slate-500">Format Excel asli, mendukung formatting</p>
+                                        <p className="text-sm font-medium text-foreground">XLSX</p>
+                                        <p className="text-xs text-muted-foreground">Format Excel asli, mendukung formatting</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="rounded-2xl border border-white/60 bg-white/70 p-6 shadow-lg shadow-slate-900/5 backdrop-blur-xl dark:border-white/10 dark:bg-white/5">
-                            <h3 className="text-base font-bold tracking-tight text-slate-900 dark:text-white">
+                        <div className="rounded-lg border border-border bg-card p-6">
+                            <h3 className="text-base font-semibold text-foreground">
                                 Kolom Data
                             </h3>
-                            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                            <p className="mt-2 text-sm text-muted-foreground">
                                 Data yang diekspor mencakup: Nama Siswa, Email, Tipe Sesi, Mata Pelajaran, Fase, Sumber, Status, Keterangan Izin, dan Waktu Scan.
                             </p>
                         </div>
 
-                        <Button asChild variant="outline" className="w-full rounded-xl">
+                        <Button asChild variant="outline" className="w-full">
                             <Link href="/teacher/attendance/daily" className="gap-2">
                                 <ArrowLeft className="h-4 w-4" />
                                 Kembali ke Absensi Harian

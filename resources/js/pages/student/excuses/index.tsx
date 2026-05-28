@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { Link } from '@inertiajs/react';
+import { StatusBadge } from '@/components/status-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,19 +26,6 @@ interface Props {
     };
 }
 
-const getStatusVariant = (status: string): 'default' | 'destructive' | 'outline' | 'secondary' => {
-    switch (status) {
-        case 'approved':
-            return 'default';
-        case 'rejected':
-            return 'destructive';
-        case 'pending':
-            return 'secondary';
-        default:
-            return 'outline';
-    }
-};
-
 const getTypeLabel = (type: string): string => {
     switch (type) {
         case 'sick':
@@ -59,7 +47,7 @@ export default function Index({ excuses }: Props) {
             <div className="space-y-6 p-4">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-semibold text-foreground">Ajuan Izin</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Ajuan Izin</h1>
                         <p className="mt-2 text-muted-foreground">Kelola ajuan izin dan ketidakhadiran Anda</p>
                     </div>
                     <Link href={student.excuses.create()}>
@@ -100,11 +88,7 @@ export default function Index({ excuses }: Props) {
                                                 {new Date(excuse.excused_date).toLocaleDateString('id-ID')}
                                             </TableCell>
                                             <TableCell>
-                                                <Badge variant={getStatusVariant(excuse.status)}>
-                                                    {excuse.status === 'pending' ? 'Menunggu' :
-                                                     excuse.status === 'approved' ? 'Disetujui' :
-                                                     'Ditolak'}
-                                                </Badge>
+                                                <StatusBadge status={excuse.status} />
                                             </TableCell>
                                             <TableCell className="text-sm text-muted-foreground line-clamp-2">
                                                 {excuse.reason}

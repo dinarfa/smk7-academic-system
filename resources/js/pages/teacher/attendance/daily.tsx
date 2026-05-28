@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { dashboard } from '@/routes';
@@ -95,7 +96,7 @@ bySubject[subject] = [];
                 {/* Header */}
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h1 className="text-3xl font-semibold text-foreground">Grid Absensi</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Grid Absensi</h1>
                         <p className="mt-1 flex items-center gap-2 text-muted-foreground">
                             <CalendarDays className="h-4 w-4" />
                             {date}
@@ -186,7 +187,7 @@ bySubject[subject] = [];
                             <div className="flex flex-wrap items-center justify-between gap-4">
                                 <div className="flex items-center gap-3">
                                     <div className="relative flex h-3 w-3">
-                                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                                        <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                                         <span className="relative inline-flex h-3 w-3 rounded-full bg-emerald-500" />
                                     </div>
                                     <div>
@@ -318,44 +319,51 @@ bySubject[subject] = [];
 
 // Inline table component for attendance records
 function Table({ records }: { records: AttendanceRecord[] }) {
-    const getStatusVariant = (status: string): 'default' | 'destructive' | 'outline' | 'secondary' => {
-        switch (status) {
-            case 'present': return 'default';
-            case 'late': return 'secondary';
-            case 'absent': return 'destructive';
-            default: return 'outline';
-        }
-    };
-
     return (
-        <div className="overflow-hidden rounded-lg border">
-            <table className="w-full text-sm">
-                <thead>
-                    <tr className="border-b bg-muted/50">
-                        <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Siswa</th>
-                        <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
-                        <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Waktu</th>
-                        <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sumber</th>
-                    </tr>
-                </thead>
-                <tbody className="divide-y">
-                    {records.map((record) => (
-                        <tr key={record.id} className="transition-colors hover:bg-muted/30">
-                            <td className="px-4 py-2.5 font-medium">{record.student.name}</td>
-                            <td className="px-4 py-2.5">
-                                <Badge variant={getStatusVariant(record.status)} className="capitalize">
-                                    {record.status}
-                                </Badge>
-                            </td>
-                            <td className="px-4 py-2.5 text-sm text-muted-foreground">
-                                {new Date(record.scanned_at).toLocaleTimeString('id-ID')}
-                            </td>
-                            <td className="px-4 py-2.5 text-sm text-muted-foreground">{record.source}</td>
+        <>
+            {/* Mobile cards */}
+            <div className="space-y-2 sm:hidden">
+                {records.map((record) => (
+                    <div key={record.id} className="rounded-lg border border-border bg-card p-4">
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium">{record.student.name}</span>
+                            <StatusBadge status={record.status} />
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                            {new Date(record.scanned_at).toLocaleTimeString('id-ID')} · {record.source}
+                        </p>
+                    </div>
+                ))}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden overflow-hidden rounded-lg border sm:block">
+                <table className="w-full text-sm">
+                    <thead>
+                        <tr className="border-b bg-muted/50">
+                            <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Siswa</th>
+                            <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
+                            <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Waktu</th>
+                            <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sumber</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
+                    </thead>
+                    <tbody className="divide-y">
+                        {records.map((record) => (
+                            <tr key={record.id} className="transition-colors hover:bg-muted/30">
+                                <td className="px-4 py-2.5 font-medium">{record.student.name}</td>
+                                <td className="px-4 py-2.5">
+                                    <StatusBadge status={record.status} />
+                                </td>
+                                <td className="px-4 py-2.5 text-sm text-muted-foreground">
+                                    {new Date(record.scanned_at).toLocaleTimeString('id-ID')}
+                                </td>
+                                <td className="px-4 py-2.5 text-sm text-muted-foreground">{record.source}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </>
     );
 }
 

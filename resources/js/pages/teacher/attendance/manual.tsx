@@ -242,7 +242,7 @@ export default function ManualAttendance({
                 {/* Header */}
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h1 className="text-3xl font-semibold text-foreground">Absensi Manual</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Absensi Manual</h1>
                         <p className="mt-1 text-muted-foreground">
                             Tanggal: {date} &middot; {students.length} siswa di kelas perwalian
                         </p>
@@ -464,7 +464,7 @@ export default function ManualAttendance({
 
                 {/* Bottom save bar */}
                 {statuses.size > 0 && (
-                    <div className="sticky bottom-4 flex items-center justify-between rounded-xl border bg-background/95 px-4 py-3 shadow-lg backdrop-blur">
+                    <div className="sticky bottom-4 flex items-center justify-between rounded-lg border bg-background/95 px-4 py-3 shadow-lg backdrop-blur">
                         <div className="flex items-center gap-3">
                             <span className="text-sm font-medium">
                                 {statuses.size} siswa dipilih

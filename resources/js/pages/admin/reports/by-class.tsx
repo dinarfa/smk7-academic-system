@@ -1,4 +1,5 @@
-import { Link, router } from '@inertiajs/react'
+import { Head, Link, router } from '@inertiajs/react'
+import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -11,9 +12,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
-import AdminLayout from '@/layouts/AdminLayout'
 import admin from '@/routes/admin'
-import { useState } from 'react'
 
 type SchoolClass = { id: number; name: string }
 
@@ -49,12 +48,6 @@ type Props = {
     }
 }
 
-const statusBadge = (status: string) => {
-    if (status === 'present') return 'bg-emerald-100 text-emerald-800'
-    if (status === 'late') return 'bg-amber-100 text-amber-800'
-    return 'bg-rose-100 text-rose-800'
-}
-
 export default function AdminReportsByClass({ classes, sessions, summary, filters }: Props) {
     const [classId, setClassId] = useState<string>(filters.class_id ? String(filters.class_id) : '')
     const [startDate, setStartDate] = useState(filters.start_date ?? '')
@@ -62,29 +55,39 @@ export default function AdminReportsByClass({ classes, sessions, summary, filter
 
     function handleFilter() {
         const params: Record<string, string> = {}
-        if (classId) params.class_id = classId
-        if (startDate) params.start_date = startDate
-        if (endDate) params.end_date = endDate
+
+        if (classId) {
+params.class_id = classId
+}
+
+        if (startDate) {
+params.start_date = startDate
+}
+
+        if (endDate) {
+params.end_date = endDate
+}
 
         router.get(admin.reports.byClass.url(), params, { preserveState: true })
     }
 
     return (
-        <AdminLayout title="Rekap Absensi Per Kelas">
-            <div className="space-y-6">
+        <>
+            <Head title="Rekap Absensi Per Kelas" />
+
+            <div className="space-y-6 p-4 sm:p-6 lg:p-8">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-semibold text-foreground">Rekap Absensi Per Kelas</h1>
-                        <p className="text-muted-foreground">
+                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Rekap Absensi Per Kelas</h1>
+                        <p className="text-sm text-muted-foreground">
                             Lihat ringkasan kehadiran siswa per kelas dalam rentang waktu tertentu.
                         </p>
                     </div>
-                    <Button asChild variant="secondary">
+                    <Button asChild variant="secondary" size="sm">
                         <Link href={admin.reports.overview.url()}>Kembali</Link>
                     </Button>
                 </div>
 
-                {/* Filter */}
                 <Card>
                     <CardHeader>
                         <CardTitle>Filter</CardTitle>
@@ -130,7 +133,6 @@ export default function AdminReportsByClass({ classes, sessions, summary, filter
                     </CardContent>
                 </Card>
 
-                {/* Summary */}
                 {classId && (
                     <div className="grid gap-4 sm:grid-cols-5">
                         <Card>
@@ -166,7 +168,6 @@ export default function AdminReportsByClass({ classes, sessions, summary, filter
                     </div>
                 )}
 
-                {/* Sessions list */}
                 {classId && (
                     <Card>
                         <CardHeader>
@@ -200,7 +201,7 @@ export default function AdminReportsByClass({ classes, sessions, summary, filter
                                                 </Badge>
                                             </div>
                                             <p className="text-sm text-muted-foreground">
-                                                Dibuka oleh {session.opened_by} &middot;{' '}
+                                                Dibuka oleh {session.opened_by} ·{' '}
                                                 {new Date(session.created_at).toLocaleDateString('id-ID', {
                                                     weekday: 'long',
                                                     day: 'numeric',
@@ -234,6 +235,14 @@ export default function AdminReportsByClass({ classes, sessions, summary, filter
                     </Card>
                 )}
             </div>
-        </AdminLayout>
+        </>
     )
 }
+
+AdminReportsByClass.layout = {
+    breadcrumbs: [
+        { title: 'Dashboard Admin', href: admin.dashboard.url() },
+        { title: 'Ringkasan Laporan', href: admin.reports.overview.url() },
+        { title: 'Per Kelas', href: admin.reports.byClass.url() },
+    ],
+};

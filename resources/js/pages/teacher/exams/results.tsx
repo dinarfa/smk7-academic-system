@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import ExamController from '@/actions/App/Http/Controllers/Teacher/ExamController';
+import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -43,7 +44,7 @@ export default function TeacherExamResults({ exam, attempts }: Props) {
             <div className="space-y-6 p-4">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-semibold text-foreground">Hasil Ujian</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Hasil Ujian</h1>
                         <p className="mt-2 text-muted-foreground">{exam.title}</p>
                     </div>
 
@@ -87,9 +88,7 @@ export default function TeacherExamResults({ exam, attempts }: Props) {
                                                 <TableCell className="text-center">{index + 1}</TableCell>
                                                 <TableCell className="font-medium">{attempt.student_name ?? 'Siswa tidak ditemukan'}</TableCell>
                                                 <TableCell>
-                                                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${attempt.status === 'completed' || attempt.status === 'submitted' ? 'bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-500' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800/30 dark:text-yellow-500'}`}>
-                                                        {attempt.status}
-                                                    </span>
+                                                    <StatusBadge status={attempt.status} />
                                                 </TableCell>
                                                 <TableCell className="text-muted-foreground">{formatDateTime(attempt.started_at)}</TableCell>
                                                 <TableCell className="text-muted-foreground">{formatDateTime(attempt.submitted_at)}</TableCell>

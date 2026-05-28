@@ -1,21 +1,9 @@
-import { Link } from '@inertiajs/react'
-import { Badge } from '@/components/ui/badge'
+import { Head, Link } from '@inertiajs/react'
+import { Users } from 'lucide-react'
+import { StatusBadge } from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import AdminLayout from '@/layouts/AdminLayout'
 import admin from '@/routes/admin'
-
-const recordStatusClasses = (status: string) => {
-    if (status === 'present') {
-        return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200'
-    }
-
-    if (status === 'late') {
-        return 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200'
-    }
-
-    return 'bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-200'
-}
 
 type StudentRecord = {
     id: number;
@@ -45,18 +33,29 @@ type Props = {
 
 export default function AdminReportsByStudent({ students }: Props) {
     return (
-        <AdminLayout title="Kehadiran Per Siswa">
-            <div className="space-y-6">
+        <>
+            <Head title="Kehadiran Per Siswa" />
+
+            <div className="space-y-6 p-4 sm:p-6 lg:p-8">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-semibold text-foreground">Kehadiran Per Siswa</h1>
-                        <p className="text-muted-foreground">Lihat riwayat kehadiran setiap siswa</p>
+                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Kehadiran Per Siswa</h1>
+                        <p className="text-sm text-muted-foreground">Lihat riwayat kehadiran setiap siswa</p>
                     </div>
-                    <Button asChild variant="secondary">
+                    <Button asChild variant="secondary" size="sm">
                         <Link href={admin.reports.overview.url()}>Kembali</Link>
                     </Button>
                 </div>
 
+                {students.data.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-16 text-center">
+                        <Users className="h-10 w-10 text-muted-foreground/50" />
+                        <h3 className="mt-4 text-sm font-medium text-foreground">Belum Ada Data Siswa</h3>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                            Data kehadiran per siswa akan muncul di sini.
+                        </p>
+                    </div>
+                ) : (
                 <div className="space-y-4">
                     {students.data.map((student) => (
                         <Card key={student.id}>
@@ -77,21 +76,11 @@ export default function AdminReportsByStudent({ students }: Props) {
                                         <table className="min-w-full divide-y divide-border">
                                             <thead className="bg-muted/50">
                                                 <tr>
-                                                    <th scope="col" className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
-                                                        Sesi
-                                                    </th>
-                                                    <th scope="col" className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
-                                                        Tipe
-                                                    </th>
-                                                    <th scope="col" className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
-                                                        Mapel
-                                                    </th>
-                                                    <th scope="col" className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
-                                                        Status
-                                                    </th>
-                                                    <th scope="col" className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
-                                                        Waktu
-                                                    </th>
+                                                    <th scope="col" className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Sesi</th>
+                                                    <th scope="col" className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Tipe</th>
+                                                    <th scope="col" className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Mapel</th>
+                                                    <th scope="col" className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Status</th>
+                                                    <th scope="col" className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Waktu</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-border">
@@ -104,19 +93,11 @@ export default function AdminReportsByStudent({ students }: Props) {
                                                 ) : (
                                                     student.records.map((record) => (
                                                         <tr key={record.id} className="hover:bg-muted/40">
-                                                            <td className="px-4 py-2 text-sm font-medium text-foreground">
-                                                                {record.session_subject}
-                                                            </td>
-                                                            <td className="px-4 py-2 text-sm text-muted-foreground">
-                                                                {record.session_type}
-                                                            </td>
-                                                            <td className="px-4 py-2 text-sm text-muted-foreground">
-                                                                {record.session_subject}
-                                                            </td>
+                                                            <td className="px-4 py-2 text-sm font-medium text-foreground">{record.session_subject}</td>
+                                                            <td className="px-4 py-2 text-sm text-muted-foreground">{record.session_type}</td>
+                                                            <td className="px-4 py-2 text-sm text-muted-foreground">{record.session_subject}</td>
                                                             <td className="px-4 py-2 text-sm">
-                                                                <Badge className={recordStatusClasses(record.status)}>
-                                                                    {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
-                                                                </Badge>
+                                                                <StatusBadge status={record.status} />
                                                             </td>
                                                             <td className="px-4 py-2 text-sm text-muted-foreground">
                                                                 {new Date(record.scanned_at).toLocaleString('id-ID')}
@@ -132,6 +113,7 @@ export default function AdminReportsByStudent({ students }: Props) {
                         </Card>
                     ))}
                 </div>
+                )}
 
                 <Card>
                     <CardContent className="flex items-center justify-between py-4">
@@ -156,6 +138,14 @@ export default function AdminReportsByStudent({ students }: Props) {
                     </CardContent>
                 </Card>
             </div>
-        </AdminLayout>
+        </>
     )
 }
+
+AdminReportsByStudent.layout = {
+    breadcrumbs: [
+        { title: 'Dashboard Admin', href: admin.dashboard.url() },
+        { title: 'Ringkasan Laporan', href: admin.reports.overview.url() },
+        { title: 'Per Siswa', href: admin.reports.byStudent.url() },
+    ],
+};

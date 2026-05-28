@@ -132,7 +132,7 @@ counts.bolos++;
                     { label: 'Tidak Hadir', value: stats.absent, icon: XCircle, color: 'text-red-600', bg: 'bg-red-100 dark:bg-red-500/15' },
                     { label: 'Bolos', value: stats.bolos, icon: AlertTriangle, color: 'text-purple-600', bg: 'bg-purple-100 dark:bg-purple-500/15' },
                 ].map((stat) => (
-                    <div key={stat.label} className="rounded-xl border bg-card p-3">
+                    <div key={stat.label} className="rounded-lg border bg-card p-3">
                         <div className="flex items-center gap-2">
                             <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${stat.bg}`}>
                                 <stat.icon className={`h-4 w-4 ${stat.color}`} />
@@ -158,7 +158,7 @@ counts.bolos++;
             </div>
 
             {/* Grid */}
-            <div className="overflow-hidden rounded-xl border">
+            <div className="overflow-hidden rounded-lg border">
                 <table className="w-full text-sm">
                     <thead>
                         <tr className="border-b bg-muted/50">

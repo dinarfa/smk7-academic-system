@@ -44,7 +44,7 @@ export default function Create({ exam }: Props) {
             <div className="space-y-6 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-semibold text-foreground">Tambah Soal</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Tambah Soal</h1>
                         <p className="mt-2 text-muted-foreground">Ujian: {exam.title}</p>
                     </div>
                     <Button asChild variant="secondary">
@@ -79,7 +79,7 @@ export default function Create({ exam }: Props) {
                                     <select
                                         id="type"
                                         name="type"
-                                        className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                                        className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                                         value={data.type}
                                         onChange={(event) => {
                                             const newType = event.target.value;

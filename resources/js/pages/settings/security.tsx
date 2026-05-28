@@ -95,7 +95,6 @@ export default function Security({
                                     id="current_password"
                                     ref={currentPasswordInput}
                                     name="current_password"
-                                    className="mt-1 block w-full"
                                     autoComplete="current-password"
                                     placeholder="Current password"
                                 />
@@ -110,7 +109,6 @@ export default function Security({
                                     id="password"
                                     ref={passwordInput}
                                     name="password"
-                                    className="mt-1 block w-full"
                                     autoComplete="new-password"
                                     placeholder="New password"
                                 />
@@ -126,7 +124,6 @@ export default function Security({
                                 <PasswordInput
                                     id="password_confirmation"
                                     name="password_confirmation"
-                                    className="mt-1 block w-full"
                                     autoComplete="new-password"
                                     placeholder="Confirm password"
                                 />
@@ -141,7 +138,7 @@ export default function Security({
                                     disabled={processing}
                                     data-test="update-password-button"
                                 >
-                                    Save password
+                                    {processing ? 'Menyimpan...' : 'Simpan Password'}
                                 </Button>
                             </div>
                         </>
@@ -172,7 +169,7 @@ export default function Security({
                                             type="submit"
                                             disabled={processing}
                                         >
-                                            Disable 2FA
+                                            {processing ? 'Menonaktifkan...' : 'Nonaktifkan 2FA'}
                                         </Button>
                                     )}
                                 </Form>
@@ -213,7 +210,7 @@ export default function Security({
                                                 type="submit"
                                                 disabled={processing}
                                             >
-                                                Enable 2FA
+                                                {processing ? 'Mengaktifkan...' : 'Aktifkan 2FA'}
                                             </Button>
                                         )}
                                     </Form>

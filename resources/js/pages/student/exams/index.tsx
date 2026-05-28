@@ -1,6 +1,8 @@
 import { Head, Link, router } from '@inertiajs/react';
+import { ClipboardList } from 'lucide-react';
 import { useState } from 'react';
 import ExamAttemptController from '@/actions/App/Http/Controllers/Student/ExamAttemptController';
+import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { dashboard } from '@/routes';
@@ -75,7 +77,7 @@ return;
 
             <div className="space-y-6 p-4">
                 <div>
-                    <h1 className="text-3xl font-semibold text-foreground">Ujian Saya</h1>
+                    <h1 className="text-2xl font-semibold tracking-tight text-foreground">Ujian Saya</h1>
                     <p className="mt-2 text-muted-foreground">
                         Daftar ujian yang tersedia untuk kelas Anda.
                     </p>
@@ -90,18 +92,16 @@ return;
                     </CardHeader>
                     <CardContent>
                         {exams.data.length === 0 ? (
-                            <p className="text-sm text-muted-foreground">
-                                Belum ada ujian aktif untuk kelas Anda.
-                            </p>
+                            <div className="flex flex-col items-center justify-center py-16 text-center">
+                                <ClipboardList className="h-10 w-10 text-muted-foreground/50" />
+                                <h3 className="mt-4 text-sm font-medium text-foreground">Belum Ada Ujian</h3>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    Belum ada ujian aktif untuk kelas Anda.
+                                </p>
+                            </div>
                         ) : (
                             <div className="space-y-3">
                                 {exams.data.map((exam) => {
-                                    const attemptLabel = exam.attempt
-                                        ? exam.attempt.status === 'in_progress'
-                                            ? 'Sedang berlangsung'
-                                            : 'Selesai'
-                                        : 'Belum dimulai';
-
                                     return (
                                         <div key={exam.id} className="rounded-lg border border-border p-4">
                                             <div className="flex flex-wrap items-start justify-between gap-4">
@@ -123,9 +123,7 @@ return;
                                                     </div>
                                                 </div>
                                                 <div className="flex flex-col items-end gap-3">
-                                                    <span className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
-                                                        {attemptLabel}
-                                                    </span>
+                                                    <StatusBadge status={exam.attempt?.status ?? 'not_started'} />
                                                     {exam.can_start ? (
                                                         <Button
                                                             type="button"

@@ -44,7 +44,7 @@ export default function TeacherExamsCreate({ subject_groups: subjectGroups }: Pr
 
             <div className="space-y-6 p-4">
                 <div>
-                    <h1 className="text-3xl font-semibold text-foreground">
+                    <h1 className="text-2xl font-semibold tracking-tight text-foreground">
                         Buat Ujian Baru
                     </h1>
                     <p className="text-muted-foreground">
@@ -89,7 +89,7 @@ export default function TeacherExamsCreate({ subject_groups: subjectGroups }: Pr
                                             id="subject_key"
                                             value={selectedSubjectKey}
                                             onChange={(event) => setSelectedSubjectKey(event.target.value)}
-                                            className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm focus-visible:ring-1 focus-visible:outline-hidden"
+                                            className="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                                         >
                                             <option value="">Pilih Mata Pelajaran</option>
                                             {subjectGroups.map((group) => (
@@ -109,7 +109,7 @@ export default function TeacherExamsCreate({ subject_groups: subjectGroups }: Pr
                                             defaultValue=""
                                             required
                                             disabled={selectedSubject === null}
-                                            className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm focus-visible:ring-1 focus-visible:outline-hidden disabled:cursor-not-allowed disabled:opacity-60"
+                                            className="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
                                         >
                                             <option value="">Pilih Kelas</option>
                                             {selectedSubject?.classes.map((cls) => (
@@ -134,7 +134,7 @@ export default function TeacherExamsCreate({ subject_groups: subjectGroups }: Pr
                                             defaultValue=""
                                             required
                                             disabled={selectedSubject === null}
-                                            className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm focus-visible:ring-1 focus-visible:outline-hidden disabled:cursor-not-allowed disabled:opacity-60"
+                                            className="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
                                         >
                                             <option value="">Pilih Mapel di Kelas Terpilih</option>
                                             {selectedSubject?.classes.map((cls) => (
@@ -197,7 +197,7 @@ export default function TeacherExamsCreate({ subject_groups: subjectGroups }: Pr
                                             type="submit"
                                             disabled={processing || subjectGroups.length === 0 || selectedSubject === null}
                                         >
-                                            Buat Ujian
+                                            {processing ? 'Membuat...' : 'Buat Ujian'}
                                         </Button>
                                     </div>
                                 </>

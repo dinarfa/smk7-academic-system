@@ -1,7 +1,8 @@
-import { Link } from '@inertiajs/react';
-import { Users, BookOpen, UserCheck, Zap, BarChart3, Activity } from 'lucide-react';
+import { Head, Link } from '@inertiajs/react';
+import { Users, BookOpen, UserCheck, Zap, Clock, ScrollText } from 'lucide-react';
+import { StatCard } from '@/components/stat-card';
 import { Button } from '@/components/ui/button';
-import AdminLayout from '@/layouts/AdminLayout';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import admin from '@/routes/admin';
 
 type Summary = {
@@ -26,168 +27,81 @@ type Props = {
     recentActivities: Activity[];
 }
 
-export default function AdminDashboard({ summary }: Props) {
-    const statCards = [
-        {
-            key: 'total_users',
-            label: 'Total Pengguna',
-            value: summary.total_users,
-            icon: Users,
-            color: 'text-blue-600',
-            bg: 'bg-blue-100',
-            gradient: 'from-blue-500 to-cyan-500',
-        },
-        {
-            key: 'total_teachers',
-            label: 'Guru',
-            value: summary.total_teachers,
-            icon: BookOpen,
-            color: 'text-emerald-600',
-            bg: 'bg-emerald-100',
-            gradient: 'from-emerald-500 to-teal-500',
-        },
-        {
-            key: 'total_students',
-            label: 'Siswa',
-            value: summary.total_students,
-            icon: UserCheck,
-            color: 'text-violet-600',
-            bg: 'bg-violet-100',
-            gradient: 'from-violet-500 to-purple-500',
-        },
-        {
-            key: 'active_sessions',
-            label: 'Sesi Aktif',
-            value: summary.active_sessions,
-            icon: Zap,
-            color: 'text-amber-600',
-            bg: 'bg-amber-100',
-            gradient: 'from-amber-400 to-orange-500',
-        },
-        {
-            key: 'today_records',
-            label: 'Catatan Hari Ini',
-            value: summary.today_records,
-            icon: BarChart3,
-            color: 'text-rose-600',
-            bg: 'bg-rose-100',
-            gradient: 'from-rose-500 to-pink-500',
-        },
-    ];
-
+export default function AdminDashboard({ summary, recentActivities }: Props) {
     return (
-        <AdminLayout title="Dashboard Admin">
-            <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+        <>
+            <Head title="Dashboard Admin" />
+
+            <div className="space-y-6 p-4 sm:p-6 lg:p-8">
                 <div>
-                    <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-indigo-500">
-                        Overview
-                    </p>
-                    <h1 className="text-4xl font-bold tracking-tight text-slate-900">
-                        Dashboard Admin
-                    </h1>
-                    <p className="mt-1.5 text-slate-500">
-                        Ringkasan sistem dan statistik real-time
-                    </p>
+                    <h1 className="text-2xl font-semibold tracking-tight text-foreground">Dashboard</h1>
+                    <p className="text-sm text-muted-foreground">Ringkasan sistem</p>
                 </div>
-            </div>
 
-            {/* Statistics Grid */}
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-                {statCards.map((stat) => {
-                    const Icon = stat.icon;
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <StatCard icon={Users} label="Total Pengguna" value={summary.total_users} />
+                    <StatCard icon={BookOpen} label="Guru" value={summary.total_teachers} />
+                    <StatCard icon={UserCheck} label="Siswa" value={summary.total_students} />
+                    <StatCard icon={Zap} label="Sesi Aktif" value={summary.active_sessions} />
+                </div>
 
-                    return (
-                        <div key={stat.key} className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
-                            <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${stat.gradient}`} />
-                            <div className="mt-1 flex items-center gap-4">
-                                <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${stat.bg}`}>
-                                    <Icon className={`h-6 w-6 ${stat.color}`} />
-                                </div>
-                                <div>
-                                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">{stat.label}</p>
-                                    <p className="text-2xl font-bold text-slate-800">{stat.value}</p>
-                                </div>
-                            </div>
+                <Card>
+                    <CardHeader>
+                        <div className="flex items-center justify-between">
+                            <CardTitle>Aktivitas Terbaru</CardTitle>
+                            <Button asChild variant="ghost" size="sm">
+                                <Link href={admin.auditLogs.index.url()}>
+                                    <ScrollText className="mr-2 h-4 w-4" />
+                                    Audit Log
+                                </Link>
+                            </Button>
                         </div>
-                    );
-                })}
-            </div>
-
-            <div className="grid gap-6 lg:grid-cols-3">
-                {/* Quick Actions */}
-                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:col-span-2">
-                    <div className="border-b border-slate-100 bg-gradient-to-r from-indigo-50 to-blue-50 px-6 py-4">
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100">
-                                <Zap className="h-5 w-5 text-indigo-600" />
-                            </div>
+                    </CardHeader>
+                    <CardContent>
+                        {recentActivities && recentActivities.length > 0 ? (
                             <div>
-                                <p className="font-semibold text-slate-800">Aksi Cepat</p>
-                                <p className="text-xs text-slate-500">Jalan pintas ke menu utama</p>
+                                {recentActivities.map((activity) => (
+                                    <div
+                                        key={activity.id}
+                                        className="flex items-center justify-between py-3 border-b border-border last:border-0"
+                                    >
+                                        <div className="flex min-w-0 items-center gap-3">
+                                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
+                                                <Clock className="h-4 w-4 text-muted-foreground" />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="truncate text-sm font-medium text-foreground">
+                                                    {activity.student_name}
+                                                </p>
+                                                <p className="truncate text-xs text-muted-foreground">
+                                                    {activity.subject}
+                                                    {activity.session_type ? ` · ${activity.session_type}` : ''}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <p className="ml-4 shrink-0 text-xs tabular-nums text-muted-foreground">
+                                            {new Date(activity.scanned_at).toLocaleString('id-ID')}
+                                        </p>
+                                    </div>
+                                ))}
                             </div>
-                        </div>
-                    </div>
-                    <div className="p-6">
-                        <div className="flex flex-row flex-wrap sm:flex-nowrap gap-3">
-                            <Button asChild className="rounded-xl bg-indigo-600 hover:bg-indigo-700 w-full">
-                                <Link href={admin.users.index.url()}>Kelola Pengguna</Link>
-                            </Button>
-                            <Button asChild className="rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 w-full">
-                                <Link href={admin.classes.index.url()}>Kelas</Link>
-                            </Button>
-                            <Button asChild className="rounded-xl w-full text-slate-700 border-slate-200 hover:bg-slate-50" variant="outline">
-                                <Link href={admin.reports.overview.url()}>Laporan</Link>
-                            </Button>
-                            <Button asChild className="rounded-xl w-full text-slate-700 border-slate-200 hover:bg-slate-50" variant="outline">
-                                <Link href={admin.reports.bySession.url()}>Per Sesi</Link>
-                            </Button>
-                            <Button asChild className="rounded-xl w-full text-slate-700 border-slate-200 hover:bg-slate-50" variant="outline">
-                                <Link href={admin.subjects.index.url()}>Mata Pelajaran</Link>
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* System Health */}
-                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                    <div className="border-b border-slate-100 bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-4">
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100">
-                                <Activity className="h-5 w-5 text-emerald-600" />
+                        ) : (
+                            <div className="flex flex-col items-center justify-center py-12 text-center">
+                                <p className="text-sm text-muted-foreground">Belum ada aktivitas terbaru</p>
                             </div>
-                            <div>
-                                <p className="font-semibold text-slate-800">Status Sistem</p>
-                                <p className="text-xs text-slate-500">Monitoring kondisi server</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="p-6 space-y-4">
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-slate-600">Database</span>
-                            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-600">
-                                <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
-                                Sehat
-                            </span>
-                        </div>
-                        <div className="h-px w-full bg-slate-100" />
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-slate-600">Server API</span>
-                            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-600">
-                                <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
-                                Berjalan
-                            </span>
-                        </div>
-                        <div className="h-px w-full bg-slate-100" />
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-slate-600">Cache</span>
-                            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-600">
-                                <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
-                                Aktif
-                            </span>
-                        </div>
-                    </div>
-                </div>
+                        )}
+                    </CardContent>
+                </Card>
             </div>
-        </AdminLayout>
+        </>
     );
 }
+
+AdminDashboard.layout = {
+    breadcrumbs: [
+        {
+            title: 'Dashboard Admin',
+            href: admin.dashboard.url(),
+        },
+    ],
+};

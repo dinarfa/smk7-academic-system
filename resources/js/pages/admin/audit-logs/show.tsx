@@ -1,8 +1,7 @@
-import { Link } from '@inertiajs/react'
+import { Head, Link } from '@inertiajs/react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import AdminLayout from '@/layouts/AdminLayout'
 import admin from '@/routes/admin'
 
 type AuditLog = {
@@ -26,11 +25,13 @@ type Props = {
 
 export default function AdminAuditLogShow({ log }: Props) {
     return (
-        <AdminLayout title="Detail Log Audit">
-            <div className="space-y-6">
+        <>
+            <Head title="Detail Log Audit" />
+
+            <div className="space-y-6 p-4 sm:p-6 lg:p-8">
                 <div>
-                    <h1 className="text-3xl font-semibold text-foreground">Detail Log Audit</h1>
-                    <p className="text-muted-foreground">Informasi detail tentang aksi ini</p>
+                    <h1 className="text-2xl font-semibold tracking-tight text-foreground">Detail Log Audit</h1>
+                    <p className="text-sm text-muted-foreground">Informasi detail tentang aksi ini</p>
                 </div>
 
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -44,7 +45,7 @@ export default function AdminAuditLogShow({ log }: Props) {
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between border-b border-border pb-3">
                                         <p className="text-sm text-muted-foreground">Aksi</p>
-                                        <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-200">
+                                        <Badge variant="outline">
                                             {log.action.replace(/_/g, ' ').toUpperCase()}
                                         </Badge>
                                     </div>
@@ -105,7 +106,7 @@ export default function AdminAuditLogShow({ log }: Props) {
                                         <h3 className="text-base font-semibold text-foreground">Perubahan</h3>
                                         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                                             {log.old_values && (
-                                                <div className="rounded-lg border border-rose-200/60 bg-rose-50/60 p-4 dark:border-rose-500/30 dark:bg-rose-500/10">
+                                                <div className="rounded-lg border border-rose-200 bg-rose-50 p-4 dark:border-rose-500/30 dark:bg-rose-500/10">
                                                     <p className="mb-2 text-sm font-medium text-rose-900 dark:text-rose-200">Nilai Lama</p>
                                                     <pre className="overflow-auto text-xs text-rose-800 dark:text-rose-200">
                                                         {JSON.stringify(log.old_values, null, 2)}
@@ -113,7 +114,7 @@ export default function AdminAuditLogShow({ log }: Props) {
                                                 </div>
                                             )}
                                             {log.new_values && (
-                                                <div className="rounded-lg border border-emerald-200/60 bg-emerald-50/60 p-4 dark:border-emerald-500/30 dark:bg-emerald-500/10">
+                                                <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-500/30 dark:bg-emerald-500/10">
                                                     <p className="mb-2 text-sm font-medium text-emerald-900 dark:text-emerald-200">Nilai Baru</p>
                                                     <pre className="overflow-auto text-xs text-emerald-800 dark:text-emerald-200">
                                                         {JSON.stringify(log.new_values, null, 2)}
@@ -147,6 +148,14 @@ export default function AdminAuditLogShow({ log }: Props) {
                     </div>
                 </div>
             </div>
-        </AdminLayout>
+        </>
     )
 }
+
+AdminAuditLogShow.layout = {
+    breadcrumbs: [
+        { title: 'Dashboard Admin', href: admin.dashboard.url() },
+        { title: 'Log Audit', href: admin.auditLogs.index.url() },
+        { title: 'Detail', href: '#' },
+    ],
+};

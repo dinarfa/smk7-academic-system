@@ -58,7 +58,7 @@ export default function QRDisplayV2({ qrSvg, startTime, endTime, sessionType, on
 
     return (
         <div className="flex flex-col items-center">
-            <div className="inline-flex items-center justify-center rounded-2xl border border-white/60 bg-white/80 p-5 shadow-lg backdrop-blur-sm dark:border-white/10 dark:bg-slate-900/50">
+            <div className="inline-flex items-center justify-center rounded-lg border border-white/60 bg-white/80 p-5 shadow-lg backdrop-blur-sm dark:border-white/10 dark:bg-slate-900/50">
                 <div
                     className="[&_svg]:h-full [&_svg]:w-full"
                     style={{ width: 200, height: 200 }}
@@ -85,7 +85,7 @@ export default function QRDisplayV2({ qrSvg, startTime, endTime, sessionType, on
                         </g>
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <span className={`text-sm font-extrabold tabular-nums ${isExpired ? 'text-red-500' : 'text-blue-600 dark:text-blue-400'}`}>
+                        <span className={`text-sm font-semibold tabular-nums ${isExpired ? 'text-red-500' : 'text-blue-600 dark:text-blue-400'}`}>
                             {isExpired ? 'KADALUARSA' : timeRemaining}
                         </span>
                     </div>
@@ -94,7 +94,7 @@ export default function QRDisplayV2({ qrSvg, startTime, endTime, sessionType, on
             </div>
 
             {isExpired && (
-                <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-medium text-red-600 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400">
+                <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-medium text-red-600 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400">
                     QR sudah kadaluarsa. Silakan buka sesi baru.
                 </div>
             )}
