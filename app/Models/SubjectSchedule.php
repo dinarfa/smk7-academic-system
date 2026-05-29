@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class SubjectSchedule extends Model
 {
@@ -56,11 +57,25 @@ class SubjectSchedule extends Model
     }
 
     /**
-     * The teacher who teaches this subject slot (resolved via subject).
+     * The teacher who teaches this subject slot.
+     * Pivot teacher_id (per class) takes precedence over subject.teacher_id (default).
      */
     public function teacher(): ?User
     {
-        return $this->subject?->teacher;
+        $subject = $this->subject;
+        if (! $subject) {
+            return null;
+        }
+
+        $pivotTeacherId = $subject->schoolClasses()
+            ->where('school_classes.id', $this->school_class_id)
+            ->first()?->pivot?->teacher_id;
+
+        if ($pivotTeacherId) {
+            return User::find($pivotTeacherId);
+        }
+
+        return $subject->teacher;
     }
 
     /**
@@ -173,6 +188,10 @@ class SubjectSchedule extends Model
      * Subject teachers see only their own subject slots + morning/dismissal
      * for non-homeroom classes they teach in.
      *
+     * Teacher assignment is resolved via:
+     * - class_subjects.pivot.teacher_id (per class, takes precedence)
+     * - subjects.teacher_id (default fallback)
+     *
      * @return Collection<int, self>
      */
     public static function activeForTeacherNow(User $teacher, ?CarbonInterface $at = null): Collection
@@ -194,23 +213,56 @@ class SubjectSchedule extends Model
                     ->pluck('id');
             }
 
-            // 2. Subject-taught classes (non-homeroom): only teacher's own subjects + morning/dismissal
-            $subjectClassIds = $teacher->subjects()
+            // 2. Subject-taught classes (non-homeroom): teacher's own subjects + morning/dismissal
+            //    Resolves teacher via pivot teacher_id AND subject.teacher_id
+            $subjectClassIdsViaDefault = $teacher->subjects()
                 ->join('class_subjects', 'subjects.id', '=', 'class_subjects.subject_id')
                 ->pluck('class_subjects.school_class_id')
                 ->filter()
                 ->unique();
+
+            $subjectClassIdsViaPivot = collect(
+                DB::table('class_subjects')
+                    ->where('teacher_id', $teacher->id)
+                    ->pluck('school_class_id')
+                    ->all(),
+            );
+
+            $allSubjectClassIds = $subjectClassIdsViaDefault
+                ->merge($subjectClassIdsViaPivot)
+                ->unique()
+                ->diff($homeroomClassIds);
+
             $teacherSubjectIds = $teacher->subjects()->pluck('subjects.id');
-            $nonHomeroomSubjectClassIds = $subjectClassIds->diff($homeroomClassIds);
+            $teacherPivotSubjectIds = collect(
+                DB::table('class_subjects')
+                    ->where('teacher_id', $teacher->id)
+                    ->pluck('subject_id')
+                    ->all(),
+            );
+            $allTeacherSubjectIds = $teacherSubjectIds->merge($teacherPivotSubjectIds)->unique();
 
             $subjectSlotIds = collect();
-            if ($nonHomeroomSubjectClassIds->isNotEmpty()) {
+            if ($allSubjectClassIds->isNotEmpty()) {
                 $subjectSlotIds = static::query()
-                    ->whereIn('school_class_id', $nonHomeroomSubjectClassIds->all())
+                    ->whereIn('school_class_id', $allSubjectClassIds->all())
                     ->activeNow($at)
-                    ->where(function ($q) use ($teacherSubjectIds) {
-                        $q->whereNull('subject_id')
-                            ->orWhereIn('subject_id', $teacherSubjectIds->all());
+                    ->where(function ($q) use ($teacher, $allTeacherSubjectIds): void {
+                        $q->whereIn('subject_id', function ($sub) use ($teacher, $allTeacherSubjectIds): void {
+                            $sub->select('subjects.id')
+                                ->from('subjects')
+                                ->whereIn('subjects.id', $allTeacherSubjectIds->all())
+                                ->where(function ($q2) use ($teacher): void {
+                                    $q2->where('subjects.teacher_id', $teacher->id)
+                                        ->orWhereExists(function ($sub2) use ($teacher): void {
+                                            $sub2->select(DB::raw(1))
+                                                ->from('class_subjects as cs2')
+                                                ->whereColumn('cs2.subject_id', 'subjects.id')
+                                                ->whereColumn('cs2.school_class_id', 'subject_schedules.school_class_id')
+                                                ->where('cs2.teacher_id', $teacher->id);
+                                        });
+                                });
+                        })->orWhereNull('subject_id');
                     })
                     ->pluck('id');
             }

@@ -64,6 +64,7 @@ class SubjectController extends Controller
                 'school_classes' => $subject->schoolClasses->map(fn (SchoolClass $class): array => [
                     'id' => $class->id,
                     'name' => $class->name,
+                    'teacher_id' => $class->pivot->teacher_id ?? $subject->teacher_id,
                 ])->values(),
                 'teacher' => $subject->teacher ? [
                     'id' => $subject->teacher->id,
@@ -110,6 +111,9 @@ class SubjectController extends Controller
                 'name' => $subject->name,
                 'school_class_ids' => $subject->schoolClasses->pluck('id')->toArray(),
                 'teacher_id' => $subject->teacher_id,
+                'class_teachers' => $subject->schoolClasses->mapWithKeys(fn (SchoolClass $class): array => [
+                    $class->id => $class->pivot->teacher_id ?? $subject->teacher_id,
+                ])->toArray(),
             ],
         ]);
     }
@@ -124,7 +128,14 @@ class SubjectController extends Controller
         unset($validated['school_class_ids']);
 
         $subject = Subject::query()->create($validated);
-        $subject->schoolClasses()->attach($classIds);
+        $teacherId = $subject->teacher_id;
+
+        // Attach classes with teacher_id on pivot
+        $attachData = [];
+        foreach ($classIds as $classId) {
+            $attachData[$classId] = ['teacher_id' => $teacherId];
+        }
+        $subject->schoolClasses()->attach($attachData);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Subject created successfully.')]);
 
@@ -143,7 +154,12 @@ class SubjectController extends Controller
         $subject->update($validated);
 
         if ($classIds !== null) {
-            $subject->schoolClasses()->sync($classIds);
+            // Sync with teacher_id on pivot (use subject's teacher_id as default)
+            $syncData = [];
+            foreach ($classIds as $classId) {
+                $syncData[$classId] = ['teacher_id' => $subject->teacher_id];
+            }
+            $subject->schoolClasses()->sync($syncData);
         }
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Subject updated successfully.')]);

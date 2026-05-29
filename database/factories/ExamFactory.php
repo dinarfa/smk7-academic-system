@@ -26,7 +26,7 @@ class ExamFactory extends Factory
         $subject = Subject::factory()->create([
             'teacher_id' => $teacher->id,
         ]);
-        $subject->schoolClasses()->attach($class->id);
+        $subject->schoolClasses()->attach($class->id, ['teacher_id' => $teacher->id]);
 
         return [
             'subject_id' => $subject->id,

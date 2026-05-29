@@ -42,7 +42,14 @@ type User = {
     name: string;
     email: string;
     role: string;
+    school_class_id: number | null;
+    school_class: { id: number; name: string } | null;
     created_at: string;
+};
+
+type SchoolClass = {
+    id: number;
+    name: string;
 };
 
 type Props = {
@@ -53,14 +60,17 @@ type Props = {
         prev_page_url: string | null;
         next_page_url: string | null;
     };
+    classes: SchoolClass[];
     filters?: {
         role?: string;
+        class_id?: string;
         search?: string;
     };
 };
 
-export default function AdminUsersIndex({ users, filters }: Props) {
+export default function AdminUsersIndex({ users, classes, filters }: Props) {
     const [role, setRole] = useState(filters?.role ?? '');
+    const [classId, setClassId] = useState(filters?.class_id ?? '');
     const [search, setSearch] = useState(filters?.search ?? '');
     const hasPrev = users.current_page > 1;
     const hasNext = users.current_page < users.last_page;
@@ -68,8 +78,12 @@ export default function AdminUsersIndex({ users, filters }: Props) {
     function handleFilter() {
         const params: Record<string, string> = {};
 
-        if (role) {
+        if (role && role !== 'all') {
             params.role = role;
+        }
+
+        if (classId && classId !== 'all') {
+            params.class_id = classId;
         }
 
         if (search) {
@@ -135,6 +149,27 @@ export default function AdminUsersIndex({ users, filters }: Props) {
                     </div>
                     <div className="space-y-1.5">
                         <label className="text-xs font-medium text-muted-foreground">
+                            Kelas
+                        </label>
+                        <Select value={classId} onValueChange={setClassId}>
+                            <SelectTrigger className="w-44">
+                                <SelectValue placeholder="Semua Kelas" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Semua Kelas</SelectItem>
+                                {classes.map((c) => (
+                                    <SelectItem
+                                        key={c.id}
+                                        value={String(c.id)}
+                                    >
+                                        {c.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-muted-foreground">
                             Cari
                         </label>
                         <Input
@@ -187,6 +222,13 @@ export default function AdminUsersIndex({ users, filters }: Props) {
                                         <p className="mt-1 text-xs text-muted-foreground">
                                             {user.email}
                                         </p>
+                                        {user.role === 'student' &&
+                                            user.school_class && (
+                                                <p className="mt-1 text-xs font-medium text-foreground">
+                                                    Kelas:{' '}
+                                                    {user.school_class.name}
+                                                </p>
+                                            )}
                                     </div>
                                 ))}
                             </div>
@@ -201,6 +243,7 @@ export default function AdminUsersIndex({ users, filters }: Props) {
                                             </TableHead>
                                             <TableHead>Email</TableHead>
                                             <TableHead>Role</TableHead>
+                                            <TableHead>Kelas</TableHead>
                                             <TableHead>Dibuat</TableHead>
                                             <TableHead className="pr-6 text-right">
                                                 Aksi
@@ -231,6 +274,19 @@ export default function AdminUsersIndex({ users, filters }: Props) {
                                                     <StatusBadge
                                                         status={user.role}
                                                     />
+                                                </TableCell>
+                                                <TableCell className="text-sm">
+                                                    {user.role === 'student' &&
+                                                    user.school_class ? (
+                                                        <span className="font-medium text-foreground">
+                                                            {user.school_class
+                                                                .name}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-muted-foreground">
+                                                            -
+                                                        </span>
+                                                    )}
                                                 </TableCell>
                                                 <TableCell className="text-sm text-muted-foreground">
                                                     {new Date(

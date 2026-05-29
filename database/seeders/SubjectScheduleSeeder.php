@@ -96,7 +96,13 @@ class SubjectScheduleSeeder extends Seeder
 
                     $daySubjects = $subjects->shuffle();
                     foreach ($daySubjects as $subject) {
-                        if (! $subject->teacher_id) {
+                        // Resolve teacher: pivot teacher_id for this class, then fallback to default
+                        $pivotTeacherId = $subject->schoolClasses()
+                            ->where('school_classes.id', $class->id)
+                            ->first()?->pivot?->teacher_id;
+                        $teacherId = $pivotTeacherId ?? $subject->teacher_id;
+
+                        if (! $teacherId) {
                             continue;
                         }
 
@@ -105,7 +111,10 @@ class SubjectScheduleSeeder extends Seeder
                             ->where('starts_at', $slot['starts_at'])
                             ->where('ends_at', $slot['ends_at'])
                             ->whereNotNull('subject_id')
-                            ->whereHas('subject', fn ($q) => $q->where('teacher_id', $subject->teacher_id))
+                            ->where(function ($q) use ($teacherId) {
+                                $q->whereHas('subject', fn ($q2) => $q2->where('teacher_id', $teacherId))
+                                    ->orWhereHas('subject.schoolClasses', fn ($q2) => $q2->wherePivot('teacher_id', $teacherId));
+                            })
                             ->exists();
 
                         if (! $teacherBusy) {
@@ -133,12 +142,21 @@ class SubjectScheduleSeeder extends Seeder
                 ->get();
 
             foreach ($emptySlots as $slot) {
+                // Resolve teacher for this slot's class
+                $pivotTeacherId = $subject->schoolClasses()
+                    ->where('school_classes.id', $slot->school_class_id)
+                    ->first()?->pivot?->teacher_id;
+                $teacherId = $pivotTeacherId ?? $subject->teacher_id;
+
                 $teacherBusy = SubjectSchedule::query()
                     ->where('day_of_week', $slot->day_of_week)
                     ->where('starts_at', $slot->starts_at)
                     ->where('ends_at', $slot->ends_at)
                     ->whereNotNull('subject_id')
-                    ->whereHas('subject', fn ($q) => $q->where('teacher_id', $subject->teacher_id))
+                    ->where(function ($q) use ($teacherId) {
+                        $q->whereHas('subject', fn ($q2) => $q2->where('teacher_id', $teacherId))
+                            ->orWhereHas('subject.schoolClasses', fn ($q2) => $q2->wherePivot('teacher_id', $teacherId));
+                    })
                     ->exists();
 
                 if (! $teacherBusy) {

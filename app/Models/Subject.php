@@ -27,7 +27,26 @@ class Subject extends Model
      */
     public function schoolClasses(): BelongsToMany
     {
-        return $this->belongsToMany(SchoolClass::class, 'class_subjects')->withTimestamps();
+        return $this->belongsToMany(SchoolClass::class, 'class_subjects')
+            ->withPivot('teacher_id')
+            ->withTimestamps();
+    }
+
+    /**
+     * Resolve the teacher for this subject in a specific class.
+     * Pivot teacher_id takes precedence over the default subjects.teacher_id.
+     */
+    public function teacherForClass(int $classId): ?User
+    {
+        $pivotTeacherId = $this->schoolClasses()
+            ->where('school_classes.id', $classId)
+            ->first()?->pivot?->teacher_id;
+
+        if ($pivotTeacherId) {
+            return User::find($pivotTeacherId);
+        }
+
+        return $this->teacher;
     }
 
     /**

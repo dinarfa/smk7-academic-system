@@ -9,17 +9,19 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
+use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable(['name', 'email', 'role', 'school_class_id', 'password'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, TwoFactorAuthenticatable;
+    use HasApiTokens, HasFactory, Notifiable, TwoFactorAuthenticatable;
 
     /**
      * Get the attributes that should be cast.
@@ -93,11 +95,21 @@ class User extends Authenticatable
     }
 
     /**
-     * Subjects owned by this teacher.
+     * Subjects owned by this teacher (default teacher on subjects table).
      */
     public function subjects(): HasMany
     {
         return $this->hasMany(Subject::class, 'teacher_id');
+    }
+
+    /**
+     * Subjects this teacher is assigned to teach via the class_subjects pivot.
+     */
+    public function teachingSubjects(): BelongsToMany
+    {
+        return $this->belongsToMany(Subject::class, 'class_subjects', 'teacher_id', 'subject_id')
+            ->withPivot('school_class_id')
+            ->withTimestamps();
     }
 
     /**

@@ -8,6 +8,7 @@ use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
 use App\Models\SchoolClass;
 use App\Models\SubjectSchedule;
+use Illuminate\Support\Facades\DB;
 use App\Services\Attendance\AbsenceDetectionService;
 use App\Services\Attendance\AttendanceReportService;
 use App\Services\Attendance\DailyAttendanceViewService;
@@ -120,10 +121,18 @@ class AttendanceViewController extends Controller
             ->unique()
             ->diff($homeroomClasses->pluck('id'));
 
+        // Also include classes where teacher is assigned via pivot
+        $pivotClassIds = DB::table('class_subjects')
+            ->where('teacher_id', $teacher->id)
+            ->pluck('school_class_id')
+            ->diff($homeroomClasses->pluck('id'));
+
+        $nonHomeroomClassIds = $subjectClassIds->merge($pivotClassIds)->unique();
+
         $subjectClasses = collect();
-        if ($subjectClassIds->isNotEmpty()) {
+        if ($nonHomeroomClassIds->isNotEmpty()) {
             $subjectClasses = SchoolClass::query()
-                ->whereIn('id', $subjectClassIds->all())
+                ->whereIn('id', $nonHomeroomClassIds->all())
                 ->with('students')
                 ->get();
         }
@@ -170,10 +179,18 @@ class AttendanceViewController extends Controller
             ->unique()
             ->diff($homeroomClasses->pluck('id'));
 
+        // Also include classes where teacher is assigned via pivot
+        $pivotClassIds = DB::table('class_subjects')
+            ->where('teacher_id', $teacher->id)
+            ->pluck('school_class_id')
+            ->diff($homeroomClasses->pluck('id'));
+
+        $nonHomeroomClassIds = $subjectClassIds->merge($pivotClassIds)->unique();
+
         $subjectClasses = collect();
-        if ($subjectClassIds->isNotEmpty()) {
+        if ($nonHomeroomClassIds->isNotEmpty()) {
             $subjectClasses = SchoolClass::query()
-                ->whereIn('id', $subjectClassIds->all())
+                ->whereIn('id', $nonHomeroomClassIds->all())
                 ->with('students')
                 ->get();
         }
@@ -310,20 +327,30 @@ class AttendanceViewController extends Controller
 
         $homeroomClasses = $teacher->homeroomClasses()->get();
 
+        // Subject-taught classes via default teacher_id
         $subjectClassIds = $teacher->subjects()
-            ->pluck('school_class_id')
+            ->join('class_subjects', 'subjects.id', '=', 'class_subjects.subject_id')
+            ->pluck('class_subjects.school_class_id')
             ->filter()
             ->unique()
             ->diff($homeroomClasses->pluck('id'));
 
-        $subjectClasses = $subjectClassIds->isNotEmpty()
-            ? SchoolClass::query()->whereIn('id', $subjectClassIds->all())->get()
+        // Also include classes where teacher is assigned via pivot
+        $pivotClassIds = DB::table('class_subjects')
+            ->where('teacher_id', $teacher->id)
+            ->pluck('school_class_id')
+            ->diff($homeroomClasses->pluck('id'));
+
+        $nonHomeroomClassIds = $subjectClassIds->merge($pivotClassIds)->unique();
+
+        $subjectClasses = $nonHomeroomClassIds->isNotEmpty()
+            ? SchoolClass::query()->whereIn('id', $nonHomeroomClassIds->all())->get()
             : collect();
 
         $allClasses = $homeroomClasses->merge($subjectClasses);
 
         $subjects = $teacher->subjects()
-            ->select('id', 'name', 'school_class_id')
+            ->select('id', 'name')
             ->get();
 
         return Inertia::render('teacher/attendance/export', [
@@ -334,7 +361,6 @@ class AttendanceViewController extends Controller
             'subjects' => $subjects->map(fn ($subject) => [
                 'id' => $subject->id,
                 'name' => $subject->name,
-                'school_class_id' => $subject->school_class_id,
             ])->values(),
         ]);
     }
