@@ -45,7 +45,7 @@ test('teacher can open a new attendance qr session', function () {
     ]);
 
     $response = $this->actingAs($teacher)->post(route('teacher.attendance-sessions.store'), [
-        'subject_key' => $subject->code.'::'.$subject->name,
+        'subject_key' => $subject->id.'::'.$subject->name,
         'class_id' => $class->id,
     ]);
 
@@ -80,7 +80,7 @@ test('teacher cannot open attendance session outside active schedule time', func
 
     $this->actingAs($teacher)
         ->post(route('teacher.attendance-sessions.store'), [
-            'subject_key' => $subject->code.'::'.$subject->name,
+            'subject_key' => $subject->id.'::'.$subject->name,
             'class_id' => $class->id,
         ])
         ->assertSessionHasErrors(['class_id']);
@@ -198,7 +198,6 @@ test('teacher opening a session only closes their own active sessions', function
 
     $subject = Subject::factory()->create([
         'teacher_id' => $teacher->id,
-        'code' => 'MTK',
         'name' => 'Matematika',
     ]);
     $subject->schoolClasses()->attach($class->id);
@@ -212,7 +211,7 @@ test('teacher opening a session only closes their own active sessions', function
     ]);
 
     $this->actingAs($teacher)->post(route('teacher.attendance-sessions.store'), [
-        'subject_key' => $subject->code.'::'.$subject->name,
+        'subject_key' => $subject->id.'::'.$subject->name,
         'class_id' => $class->id,
     ])->assertRedirect();
 
@@ -367,7 +366,6 @@ test('teacher can open the dedicated qr attendance page', function () {
 
     $subject = Subject::factory()->create([
         'teacher_id' => $teacher->id,
-        'code' => 'MTK',
         'name' => 'Matematika',
     ]);
     $subject->schoolClasses()->attach($class->id);
@@ -396,7 +394,6 @@ test('teacher qr attendance page only shows currently active schedules', functio
     $activeClass = SchoolClass::factory()->create();
     $activeSubject = Subject::factory()->create([
         'teacher_id' => $teacher->id,
-        'code' => 'FIS',
         'name' => 'Fisika',
     ]);
     $activeSubject->schoolClasses()->attach($activeClass->id);
@@ -412,7 +409,6 @@ test('teacher qr attendance page only shows currently active schedules', functio
     $futureClass = SchoolClass::factory()->create();
     $futureSubject = Subject::factory()->create([
         'teacher_id' => $teacher->id,
-        'code' => 'BIO',
         'name' => 'Biologi',
     ]);
     $futureSubject->schoolClasses()->attach($futureClass->id);
@@ -452,14 +448,13 @@ test('teacher cannot open attendance session using foreign subject class mapping
     $class = SchoolClass::factory()->create();
     $foreignSubject = Subject::factory()->create([
         'teacher_id' => $otherTeacher->id,
-        'code' => 'BIO',
         'name' => 'Biologi',
     ]);
-    $foreignSubject->schoolClasses()->attach($class->id);
+    $foreignSubject->schoolClasses()->attach($class->id, ['teacher_id' => $otherTeacher->id]);
 
     $this->actingAs($teacher)
         ->post(route('teacher.attendance-sessions.store'), [
-            'subject_key' => 'BIO::Biologi',
+            'subject_key' => $foreignSubject->id . '::Biologi',
             'class_id' => $class->id,
         ])
         ->assertSessionHasErrors(['subject_key', 'class_id']);

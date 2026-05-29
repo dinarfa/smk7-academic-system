@@ -55,14 +55,13 @@ class AttendanceViewController extends Controller
 
         $subjectGroups = $activeSchedules
             ->filter(fn (SubjectSchedule $schedule) => $schedule->subject_id !== null)
-            ->groupBy(fn (SubjectSchedule $schedule) => $schedule->subject?->code.'::'.$schedule->subject?->name)
+            ->groupBy(fn (SubjectSchedule $schedule) => $schedule->subject?->id.'::'.$schedule->subject?->name)
             ->map(function ($schedulesInGroup, $subjectKey) {
                 $firstSchedule = $schedulesInGroup->first();
 
                 return [
                     'key' => $subjectKey,
                     'name' => $firstSchedule?->subject?->name,
-                    'code' => $firstSchedule?->subject?->code,
                     'classes' => $schedulesInGroup
                         ->map(fn (SubjectSchedule $schedule) => [
                             'id' => $schedule->school_class_id,

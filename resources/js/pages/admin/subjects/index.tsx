@@ -42,7 +42,6 @@ import admin from '@/routes/admin';
 
 type Subject = {
     id: number;
-    code: string;
     name: string;
     school_classes: { id: number; name: string }[];
     teacher: { id: number; name: string } | null;
@@ -109,7 +108,6 @@ export default function AdminSubjectsIndex({
     }
 
     const { data, setData, post, processing, errors, reset } = useForm({
-        code: '',
         name: '',
         school_class_ids: [] as string[],
         teacher_id: '',
@@ -223,25 +221,6 @@ export default function AdminSubjectsIndex({
                         </CardHeader>
                         <CardContent>
                             <form onSubmit={handleSubmit} className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="code">Kode Mapel</Label>
-                                    <Input
-                                        id="code"
-                                        name="code"
-                                        value={data.code}
-                                        onChange={(event) =>
-                                            setData('code', event.target.value)
-                                        }
-                                        placeholder="MTK"
-                                        aria-invalid={Boolean(errors.code)}
-                                    />
-                                    {errors.code && (
-                                        <p className="text-xs text-destructive">
-                                            {errors.code}
-                                        </p>
-                                    )}
-                                </div>
-
                                 <div className="space-y-2">
                                     <Label>Kelas</Label>
                                     <div className="grid grid-cols-2 gap-2 rounded-lg border border-border p-3">
@@ -375,7 +354,6 @@ export default function AdminSubjectsIndex({
                                                 <TableHead>
                                                     Mata Pelajaran
                                                 </TableHead>
-                                                <TableHead>Kode</TableHead>
                                                 <TableHead>Kelas</TableHead>
                                                 <TableHead>Guru</TableHead>
                                                 <TableHead className="pr-6 text-right">
@@ -398,11 +376,6 @@ export default function AdminSubjectsIndex({
                                                             <span className="font-medium text-foreground">
                                                                 {subject.name}
                                                             </span>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <Badge variant="outline">
-                                                                {subject.code}
-                                                            </Badge>
                                                         </TableCell>
                                                         <TableCell>
                                                             {subject

@@ -51,7 +51,6 @@ class SubjectSeeder extends Seeder
                 ['name' => $subjectName],
                 [
                     'teacher_id' => $teachers[$index % $teachers->count()]->id,
-                    'code' => 'MAP'.($index + 1),
                 ],
             );
 

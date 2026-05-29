@@ -12,7 +12,6 @@ test('teacher can view exam creation form', function () {
     $schoolClass = SchoolClass::factory()->create();
     $subject = Subject::factory()->create([
         'teacher_id' => $teacher->id,
-        'code' => 'MTK',
         'name' => 'Matematika',
     ]);
     $subject->schoolClasses()->attach($schoolClass->id);

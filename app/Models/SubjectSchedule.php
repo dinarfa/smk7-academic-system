@@ -177,7 +177,7 @@ class SubjectSchedule extends Model
         return static::query()
             ->where('school_class_id', $schoolClassId)
             ->activeNow($at)
-            ->with('subject:id,code,name')
+            ->with('subject:id,name')
             ->first();
     }
 
@@ -276,7 +276,7 @@ class SubjectSchedule extends Model
 
         return static::query()
             ->whereIn('id', $ids)
-            ->with(['subject:id,code,name', 'schoolClass:id,name'])
+            ->with(['subject:id,name', 'schoolClass:id,name'])
             ->orderBy('starts_at')
             ->get();
     }

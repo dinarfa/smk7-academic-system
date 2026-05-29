@@ -21,7 +21,6 @@ import admin from '@/routes/admin';
 
 type Subject = {
     id: number;
-    code: string;
     name: string;
     school_class_ids: number[];
     teacher_id: number | null;
@@ -51,7 +50,6 @@ export default function AdminSubjectEdit({
     teachers,
 }: Props) {
     const { data, setData, put, processing, errors } = useForm({
-        code: subject.code,
         name: subject.name,
         school_class_ids: subject.school_class_ids.map(String),
         teacher_id: subject.teacher_id ? String(subject.teacher_id) : '',
@@ -118,24 +116,6 @@ export default function AdminSubjectEdit({
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleSubmit} className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="code">Kode Mapel</Label>
-                                <Input
-                                    id="code"
-                                    name="code"
-                                    value={data.code}
-                                    onChange={(event) =>
-                                        setData('code', event.target.value)
-                                    }
-                                    aria-invalid={Boolean(errors.code)}
-                                />
-                                {errors.code && (
-                                    <p className="text-sm text-destructive">
-                                        {errors.code}
-                                    </p>
-                                )}
-                            </div>
-
                             <div className="space-y-2">
                                 <Label htmlFor="name">
                                     Nama Mata Pelajaran

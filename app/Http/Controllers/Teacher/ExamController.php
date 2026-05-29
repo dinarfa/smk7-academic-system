@@ -53,8 +53,8 @@ class ExamController extends Controller
             ->with('schoolClasses:id,name,code')
             ->where('teacher_id', $teacher->id)
             ->orderBy('name')
-            ->get(['id', 'code', 'name'])
-            ->groupBy(fn (Subject $subject) => $subject->code.'::'.$subject->name)
+            ->get(['id', 'name'])
+            ->groupBy(fn (Subject $subject) => $subject->id.'::'.$subject->name)
             ->map(function ($subjectsInGroup, $subjectKey) {
                 $firstSubject = $subjectsInGroup->first();
 

@@ -42,23 +42,30 @@ class OpenAttendanceSessionRequest extends FormRequest
 
                     // If teacher selected a specific subject, ensure it belongs to them and the class
                     if (is_string($subjectKey) && str_contains($subjectKey, '::')) {
-                        [$subjectCode, $subjectName] = explode('::', $subjectKey, 2);
+                        [$subjectId, $subjectName] = explode('::', $subjectKey, 2);
 
                         $subjectQuery = Subject::query()
-                            ->where('teacher_id', $teacherId)
+                            ->where('id', (int) $subjectId)
                             ->where('name', $subjectName)
                             ->whereHas('schoolClasses', fn ($q) => $q->where('school_classes.id', (int) $value));
 
-                        if ($subjectCode === '') {
-                            $subjectQuery->whereNull('code');
-                        } else {
-                            $subjectQuery->where('code', $subjectCode);
+                        // Check teacher access via pivot or default
+                        $subject = $subjectQuery->first();
+                        if (! $subject) {
+                            $fail('Kelas yang dipilih tidak termasuk relasi mata pelajaran Anda.');
+                            return;
                         }
 
-                        $isAllowed = $subjectQuery->exists();
+                        $pivotTeacherId = $subject->schoolClasses()
+                            ->where('school_classes.id', (int) $value)
+                            ->first()?->pivot?->teacher_id;
 
-                        if (! $isAllowed) {
-                            $fail('Kelas yang dipilih tidak termasuk relasi mata pelajaran Anda.');
+                        $hasAccess = $pivotTeacherId
+                            ? $pivotTeacherId === $teacherId
+                            : $subject->teacher_id === $teacherId;
+
+                        if (! $hasAccess) {
+                            $fail('Anda tidak memiliki akses ke mata pelajaran ini.');
                         }
 
                         return;
@@ -111,17 +118,17 @@ class OpenAttendanceSessionRequest extends FormRequest
         // Subjects where teacher is the default teacher
         $defaultSubjects = Subject::query()
             ->where('teacher_id', $teacherId)
-            ->get(['id', 'code', 'name']);
+            ->get(['id', 'name']);
 
         // Subjects assigned to this teacher via the class_subjects pivot
         $pivotSubjects = Subject::query()
             ->whereHas('schoolClasses', fn ($q) => $q->where('class_subjects.teacher_id', $teacherId))
-            ->get(['id', 'code', 'name']);
+            ->get(['id', 'name']);
 
         return $defaultSubjects
             ->merge($pivotSubjects)
             ->unique('id')
-            ->map(fn (Subject $subject): string => $subject->code.'::'.$subject->name)
+            ->map(fn (Subject $subject): string => $subject->id.'::'.$subject->name)
             ->unique()
             ->values()
             ->all();

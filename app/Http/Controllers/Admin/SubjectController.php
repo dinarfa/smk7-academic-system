@@ -34,7 +34,7 @@ class SubjectController extends Controller
 
         $query = Subject::query()
             ->with(['teacher:id,name', 'schoolClasses:id,name'])
-            ->select(['id', 'code', 'name', 'teacher_id', 'created_at', 'updated_at']);
+            ->select(['id', 'name', 'teacher_id', 'created_at', 'updated_at']);
 
         if ($request->filled('teacher_id')) {
             $query->where('teacher_id', $request->input('teacher_id'));
@@ -47,10 +47,7 @@ class SubjectController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->input('search');
-            $query->where(function ($q) use ($search): void {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('code', 'like', "%{$search}%");
-            });
+            $query->where('name', 'like', "%{$search}%");
         }
 
         $subjects = $query
@@ -59,7 +56,6 @@ class SubjectController extends Controller
             ->withQueryString()
             ->through(fn (Subject $subject): array => [
                 'id' => $subject->id,
-                'code' => $subject->code,
                 'name' => $subject->name,
                 'school_classes' => $subject->schoolClasses->map(fn (SchoolClass $class): array => [
                     'id' => $class->id,
@@ -107,7 +103,6 @@ class SubjectController extends Controller
             'teachers' => $teachers,
             'subject' => [
                 'id' => $subject->id,
-                'code' => $subject->code,
                 'name' => $subject->name,
                 'school_class_ids' => $subject->schoolClasses->pluck('id')->toArray(),
                 'teacher_id' => $subject->teacher_id,
