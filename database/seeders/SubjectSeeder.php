@@ -61,11 +61,15 @@ class SubjectSeeder extends Seeder
                 $pairIndex++;
             }
 
-            // Sync only if not already attached
+            // Sync only if not already attached (with teacher_id on pivot)
             $existingIds = $subject->schoolClasses()->pluck('school_classes.id')->toArray();
             $newIds = array_diff($assignedClasses, $existingIds);
             if (! empty($newIds)) {
-                $subject->schoolClasses()->attach($newIds);
+                $attachData = [];
+                foreach ($newIds as $classId) {
+                    $attachData[$classId] = ['teacher_id' => $subject->teacher_id];
+                }
+                $subject->schoolClasses()->attach($attachData);
             }
         }
 

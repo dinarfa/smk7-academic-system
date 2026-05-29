@@ -65,9 +65,16 @@ class OpenAttendanceSessionRequest extends FormRequest
                     }
 
                     // No specific subject chosen. Allow if teacher is homeroom or teaches in that class.
+                    // Check both pivot teacher_id and subject.teacher_id (default)
                     $teachesInClass = Subject::query()
-                        ->where('teacher_id', $teacherId)
-                        ->whereHas('schoolClasses', fn ($q) => $q->where('school_classes.id', (int) $value))
+                        ->where(function ($q) use ($teacherId, $value): void {
+                            $q->where('teacher_id', $teacherId)
+                                ->whereHas('schoolClasses', fn ($q2) => $q2->where('school_classes.id', (int) $value));
+                        })
+                        ->orWhereHas('schoolClasses', function ($q) use ($teacherId, $value): void {
+                            $q->where('school_classes.id', (int) $value)
+                                ->where('class_subjects.teacher_id', $teacherId);
+                        })
                         ->exists();
 
                     if ($teachesInClass) {
@@ -101,9 +108,19 @@ class OpenAttendanceSessionRequest extends FormRequest
             return [];
         }
 
-        return Subject::query()
+        // Subjects where teacher is the default teacher
+        $defaultSubjects = Subject::query()
             ->where('teacher_id', $teacherId)
-            ->get(['code', 'name'])
+            ->get(['id', 'code', 'name']);
+
+        // Subjects assigned to this teacher via the class_subjects pivot
+        $pivotSubjects = Subject::query()
+            ->whereHas('schoolClasses', fn ($q) => $q->where('class_subjects.teacher_id', $teacherId))
+            ->get(['id', 'code', 'name']);
+
+        return $defaultSubjects
+            ->merge($pivotSubjects)
+            ->unique('id')
             ->map(fn (Subject $subject): string => $subject->code.'::'.$subject->name)
             ->unique()
             ->values()

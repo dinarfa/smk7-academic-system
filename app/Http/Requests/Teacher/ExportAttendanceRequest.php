@@ -4,6 +4,7 @@ namespace App\Http\Requests\Teacher;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\DB;
 
 class ExportAttendanceRequest extends FormRequest
 {
@@ -48,8 +49,14 @@ class ExportAttendanceRequest extends FormRequest
                     ->filter()
                     ->unique();
 
+                // Also include classes where teacher is assigned via pivot
+                $pivotClassIds = DB::table('class_subjects')
+                    ->where('teacher_id', $teacher->id)
+                    ->pluck('school_class_id');
+
                 $allowedClassIds = $teacher->homeroomClasses()->pluck('id')
                     ->merge($subjectClassIds)
+                    ->merge($pivotClassIds)
                     ->unique()
                     ->values()
                     ->toArray();
