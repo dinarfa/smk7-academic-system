@@ -21,7 +21,9 @@ export function NavMain({ sections }: { sections: NavSection[] }) {
         <>
             {sections.map((section, i) => (
                 <SidebarGroup key={section.label ?? i} className="px-2 py-0">
-                    {section.label && <SidebarGroupLabel>{section.label}</SidebarGroupLabel>}
+                    {section.label && (
+                        <SidebarGroupLabel>{section.label}</SidebarGroupLabel>
+                    )}
                     <SidebarMenu>
                         {section.items.map((item) => (
                             <SidebarMenuItem key={item.title}>

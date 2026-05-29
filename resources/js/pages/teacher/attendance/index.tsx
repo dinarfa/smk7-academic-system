@@ -4,8 +4,21 @@ import { useEffect, useState } from 'react';
 import QRScanner from '@/components/QRScanner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { dashboard } from '@/routes';
 
 interface AttendanceRecord {
@@ -37,13 +50,19 @@ interface DailyAttendanceData {
     date: string;
 }
 
-export default function Index({ attendance, active_session: activeSession, date }: DailyAttendanceData) {
+export default function Index({
+    attendance,
+    active_session: activeSession,
+    date,
+}: DailyAttendanceData) {
     const [currentTime, setCurrentTime] = useState(new Date());
     const [showScanner, setShowScanner] = useState(false);
     const [exportProcessing, setExportProcessing] = useState(false);
 
     const getCsrfToken = () =>
-        document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+        document
+            .querySelector('meta[name="csrf-token"]')
+            ?.getAttribute('content') ?? '';
 
     const handleExport = async (format: 'csv' | 'xlsx') => {
         setExportProcessing(true);
@@ -60,9 +79,11 @@ export default function Index({ attendance, active_session: activeSession, date 
                 credentials: 'same-origin',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': '*/*',
+                    Accept: '*/*',
                     'X-Requested-With': 'XMLHttpRequest',
-                    ...(getCsrfToken() ? { 'X-CSRF-TOKEN': getCsrfToken() } : {}),
+                    ...(getCsrfToken()
+                        ? { 'X-CSRF-TOKEN': getCsrfToken() }
+                        : {}),
                 },
                 body: JSON.stringify(payload),
             });
@@ -120,8 +141,8 @@ export default function Index({ attendance, active_session: activeSession, date 
         const diff = end.getTime() - currentTime.getTime();
 
         if (diff <= 0) {
-return 'Expired';
-}
+            return 'Expired';
+        }
 
         const minutes = Math.floor(diff / 60000);
         const seconds = Math.floor((diff % 60000) / 1000);
@@ -129,12 +150,18 @@ return 'Expired';
         return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     };
 
-    const getStatusVariant = (status: string): 'default' | 'destructive' | 'outline' | 'secondary' => {
+    const getStatusVariant = (
+        status: string,
+    ): 'default' | 'destructive' | 'outline' | 'secondary' => {
         switch (status) {
-            case 'present': return 'default';
-            case 'late': return 'secondary';
-            case 'absent': return 'destructive';
-            default: return 'outline';
+            case 'present':
+                return 'default';
+            case 'late':
+                return 'secondary';
+            case 'absent':
+                return 'destructive';
+            default:
+                return 'outline';
         }
     };
 
@@ -146,140 +173,193 @@ return 'Expired';
 
             <div className="space-y-6 p-4">
                 <div>
-                    <h1 className="text-2xl font-semibold tracking-tight text-foreground">Absensi Harian</h1>
-                    <p className="mt-2 text-muted-foreground">Kelola absensi siswa untuk {date}</p>
+                    <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                        Absensi Harian
+                    </h1>
+                    <p className="mt-2 text-muted-foreground">
+                        Kelola absensi siswa untuk {date}
+                    </p>
                 </div>
 
                 {/* Active Session Section */}
-                {activeSession && getTimeRemaining(activeSession.ends_at) !== 'Expired' && (
-                    <Card>
-                        <CardHeader className="flex flex-row items-start justify-between gap-4 md:flex-row md:items-center md:justify-between">
-                            <div>
-                                <CardTitle>Sesi Aktif</CardTitle>
-                                <CardDescription className="capitalize">
-                                    {activeSession.type}{activeSession.subject_name ? ` — ${activeSession.subject_name}` : ''}
-                                </CardDescription>
-                            </div>
-                            <div className="text-right">
-                                <div className="text-3xl font-bold text-primary">
-                                    {getTimeRemaining(activeSession.ends_at)}
+                {activeSession &&
+                    getTimeRemaining(activeSession.ends_at) !== 'Expired' && (
+                        <Card>
+                            <CardHeader className="flex flex-row items-start justify-between gap-4 md:flex-row md:items-center md:justify-between">
+                                <div>
+                                    <CardTitle>Sesi Aktif</CardTitle>
+                                    <CardDescription className="capitalize">
+                                        {activeSession.type}
+                                        {activeSession.subject_name
+                                            ? ` — ${activeSession.subject_name}`
+                                            : ''}
+                                    </CardDescription>
                                 </div>
-                                <div className="text-xs text-muted-foreground">Waktu tersisa</div>
-                            </div>
-                        </CardHeader>
-
-                        <CardContent>
-                            <div className="grid md:grid-cols-2 gap-6">
-                                {/* QR Code Display */}
-                                <div className="flex flex-col items-center justify-center">
-                                    <div className="inline-block p-4 border rounded-lg bg-background">
-                                        <img
-                                            src={`/api/qr/${activeSession.qr_token}`}
-                                            alt="QR Code"
-                                            className="w-48 h-48"
-                                        />
+                                <div className="text-right">
+                                    <div className="text-3xl font-bold text-primary">
+                                        {getTimeRemaining(
+                                            activeSession.ends_at,
+                                        )}
                                     </div>
-                                    <p className="mt-4 text-sm text-muted-foreground">
-                                        Tunjukkan QR ke siswa untuk pemindaian
-                                    </p>
+                                    <div className="text-xs text-muted-foreground">
+                                        Waktu tersisa
+                                    </div>
                                 </div>
+                            </CardHeader>
 
-                                {/* Session Controls */}
-                                <div className="flex flex-col gap-3">
-                                    <Button
-                                        onClick={() => setShowScanner(!showScanner)}
-                                        variant={showScanner ? 'secondary' : 'default'}
-                                        className="w-full"
-                                    >
-                                        {showScanner ? 'Tutup Pemindai' : 'Buka Pemindai QR'}
-                                    </Button>
+                            <CardContent>
+                                <div className="grid gap-6 md:grid-cols-2">
+                                    {/* QR Code Display */}
+                                    <div className="flex flex-col items-center justify-center">
+                                        <div className="inline-block rounded-lg border bg-background p-4">
+                                            <img
+                                                src={`/api/qr/${activeSession.qr_token}`}
+                                                alt="QR Code"
+                                                className="h-48 w-48"
+                                            />
+                                        </div>
+                                        <p className="mt-4 text-sm text-muted-foreground">
+                                            Tunjukkan QR ke siswa untuk
+                                            pemindaian
+                                        </p>
+                                    </div>
+
+                                    {/* Session Controls */}
+                                    <div className="flex flex-col gap-3">
+                                        <Button
+                                            onClick={() =>
+                                                setShowScanner(!showScanner)
+                                            }
+                                            variant={
+                                                showScanner
+                                                    ? 'secondary'
+                                                    : 'default'
+                                            }
+                                            className="w-full"
+                                        >
+                                            {showScanner
+                                                ? 'Tutup Pemindai'
+                                                : 'Buka Pemindai QR'}
+                                        </Button>
                                         <div className="mt-2 grid grid-cols-2 gap-2">
                                             <Button
                                                 variant="outline"
-                                                onClick={() => handleExport('csv')}
+                                                onClick={() =>
+                                                    handleExport('csv')
+                                                }
                                                 disabled={exportProcessing}
                                                 className="w-full text-sm"
                                             >
-                                                {exportProcessing ? 'Mengekspor...' : 'Export CSV'}
+                                                {exportProcessing
+                                                    ? 'Mengekspor...'
+                                                    : 'Export CSV'}
                                             </Button>
 
                                             <Button
                                                 variant="secondary"
-                                                onClick={() => handleExport('xlsx')}
+                                                onClick={() =>
+                                                    handleExport('xlsx')
+                                                }
                                                 disabled={exportProcessing}
                                                 className="w-full text-sm"
                                             >
-                                                {exportProcessing ? 'Mengekspor...' : 'Export XLSX'}
+                                                {exportProcessing
+                                                    ? 'Mengekspor...'
+                                                    : 'Export XLSX'}
                                             </Button>
                                         </div>
 
-                                    <Button
-                                        variant="outline"
-                                        className="w-full"
-                                    >
-                                        Buat QR Baru
-                                    </Button>
+                                        <Button
+                                            variant="outline"
+                                            className="w-full"
+                                        >
+                                            Buat QR Baru
+                                        </Button>
 
-                                    <Button
-                                        variant="destructive"
-                                        className="w-full"
-                                    >
-                                        Tutup Sesi
-                                    </Button>
+                                        <Button
+                                            variant="destructive"
+                                            className="w-full"
+                                        >
+                                            Tutup Sesi
+                                        </Button>
+                                    </div>
                                 </div>
-                            </div>
 
-                            {/* QR Scanner */}
-                            {showScanner && (
-                                <div className="mt-6 border-t pt-6">
-                                    <QRScanner
-                                        onScan={async (data) => {
-                                            setShowScanner(false);
+                                {/* QR Scanner */}
+                                {showScanner && (
+                                    <div className="mt-6 border-t pt-6">
+                                        <QRScanner
+                                            onScan={async (data) => {
+                                                setShowScanner(false);
 
-                                            try {
-                                                const fd = new FormData();
-                                                fd.append('qr_token', data);
-                                                const res = await fetch('/student/attendance/scan', {
-                                                    method: 'POST',
-                                                    body: fd,
-                                                    credentials: 'same-origin',
-                                                    headers: {
-                                                        'X-Requested-With': 'XMLHttpRequest',
-                                                        'Accept': 'application/json',
-                                                        ...(getCsrfToken() ? { 'X-CSRF-TOKEN': getCsrfToken() } : {}),
-                                                    },
-                                                });
+                                                try {
+                                                    const fd = new FormData();
+                                                    fd.append('qr_token', data);
+                                                    const res = await fetch(
+                                                        '/student/attendance/scan',
+                                                        {
+                                                            method: 'POST',
+                                                            body: fd,
+                                                            credentials:
+                                                                'same-origin',
+                                                            headers: {
+                                                                'X-Requested-With':
+                                                                    'XMLHttpRequest',
+                                                                Accept: 'application/json',
+                                                                ...(getCsrfToken()
+                                                                    ? {
+                                                                          'X-CSRF-TOKEN':
+                                                                              getCsrfToken(),
+                                                                      }
+                                                                    : {}),
+                                                            },
+                                                        },
+                                                    );
 
-                                                if (!res.ok) {
-                                                    const text = await res.text();
-                                                    console.error('Scan error response', text);
-                                                    alert('Pemindaian gagal');
-                                                } else {
-                                                    window.location.reload();
+                                                    if (!res.ok) {
+                                                        const text =
+                                                            await res.text();
+                                                        console.error(
+                                                            'Scan error response',
+                                                            text,
+                                                        );
+                                                        alert(
+                                                            'Pemindaian gagal',
+                                                        );
+                                                    } else {
+                                                        window.location.reload();
+                                                    }
+                                                } catch (err) {
+                                                    console.error(err);
+                                                    alert(
+                                                        'Kesalahan pemindaian',
+                                                    );
                                                 }
-                                            } catch (err) {
-                                                console.error(err);
-                                                alert('Kesalahan pemindaian');
-                                            }
-                                        }}
-                                        onError={(error) => {
-                                            console.error('Scan error:', error);
-                                        }}
-                                    />
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-                )}
+                                            }}
+                                            onError={(error) => {
+                                                console.error(
+                                                    'Scan error:',
+                                                    error,
+                                                );
+                                            }}
+                                        />
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    )}
 
                 {/* Attendance by Phase */}
                 <div className="space-y-6">
-                    {phases.map(phase => (
+                    {phases.map((phase) => (
                         <Card key={phase}>
                             <CardHeader>
-                                <CardTitle className="capitalize">{phase} - Absensi</CardTitle>
+                                <CardTitle className="capitalize">
+                                    {phase} - Absensi
+                                </CardTitle>
                                 <CardDescription>
-                                    {attendance[phase]?.length ?? 0} siswa tercatat
+                                    {attendance[phase]?.length ?? 0} siswa
+                                    tercatat
                                 </CardDescription>
                             </CardHeader>
 
@@ -295,18 +375,27 @@ return 'Expired';
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {attendance[phase].map(record => (
+                                            {attendance[phase].map((record) => (
                                                 <TableRow key={record.id}>
                                                     <TableCell className="font-medium">
                                                         {record.student.name}
                                                     </TableCell>
                                                     <TableCell>
-                                                        <Badge variant={getStatusVariant(record.status)} className="capitalize">
+                                                        <Badge
+                                                            variant={getStatusVariant(
+                                                                record.status,
+                                                            )}
+                                                            className="capitalize"
+                                                        >
                                                             {record.status}
                                                         </Badge>
                                                     </TableCell>
                                                     <TableCell className="text-sm text-muted-foreground">
-                                                        {new Date(record.scanned_at).toLocaleTimeString('id-ID')}
+                                                        {new Date(
+                                                            record.scanned_at,
+                                                        ).toLocaleTimeString(
+                                                            'id-ID',
+                                                        )}
                                                     </TableCell>
                                                     <TableCell className="text-sm text-muted-foreground">
                                                         {record.source}
@@ -316,9 +405,10 @@ return 'Expired';
                                         </TableBody>
                                     </Table>
                                 ) : (
-                                    <div className="text-center py-12">
+                                    <div className="py-12 text-center">
                                         <p className="text-muted-foreground">
-                                            Belum ada catatan absensi untuk fase {phase}
+                                            Belum ada catatan absensi untuk fase{' '}
+                                            {phase}
                                         </p>
                                     </div>
                                 )}
@@ -333,7 +423,8 @@ return 'Expired';
                         <CardHeader>
                             <CardTitle>Absensi Manual</CardTitle>
                             <CardDescription>
-                                Gunakan ketika pemindaian QR tidak tersedia atau untuk pembaruan massal.
+                                Gunakan ketika pemindaian QR tidak tersedia atau
+                                untuk pembaruan massal.
                             </CardDescription>
                         </CardHeader>
 
@@ -358,7 +449,11 @@ return 'Expired';
                         </CardHeader>
 
                         <CardContent>
-                            <Button asChild variant="outline" className="w-full">
+                            <Button
+                                asChild
+                                variant="outline"
+                                className="w-full"
+                            >
                                 <Link href="/teacher/attendance/export">
                                     Buka Halaman Ekspor
                                 </Link>
@@ -370,12 +465,17 @@ return 'Expired';
                         <CardHeader>
                             <CardTitle>Rekap Absensi</CardTitle>
                             <CardDescription>
-                                Lihat rekap kehadiran siswa berdasarkan rentang tanggal.
+                                Lihat rekap kehadiran siswa berdasarkan rentang
+                                tanggal.
                             </CardDescription>
                         </CardHeader>
 
                         <CardContent>
-                            <Button asChild variant="outline" className="w-full">
+                            <Button
+                                asChild
+                                variant="outline"
+                                className="w-full"
+                            >
                                 <Link href="/teacher/attendance/recap">
                                     Lihat Rekap
                                 </Link>

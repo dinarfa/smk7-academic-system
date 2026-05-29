@@ -21,6 +21,13 @@ class UpdateSubjectScheduleRequest extends FormRequest
         if ($this->has('subject_id') && $this->input('subject_id') === '') {
             $this->merge(['subject_id' => null]);
         }
+
+        // Normalize H:i:s to H:i
+        foreach (['starts_at', 'ends_at'] as $field) {
+            if ($this->has($field) && strlen($this->input($field)) === 8) {
+                $this->merge([$field => substr($this->input($field), 0, 5)]);
+            }
+        }
     }
 
     /**

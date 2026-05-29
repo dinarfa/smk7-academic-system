@@ -9,6 +9,7 @@ use App\Http\Requests\Admin\UpdateSchoolClassRequest;
 use App\Models\SchoolClass;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -17,13 +18,21 @@ class SchoolClassController extends Controller
     /**
      * Show all school classes and creation form.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $classes = SchoolClass::query()
+        $query = SchoolClass::query()
             ->with(['homeroomTeacher:id,name,email'])
-            ->withCount('students')
+            ->withCount('students');
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        $classes = $query
             ->latest('id')
             ->paginate(10)
+            ->withQueryString()
             ->through(fn (SchoolClass $schoolClass): array => [
                 'id' => $schoolClass->id,
                 'name' => $schoolClass->name,
@@ -50,6 +59,9 @@ class SchoolClassController extends Controller
                 'name' => $teacher->name,
                 'email' => $teacher->email,
             ])->values(),
+            'filters' => [
+                'search' => $request->input('search'),
+            ],
         ]);
     }
 

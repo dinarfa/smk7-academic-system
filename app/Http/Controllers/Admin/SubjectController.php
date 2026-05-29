@@ -10,6 +10,7 @@ use App\Models\SchoolClass;
 use App\Models\Subject;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,7 +19,7 @@ class SubjectController extends Controller
     /**
      * Show subject list and create form.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $classes = SchoolClass::query()
             ->select(['id', 'name'])
@@ -31,11 +32,31 @@ class SubjectController extends Controller
             ->orderBy('name')
             ->get();
 
-        $subjects = Subject::query()
+        $query = Subject::query()
             ->with(['teacher:id,name', 'schoolClasses:id,name'])
-            ->select(['id', 'code', 'name', 'teacher_id', 'created_at', 'updated_at'])
+            ->select(['id', 'code', 'name', 'teacher_id', 'created_at', 'updated_at']);
+
+        if ($request->filled('teacher_id')) {
+            $query->where('teacher_id', $request->input('teacher_id'));
+        }
+
+        if ($request->filled('class_id')) {
+            $classId = $request->input('class_id');
+            $query->whereHas('schoolClasses', fn ($q) => $q->where('school_classes.id', $classId));
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search): void {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('code', 'like', "%{$search}%");
+            });
+        }
+
+        $subjects = $query
             ->latest('id')
             ->paginate(10)
+            ->withQueryString()
             ->through(fn (Subject $subject): array => [
                 'id' => $subject->id,
                 'code' => $subject->code,
@@ -56,6 +77,11 @@ class SubjectController extends Controller
             'classes' => $classes,
             'teachers' => $teachers,
             'subjects' => $subjects,
+            'filters' => [
+                'teacher_id' => $request->input('teacher_id'),
+                'class_id' => $request->input('class_id'),
+                'search' => $request->input('search'),
+            ],
         ]);
     }
 

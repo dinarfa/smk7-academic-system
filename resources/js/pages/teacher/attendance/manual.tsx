@@ -1,7 +1,5 @@
 import { Head, router } from '@inertiajs/react';
-import type {
-    Check
-} from 'lucide-react';
+import type { Check } from 'lucide-react';
 import {
     Search,
     CheckCircle2,
@@ -16,7 +14,14 @@ import { useState, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { dashboard } from '@/routes';
@@ -65,7 +70,9 @@ const createInitialStatuses = (
     for (const [studentId, record] of Object.entries(existingRecords)) {
         if (
             record.phase === phase &&
-            (record.status === 'present' || record.status === 'late' || record.status === 'absent')
+            (record.status === 'present' ||
+                record.status === 'late' ||
+                record.status === 'absent')
         ) {
             initial.set(Number(studentId), record.status as StudentStatus);
         }
@@ -74,10 +81,37 @@ const createInitialStatuses = (
     return initial;
 };
 
-const statusConfig: Record<StudentStatus, { label: string; shortLabel: string; color: string; bgColor: string; icon: typeof Check }> = {
-    present: { label: 'Hadir', shortLabel: 'H', color: 'text-emerald-700 dark:text-emerald-300', bgColor: 'bg-emerald-500', icon: CheckCircle2 },
-    late: { label: 'Terlambat', shortLabel: 'T', color: 'text-amber-700 dark:text-amber-300', bgColor: 'bg-amber-500', icon: Clock },
-    absent: { label: 'Tidak Hadir', shortLabel: 'A', color: 'text-red-700 dark:text-red-300', bgColor: 'bg-red-500', icon: XCircle },
+const statusConfig: Record<
+    StudentStatus,
+    {
+        label: string;
+        shortLabel: string;
+        color: string;
+        bgColor: string;
+        icon: typeof Check;
+    }
+> = {
+    present: {
+        label: 'Hadir',
+        shortLabel: 'H',
+        color: 'text-emerald-700 dark:text-emerald-300',
+        bgColor: 'bg-emerald-500',
+        icon: CheckCircle2,
+    },
+    late: {
+        label: 'Terlambat',
+        shortLabel: 'T',
+        color: 'text-amber-700 dark:text-amber-300',
+        bgColor: 'bg-amber-500',
+        icon: Clock,
+    },
+    absent: {
+        label: 'Tidak Hadir',
+        shortLabel: 'A',
+        color: 'text-red-700 dark:text-red-300',
+        bgColor: 'bg-red-500',
+        icon: XCircle,
+    },
 };
 
 const phaseLabels: Record<string, string> = {
@@ -95,8 +129,8 @@ export default function ManualAttendance({
     const [search, setSearch] = useState('');
     const [selectedClass, setSelectedClass] = useState<number | null>(null);
     const [phase, setPhase] = useState('morning');
-    const [statuses, setStatuses] = useState<Map<number, StudentStatus>>(
-        () => createInitialStatuses(existingRecords, 'morning'),
+    const [statuses, setStatuses] = useState<Map<number, StudentStatus>>(() =>
+        createInitialStatuses(existingRecords, 'morning'),
     );
 
     // When phase changes, load existing records for that phase
@@ -109,15 +143,24 @@ export default function ManualAttendance({
 
     const filteredStudents = useMemo(() => {
         return students.filter((s) => {
-            const matchesSearch = s.name.toLowerCase().includes(search.toLowerCase());
-            const matchesClass = selectedClass === null || s.class_id === selectedClass;
+            const matchesSearch = s.name
+                .toLowerCase()
+                .includes(search.toLowerCase());
+            const matchesClass =
+                selectedClass === null || s.class_id === selectedClass;
 
             return matchesSearch && matchesClass;
         });
     }, [students, search, selectedClass]);
 
     const summary = useMemo(() => {
-        const counts = { present: 0, late: 0, absent: 0, unset: 0, overwrites: 0 };
+        const counts = {
+            present: 0,
+            late: 0,
+            absent: 0,
+            unset: 0,
+            overwrites: 0,
+        };
 
         for (const s of filteredStudents) {
             const status = statuses.get(s.id);
@@ -125,7 +168,12 @@ export default function ManualAttendance({
 
             if (status) {
                 counts[status]++;
-                if (existing && existing.phase === phase && existing.status !== status) {
+
+                if (
+                    existing &&
+                    existing.phase === phase &&
+                    existing.status !== status
+                ) {
                     counts.overwrites++;
                 }
             } else {
@@ -172,13 +220,18 @@ export default function ManualAttendance({
         try {
             const payload = {
                 phase,
-                students: Array.from(statuses.entries()).map(([studentId, status]) => ({
-                    student_id: studentId,
-                    status,
-                })),
+                students: Array.from(statuses.entries()).map(
+                    ([studentId, status]) => ({
+                        student_id: studentId,
+                        status,
+                    }),
+                ),
             };
 
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+            const csrfToken =
+                document
+                    .querySelector('meta[name="csrf-token"]')
+                    ?.getAttribute('content') ?? '';
 
             const res = await fetch('/teacher/attendance/manual', {
                 method: 'POST',
@@ -186,7 +239,7 @@ export default function ManualAttendance({
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
+                    Accept: 'application/json',
                     ...(csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}),
                 },
                 body: JSON.stringify(payload),
@@ -215,11 +268,12 @@ export default function ManualAttendance({
             return null;
         }
 
-        const cfg = record.status === 'present'
-            ? statusConfig.present
-            : record.status === 'late'
-                ? statusConfig.late
-                : record.status === 'absent'
+        const cfg =
+            record.status === 'present'
+                ? statusConfig.present
+                : record.status === 'late'
+                  ? statusConfig.late
+                  : record.status === 'absent'
                     ? statusConfig.absent
                     : null;
 
@@ -242,9 +296,12 @@ export default function ManualAttendance({
                 {/* Header */}
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Absensi Manual</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                            Absensi Manual
+                        </h1>
                         <p className="mt-1 text-muted-foreground">
-                            Tanggal: {date} &middot; {students.length} siswa di kelas perwalian
+                            Tanggal: {date} &middot; {students.length} siswa di
+                            kelas perwalian
                         </p>
                     </div>
                     <Button
@@ -265,18 +322,23 @@ export default function ManualAttendance({
                             <div className="space-y-2">
                                 <Label>Fase Absensi</Label>
                                 <div className="flex gap-1 rounded-lg border p-1">
-                                    {Object.entries(phaseLabels).map(([value, label]) => (
-                                        <button
-                                            key={value}
-                                            onClick={() => handlePhaseChange(value)}
-                                            className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${phase === value
-                                                    ? 'bg-primary text-primary-foreground'
-                                                    : 'text-muted-foreground hover:bg-muted'
+                                    {Object.entries(phaseLabels).map(
+                                        ([value, label]) => (
+                                            <button
+                                                key={value}
+                                                onClick={() =>
+                                                    handlePhaseChange(value)
+                                                }
+                                                className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                                                    phase === value
+                                                        ? 'bg-primary text-primary-foreground'
+                                                        : 'text-muted-foreground hover:bg-muted'
                                                 }`}
-                                        >
-                                            {label}
-                                        </button>
-                                    ))}
+                                            >
+                                                {label}
+                                            </button>
+                                        ),
+                                    )}
                                 </div>
                             </div>
 
@@ -286,22 +348,28 @@ export default function ManualAttendance({
                                     <Label>Filter Kelas</Label>
                                     <div className="flex flex-wrap gap-1">
                                         <button
-                                            onClick={() => setSelectedClass(null)}
-                                            className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${selectedClass === null
+                                            onClick={() =>
+                                                setSelectedClass(null)
+                                            }
+                                            className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                                                selectedClass === null
                                                     ? 'bg-primary text-primary-foreground'
                                                     : 'border text-muted-foreground hover:bg-muted'
-                                                }`}
+                                            }`}
                                         >
                                             Semua
                                         </button>
                                         {classes.map((c) => (
                                             <button
                                                 key={c.id}
-                                                onClick={() => setSelectedClass(c.id)}
-                                                className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${selectedClass === c.id
+                                                onClick={() =>
+                                                    setSelectedClass(c.id)
+                                                }
+                                                className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                                                    selectedClass === c.id
                                                         ? 'bg-primary text-primary-foreground'
                                                         : 'border text-muted-foreground hover:bg-muted'
-                                                    }`}
+                                                }`}
                                             >
                                                 {c.name}
                                             </button>
@@ -314,10 +382,12 @@ export default function ManualAttendance({
                             <div className="space-y-2">
                                 <Label>Cari Siswa</Label>
                                 <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                    <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                     <Input
                                         value={search}
-                                        onChange={(e) => setSearch(e.target.value)}
+                                        onChange={(e) =>
+                                            setSearch(e.target.value)
+                                        }
                                         placeholder="Nama siswa..."
                                         className="pl-9"
                                     />
@@ -364,32 +434,46 @@ export default function ManualAttendance({
                 <div className="flex flex-wrap items-center gap-4 rounded-lg border bg-muted/30 px-4 py-3">
                     <div className="flex items-center gap-2">
                         <Users className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm font-medium">{filteredStudents.length} siswa</span>
+                        <span className="text-sm font-medium">
+                            {filteredStudents.length} siswa
+                        </span>
                     </div>
                     <div className="h-4 w-px bg-border" />
                     <div className="flex items-center gap-1.5">
                         <div className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
                         <span className="text-sm text-muted-foreground">
-                            <span className="font-medium text-foreground">{summary.present}</span> Hadir
+                            <span className="font-medium text-foreground">
+                                {summary.present}
+                            </span>{' '}
+                            Hadir
                         </span>
                     </div>
                     <div className="flex items-center gap-1.5">
                         <div className="h-2.5 w-2.5 rounded-full bg-amber-500" />
                         <span className="text-sm text-muted-foreground">
-                            <span className="font-medium text-foreground">{summary.late}</span> Terlambat
+                            <span className="font-medium text-foreground">
+                                {summary.late}
+                            </span>{' '}
+                            Terlambat
                         </span>
                     </div>
                     <div className="flex items-center gap-1.5">
                         <div className="h-2.5 w-2.5 rounded-full bg-red-500" />
                         <span className="text-sm text-muted-foreground">
-                            <span className="font-medium text-foreground">{summary.absent}</span> Tidak Hadir
+                            <span className="font-medium text-foreground">
+                                {summary.absent}
+                            </span>{' '}
+                            Tidak Hadir
                         </span>
                     </div>
                     {summary.unset > 0 && (
                         <>
                             <div className="h-4 w-px bg-border" />
                             <span className="text-sm text-muted-foreground">
-                                <span className="font-medium text-foreground">{summary.unset}</span> belum diisi
+                                <span className="font-medium text-foreground">
+                                    {summary.unset}
+                                </span>{' '}
+                                belum diisi
                             </span>
                         </>
                     )}
@@ -402,54 +486,84 @@ export default function ManualAttendance({
                             <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
                                 <Users className="mb-3 h-10 w-10 opacity-40" />
                                 <p className="text-sm">
-                                    {search ? 'Tidak ada siswa yang cocok dengan pencarian' : 'Tidak ada siswa di kelas perwalian'}
+                                    {search
+                                        ? 'Tidak ada siswa yang cocok dengan pencarian'
+                                        : 'Tidak ada siswa di kelas perwalian'}
                                 </p>
                             </div>
                         ) : (
                             <div className="divide-y">
                                 {filteredStudents.map((student, index) => {
-                                    const currentStatus = statuses.get(student.id);
+                                    const currentStatus = statuses.get(
+                                        student.id,
+                                    );
 
                                     return (
                                         <div
                                             key={student.id}
-                                            className={`flex items-center gap-4 px-4 py-3 transition-colors hover:bg-muted/30 ${currentStatus ? 'bg-muted/10' : ''
-                                                }`}
+                                            className={`flex items-center gap-4 px-4 py-3 transition-colors hover:bg-muted/30 ${
+                                                currentStatus
+                                                    ? 'bg-muted/10'
+                                                    : ''
+                                            }`}
                                         >
                                             <span className="w-8 text-right text-sm text-muted-foreground">
                                                 {index + 1}
                                             </span>
 
                                             <div className="min-w-0 flex-1">
-                                                <p className="truncate text-sm font-medium">{student.name}</p>
-                                                <p className="text-xs text-muted-foreground">{student.class_name}</p>
+                                                <p className="truncate text-sm font-medium">
+                                                    {student.name}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {student.class_name}
+                                                </p>
                                             </div>
 
                                             {getExistingBadge(student.id) && (
                                                 <div className="hidden sm:block">
-                                                    {getExistingBadge(student.id)}
+                                                    {getExistingBadge(
+                                                        student.id,
+                                                    )}
                                                 </div>
                                             )}
 
                                             <div className="flex gap-1.5">
-                                                {(Object.keys(statusConfig) as StudentStatus[]).map((status) => {
-                                                    const cfg = statusConfig[status];
-                                                    const isActive = currentStatus === status;
+                                                {(
+                                                    Object.keys(
+                                                        statusConfig,
+                                                    ) as StudentStatus[]
+                                                ).map((status) => {
+                                                    const cfg =
+                                                        statusConfig[status];
+                                                    const isActive =
+                                                        currentStatus ===
+                                                        status;
                                                     const Icon = cfg.icon;
 
                                                     return (
                                                         <button
                                                             key={status}
-                                                            onClick={() => setStatus(student.id, status)}
+                                                            onClick={() =>
+                                                                setStatus(
+                                                                    student.id,
+                                                                    status,
+                                                                )
+                                                            }
                                                             title={cfg.label}
-                                                            className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all ${isActive
+                                                            className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
+                                                                isActive
                                                                     ? `${cfg.bgColor} text-white shadow-md`
                                                                     : 'border bg-background text-muted-foreground hover:border-muted-foreground/30 hover:bg-muted'
-                                                                }`}
+                                                            }`}
                                                         >
                                                             <Icon className="h-4 w-4" />
-                                                            <span className="hidden sm:inline">{cfg.label}</span>
-                                                            <span className="sm:hidden">{cfg.shortLabel}</span>
+                                                            <span className="hidden sm:inline">
+                                                                {cfg.label}
+                                                            </span>
+                                                            <span className="sm:hidden">
+                                                                {cfg.shortLabel}
+                                                            </span>
                                                         </button>
                                                     );
                                                 })}
@@ -470,14 +584,25 @@ export default function ManualAttendance({
                                 {statuses.size} siswa dipilih
                             </span>
                             <div className="hidden gap-2 sm:flex">
-                                <Badge variant="outline" className="gap-1 text-emerald-600">
-                                    <CheckCircle2 className="h-3 w-3" /> {summary.present}
+                                <Badge
+                                    variant="outline"
+                                    className="gap-1 text-emerald-600"
+                                >
+                                    <CheckCircle2 className="h-3 w-3" />{' '}
+                                    {summary.present}
                                 </Badge>
-                                <Badge variant="outline" className="gap-1 text-amber-600">
+                                <Badge
+                                    variant="outline"
+                                    className="gap-1 text-amber-600"
+                                >
                                     <Clock className="h-3 w-3" /> {summary.late}
                                 </Badge>
-                                <Badge variant="outline" className="gap-1 text-red-600">
-                                    <XCircle className="h-3 w-3" /> {summary.absent}
+                                <Badge
+                                    variant="outline"
+                                    className="gap-1 text-red-600"
+                                >
+                                    <XCircle className="h-3 w-3" />{' '}
+                                    {summary.absent}
                                 </Badge>
                             </div>
                         </div>
@@ -500,41 +625,65 @@ export default function ManualAttendance({
                     <DialogHeader>
                         <DialogTitle>Konfirmasi Simpan Absensi</DialogTitle>
                         <DialogDescription>
-                            Pastikan data yang dimasukkan sudah benar. Data yang sudah disimpan dapat diubah.
+                            Pastikan data yang dimasukkan sudah benar. Data yang
+                            sudah disimpan dapat diubah.
                         </DialogDescription>
                     </DialogHeader>
 
                     <div className="space-y-3">
                         {summary.overwrites > 0 && (
                             <div className="rounded-lg border border-amber-400/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
-                                Peringatan: {summary.overwrites} data akan ditimpa dengan status baru.
+                                Peringatan: {summary.overwrites} data akan
+                                ditimpa dengan status baru.
                             </div>
                         )}
                         <div className="rounded-lg border p-4">
-                            <p className="text-sm text-muted-foreground">Fase</p>
+                            <p className="text-sm text-muted-foreground">
+                                Fase
+                            </p>
                             <p className="font-medium">{phaseLabels[phase]}</p>
                         </div>
                         <div className="grid grid-cols-3 gap-3">
                             <div className="rounded-lg border p-3 text-center">
-                                <p className="text-2xl font-bold text-emerald-600">{summary.present}</p>
-                                <p className="text-xs text-muted-foreground">Hadir</p>
+                                <p className="text-2xl font-bold text-emerald-600">
+                                    {summary.present}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                    Hadir
+                                </p>
                             </div>
                             <div className="rounded-lg border p-3 text-center">
-                                <p className="text-2xl font-bold text-amber-600">{summary.late}</p>
-                                <p className="text-xs text-muted-foreground">Terlambat</p>
+                                <p className="text-2xl font-bold text-amber-600">
+                                    {summary.late}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                    Terlambat
+                                </p>
                             </div>
                             <div className="rounded-lg border p-3 text-center">
-                                <p className="text-2xl font-bold text-red-600">{summary.absent}</p>
-                                <p className="text-xs text-muted-foreground">Tidak Hadir</p>
+                                <p className="text-2xl font-bold text-red-600">
+                                    {summary.absent}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                    Tidak Hadir
+                                </p>
                             </div>
                         </div>
                     </div>
 
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setShowConfirm(false)} disabled={processing}>
+                        <Button
+                            variant="outline"
+                            onClick={() => setShowConfirm(false)}
+                            disabled={processing}
+                        >
                             Batal
                         </Button>
-                        <Button onClick={handleSubmit} disabled={processing} className="gap-2">
+                        <Button
+                            onClick={handleSubmit}
+                            disabled={processing}
+                            className="gap-2"
+                        >
                             {processing ? 'Menyimpan...' : 'Ya, Simpan'}
                         </Button>
                     </DialogFooter>

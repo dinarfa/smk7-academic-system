@@ -47,18 +47,26 @@ class SubjectSeeder extends Seeder
         $pairIndex = 0;
 
         foreach ($subjectNames as $index => $subjectName) {
-            $subject = Subject::query()->create([
-                'teacher_id' => $teachers[$index % $teachers->count()]->id,
-                'name' => $subjectName,
-                'code' => 'MAP'.($index + 1),
-            ]);
+            $subject = Subject::firstOrCreate(
+                ['name' => $subjectName],
+                [
+                    'teacher_id' => $teachers[$index % $teachers->count()]->id,
+                    'code' => 'MAP'.($index + 1),
+                ],
+            );
 
             $assignedClasses = [];
             for ($j = 0; $j < $classesPerSubject; $j++) {
                 $assignedClasses[] = $classIds[$pairIndex % count($classIds)];
                 $pairIndex++;
             }
-            $subject->schoolClasses()->attach($assignedClasses);
+
+            // Sync only if not already attached
+            $existingIds = $subject->schoolClasses()->pluck('school_classes.id')->toArray();
+            $newIds = array_diff($assignedClasses, $existingIds);
+            if (! empty($newIds)) {
+                $subject->schoolClasses()->attach($newIds);
+            }
         }
 
         $this->command?->info('Seeded '.count($subjectNames).' subjects across '.$classes->count().' classes.');

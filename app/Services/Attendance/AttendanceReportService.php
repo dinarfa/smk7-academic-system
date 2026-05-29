@@ -100,7 +100,7 @@ class AttendanceReportService
      *
      * @return LengthAwarePaginator<int, array<string, mixed>>
      */
-    public function sessions(?string $search = null): LengthAwarePaginator
+    public function sessions(?string $search = null, ?int $classId = null, ?string $startDate = null, ?string $endDate = null): LengthAwarePaginator
     {
         $query = AttendanceSession::query()
             ->with(['records' => function ($q): void {
@@ -118,7 +118,22 @@ class AttendanceReportService
             });
         }
 
-        $sessions = $query->paginate(10);
+        if ($classId !== null) {
+            $query->where(function ($q) use ($classId): void {
+                $q->where('class_id', $classId)
+                    ->orWhereHas('subjectModel.schoolClasses', fn ($sq) => $sq->where('school_classes.id', $classId));
+            });
+        }
+
+        if ($startDate !== null && $startDate !== '') {
+            $query->whereDate('created_at', '>=', $startDate);
+        }
+
+        if ($endDate !== null && $endDate !== '') {
+            $query->whereDate('created_at', '<=', $endDate);
+        }
+
+        $sessions = $query->latest('created_at')->paginate(10)->withQueryString();
 
         $sessions->setCollection(
             $sessions->getCollection()->map(fn (AttendanceSession $session): array => [
@@ -148,9 +163,9 @@ class AttendanceReportService
      *
      * @return LengthAwarePaginator<int, array<string, mixed>>
      */
-    public function students(): LengthAwarePaginator
+    public function students(?string $search = null): LengthAwarePaginator
     {
-        $students = User::query()
+        $query = User::query()
             ->where('role', 'student')
             ->with(['attendanceRecords' => function ($q): void {
                 $q->with(['session' => function ($sq): void {
@@ -158,8 +173,16 @@ class AttendanceReportService
                         ->with('subjectModel:id,name');
                 }])->latest('scanned_at')->limit(50);
             }])
-            ->withCount('attendanceRecords')
-            ->paginate(10);
+            ->withCount('attendanceRecords');
+
+        if ($search !== null && $search !== '') {
+            $query->where(function ($q) use ($search): void {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        $students = $query->latest()->paginate(10)->withQueryString();
 
         $students->setCollection(
             $students->getCollection()->map(fn (User $student): array => [

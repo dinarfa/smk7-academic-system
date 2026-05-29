@@ -1,10 +1,22 @@
-import { Head, Link } from '@inertiajs/react'
-import { FileBarChart2, Users, Activity, UsersRound, Calendar } from 'lucide-react'
-import { StatCard } from '@/components/stat-card'
-import { StatusBadge } from '@/components/status-badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import admin from '@/routes/admin'
+import { Head, Link } from '@inertiajs/react';
+import {
+    FileBarChart2,
+    Users,
+    Activity,
+    UsersRound,
+    Calendar,
+} from 'lucide-react';
+import { StatCard } from '@/components/stat-card';
+import { StatusBadge } from '@/components/status-badge';
+import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import admin from '@/routes/admin';
 
 type Summary = {
     total_users: number;
@@ -13,14 +25,14 @@ type Summary = {
     total_sessions: number;
     total_records: number;
     today_records: number;
-}
+};
 
 type TopStudent = {
     student_id: number;
     student_name: string;
     student_email: string;
     attendance_count: number;
-}
+};
 
 type RecentSession = {
     id: number;
@@ -28,15 +40,19 @@ type RecentSession = {
     type: string;
     opened_by: string;
     is_active: boolean;
-}
+};
 
 type Props = {
     summary: Summary;
     topStudents: TopStudent[];
     recentSessions: RecentSession[];
-}
+};
 
-export default function AdminReportsOverview({ summary, topStudents, recentSessions }: Props) {
+export default function AdminReportsOverview({
+    summary,
+    topStudents,
+    recentSessions,
+}: Props) {
     return (
         <>
             <Head title="Ringkasan Laporan" />
@@ -44,56 +60,105 @@ export default function AdminReportsOverview({ summary, topStudents, recentSessi
             <div className="space-y-6 p-4 sm:p-6 lg:p-8">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Ringkasan Laporan</h1>
-                        <p className="text-sm text-muted-foreground">Statistik sistem dan data kehadiran</p>
+                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                            Ringkasan Laporan
+                        </h1>
+                        <p className="text-sm text-muted-foreground">
+                            Statistik sistem dan data kehadiran
+                        </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
                         <Button asChild size="sm">
-                            <Link href={admin.reports.bySession.url()}>Per Sesi</Link>
+                            <Link href={admin.reports.bySession.url()}>
+                                Per Sesi
+                            </Link>
                         </Button>
                         <Button asChild size="sm" variant="secondary">
-                            <Link href={admin.reports.byClass.url()}>Per Kelas</Link>
+                            <Link href={admin.reports.byClass.url()}>
+                                Per Kelas
+                            </Link>
                         </Button>
                         <Button asChild size="sm" variant="secondary">
-                            <Link href={admin.reports.export.url()}>Ekspor CSV</Link>
+                            <Link href={admin.reports.export.url()}>
+                                Ekspor CSV
+                            </Link>
                         </Button>
                     </div>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-                    <StatCard icon={UsersRound} label="Total Pengguna" value={summary.total_users} />
-                    <StatCard icon={Users} label="Guru" value={summary.total_teachers} />
-                    <StatCard icon={Users} label="Siswa" value={summary.total_students} />
-                    <StatCard icon={Calendar} label="Total Sesi" value={summary.total_sessions} />
-                    <StatCard icon={FileBarChart2} label="Total Absen" value={summary.total_records} />
-                    <StatCard icon={Activity} label="Absen Hari Ini" value={summary.today_records} />
+                    <StatCard
+                        icon={UsersRound}
+                        label="Total Pengguna"
+                        value={summary.total_users}
+                    />
+                    <StatCard
+                        icon={Users}
+                        label="Guru"
+                        value={summary.total_teachers}
+                    />
+                    <StatCard
+                        icon={Users}
+                        label="Siswa"
+                        value={summary.total_students}
+                    />
+                    <StatCard
+                        icon={Calendar}
+                        label="Total Sesi"
+                        value={summary.total_sessions}
+                    />
+                    <StatCard
+                        icon={FileBarChart2}
+                        label="Total Absen"
+                        value={summary.total_records}
+                    />
+                    <StatCard
+                        icon={Activity}
+                        label="Absen Hari Ini"
+                        value={summary.today_records}
+                    />
                 </div>
 
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                     <Card className="flex flex-col">
                         <CardHeader>
                             <CardTitle>Siswa Terajin</CardTitle>
-                            <CardDescription>Siswa dengan jumlah kehadiran tertinggi.</CardDescription>
+                            <CardDescription>
+                                Siswa dengan jumlah kehadiran tertinggi.
+                            </CardDescription>
                         </CardHeader>
                         <CardContent className="flex-1">
                             {topStudents.length === 0 ? (
-                                <p className="text-sm text-muted-foreground text-center py-8">Belum ada data kehadiran</p>
+                                <p className="py-8 text-center text-sm text-muted-foreground">
+                                    Belum ada data kehadiran
+                                </p>
                             ) : (
                                 <div className="divide-y divide-border">
                                     {topStudents.map((student, index) => (
-                                        <div key={student.student_id} className="flex items-center justify-between py-3">
+                                        <div
+                                            key={student.student_id}
+                                            className="flex items-center justify-between py-3"
+                                        >
                                             <div className="flex items-center gap-3">
-                                                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground">
+                                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-bold text-muted-foreground">
                                                     {index + 1}
                                                 </div>
                                                 <div>
-                                                    <p className="font-medium text-sm text-foreground">{student.student_name}</p>
-                                                    <p className="text-xs text-muted-foreground">{student.student_email}</p>
+                                                    <p className="text-sm font-medium text-foreground">
+                                                        {student.student_name}
+                                                    </p>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {student.student_email}
+                                                    </p>
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <p className="text-lg font-semibold text-foreground">{student.attendance_count}</p>
-                                                <p className="text-xs text-muted-foreground">Kehadiran</p>
+                                                <p className="text-lg font-semibold text-foreground">
+                                                    {student.attendance_count}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    Kehadiran
+                                                </p>
                                             </div>
                                         </div>
                                     ))}
@@ -105,24 +170,48 @@ export default function AdminReportsOverview({ summary, topStudents, recentSessi
                     <Card className="flex flex-col">
                         <CardHeader>
                             <CardTitle>Sesi Terbaru</CardTitle>
-                            <CardDescription>Sesi kehadiran terakhir di seluruh kelas.</CardDescription>
+                            <CardDescription>
+                                Sesi kehadiran terakhir di seluruh kelas.
+                            </CardDescription>
                         </CardHeader>
                         <CardContent className="flex-1">
                             {recentSessions.length === 0 ? (
-                                <p className="text-sm text-muted-foreground text-center py-8">Belum ada sesi</p>
+                                <p className="py-8 text-center text-sm text-muted-foreground">
+                                    Belum ada sesi
+                                </p>
                             ) : (
                                 <div className="divide-y divide-border">
                                     {recentSessions.map((session) => (
-                                        <div key={session.id} className="flex items-center justify-between py-3">
+                                        <div
+                                            key={session.id}
+                                            className="flex items-center justify-between py-3"
+                                        >
                                             <div>
-                                                <p className="font-medium text-sm text-foreground">{session.subject}</p>
-                                                <div className="flex items-center gap-2 mt-1">
-                                                    <span className="text-xs text-muted-foreground">{session.type}</span>
-                                                    <span className="text-xs text-muted-foreground">oleh {session.opened_by}</span>
+                                                <p className="text-sm font-medium text-foreground">
+                                                    {session.subject}
+                                                </p>
+                                                <div className="mt-1 flex items-center gap-2">
+                                                    <span className="text-xs text-muted-foreground">
+                                                        {session.type}
+                                                    </span>
+                                                    <span className="text-xs text-muted-foreground">
+                                                        oleh {session.opened_by}
+                                                    </span>
                                                 </div>
                                             </div>
                                             <div>
-                                                <StatusBadge status={session.is_active ? 'active' : 'draft'} label={session.is_active ? 'Aktif' : 'Ditutup'} />
+                                                <StatusBadge
+                                                    status={
+                                                        session.is_active
+                                                            ? 'active'
+                                                            : 'draft'
+                                                    }
+                                                    label={
+                                                        session.is_active
+                                                            ? 'Aktif'
+                                                            : 'Ditutup'
+                                                    }
+                                                />
                                             </div>
                                         </div>
                                     ))}
@@ -135,28 +224,38 @@ export default function AdminReportsOverview({ summary, topStudents, recentSessi
                 <Card>
                     <CardHeader>
                         <CardTitle>Akses Cepat</CardTitle>
-                        <CardDescription>Langkah ke bagian admin yang sering digunakan.</CardDescription>
+                        <CardDescription>
+                            Langkah ke bagian admin yang sering digunakan.
+                        </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                             <Button asChild variant="outline">
-                                <Link href={admin.reports.byStudent.url()}>Per Siswa</Link>
+                                <Link href={admin.reports.byStudent.url()}>
+                                    Per Siswa
+                                </Link>
                             </Button>
                             <Button asChild variant="outline">
-                                <Link href={admin.reports.byClass.url()}>Per Kelas</Link>
+                                <Link href={admin.reports.byClass.url()}>
+                                    Per Kelas
+                                </Link>
                             </Button>
                             <Button asChild variant="outline">
-                                <Link href={admin.users.index.url()}>Kelola Pengguna</Link>
+                                <Link href={admin.users.index.url()}>
+                                    Kelola Pengguna
+                                </Link>
                             </Button>
                             <Button asChild variant="outline">
-                                <Link href={admin.auditLogs.index.url()}>Log Audit</Link>
+                                <Link href={admin.auditLogs.index.url()}>
+                                    Log Audit
+                                </Link>
                             </Button>
                         </div>
                     </CardContent>
                 </Card>
             </div>
         </>
-    )
+    );
 }
 
 AdminReportsOverview.layout = {

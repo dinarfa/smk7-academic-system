@@ -9,7 +9,13 @@ interface QRDisplayProps {
     onExpire?: () => void;
 }
 
-export default function QRDisplayV2({ qrSvg, startTime, endTime, sessionType, onExpire }: QRDisplayProps) {
+export default function QRDisplayV2({
+    qrSvg,
+    startTime,
+    endTime,
+    sessionType,
+    onExpire,
+}: QRDisplayProps) {
     const [timeRemaining, setTimeRemaining] = useState('');
     const [percent, setPercent] = useState(100);
     const expiredRef = useRef(false);
@@ -20,7 +26,9 @@ export default function QRDisplayV2({ qrSvg, startTime, endTime, sessionType, on
         const updateTimer = () => {
             const now = new Date();
             const end = new Date(endTime);
-            const start = startTime ? new Date(startTime) : new Date(now.getTime() - 5 * 60000);
+            const start = startTime
+                ? new Date(startTime)
+                : new Date(now.getTime() - 5 * 60000);
             const total = Math.max(1, end.getTime() - start.getTime());
             const remaining = end.getTime() - now.getTime();
 
@@ -38,9 +46,14 @@ export default function QRDisplayV2({ qrSvg, startTime, endTime, sessionType, on
 
             const minutes = Math.floor(remaining / 60000);
             const seconds = Math.floor((remaining % 60000) / 1000);
-            setTimeRemaining(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+            setTimeRemaining(
+                `${minutes}:${seconds.toString().padStart(2, '0')}`,
+            );
 
-            const p = Math.max(0, Math.min(100, Math.round((remaining / total) * 100)));
+            const p = Math.max(
+                0,
+                Math.min(100, Math.round((remaining / total) * 100)),
+            );
             setPercent(p);
         };
 
@@ -62,7 +75,9 @@ export default function QRDisplayV2({ qrSvg, startTime, endTime, sessionType, on
                 <div
                     className="[&_svg]:h-full [&_svg]:w-full"
                     style={{ width: 200, height: 200 }}
-                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(qrSvg) }}
+                    dangerouslySetInnerHTML={{
+                        __html: DOMPurify.sanitize(qrSvg),
+                    }}
                 />
             </div>
 
@@ -70,7 +85,12 @@ export default function QRDisplayV2({ qrSvg, startTime, endTime, sessionType, on
                 <div className="relative">
                     <svg className="h-20 w-20" viewBox="0 0 100 100">
                         <g transform="translate(50,50)">
-                            <circle r={radius} fill="transparent" stroke="rgba(0,0,0,0.06)" strokeWidth="6" />
+                            <circle
+                                r={radius}
+                                fill="transparent"
+                                stroke="rgba(0,0,0,0.06)"
+                                strokeWidth="6"
+                            />
                             <circle
                                 r={radius}
                                 fill="transparent"
@@ -79,18 +99,25 @@ export default function QRDisplayV2({ qrSvg, startTime, endTime, sessionType, on
                                 strokeLinecap="round"
                                 strokeDasharray={circumference}
                                 strokeDashoffset={strokeDashoffset}
-                                style={{ transition: 'stroke-dashoffset 0.35s linear' }}
+                                style={{
+                                    transition:
+                                        'stroke-dashoffset 0.35s linear',
+                                }}
                                 transform="rotate(-90)"
                             />
                         </g>
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <span className={`text-sm font-semibold tabular-nums ${isExpired ? 'text-red-500' : 'text-blue-600 dark:text-blue-400'}`}>
+                        <span
+                            className={`text-sm font-semibold tabular-nums ${isExpired ? 'text-red-500' : 'text-blue-600 dark:text-blue-400'}`}
+                        >
                             {isExpired ? 'KADALUARSA' : timeRemaining}
                         </span>
                     </div>
                 </div>
-                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{sessionType}</p>
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                    {sessionType}
+                </p>
             </div>
 
             {isExpired && (

@@ -30,22 +30,39 @@ class AdminReportController extends Controller
      */
     public function bySession(Request $request, AttendanceReportService $attendanceReportService): Response
     {
-        $sessions = $attendanceReportService->sessions($request->string('search')->toString());
+        $classId = $request->filled('class_id') ? (int) $request->input('class_id') : null;
+        $search = $request->filled('search') ? $request->input('search') : null;
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        $classes = SchoolClass::query()->select(['id', 'name'])->orderBy('name')->get();
+        $sessions = $attendanceReportService->sessions($search, $classId, $startDate, $endDate);
 
         return Inertia::render('admin/reports/by-session', [
             'sessions' => $sessions,
+            'classes' => $classes,
+            'filters' => [
+                'class_id' => $classId,
+                'search' => $search,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+            ],
         ]);
     }
 
     /**
      * Display attendance records by student.
      */
-    public function byStudent(AttendanceReportService $attendanceReportService): Response
+    public function byStudent(Request $request, AttendanceReportService $attendanceReportService): Response
     {
-        $students = $attendanceReportService->students();
+        $search = $request->filled('search') ? $request->input('search') : null;
+        $students = $attendanceReportService->students($search);
 
         return Inertia::render('admin/reports/by-student', [
             'students' => $students,
+            'filters' => [
+                'search' => $search,
+            ],
         ]);
     }
 

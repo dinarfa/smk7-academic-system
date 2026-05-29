@@ -12,10 +12,16 @@ import {
     Download,
 } from 'lucide-react';
 import { useMemo } from 'react';
-import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/status-badge';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { dashboard } from '@/routes';
 
 type AttendanceRecord = {
@@ -54,10 +60,16 @@ type Props = {
     date: string;
 };
 
-export default function TeacherAttendanceDaily({ attendance, active_session: activeSession, date }: Props) {
+export default function TeacherAttendanceDaily({
+    attendance,
+    active_session: activeSession,
+    date,
+}: Props) {
     const allRecords = Object.values(attendance).flat();
     const totalRecords = allRecords.length;
-    const presentCount = allRecords.filter((r) => r.status === 'present').length;
+    const presentCount = allRecords.filter(
+        (r) => r.status === 'present',
+    ).length;
     const lateCount = allRecords.filter((r) => r.status === 'late').length;
     const absentCount = allRecords.filter((r) => r.status === 'absent').length;
 
@@ -77,8 +89,8 @@ export default function TeacherAttendanceDaily({ attendance, active_session: act
                 const subject = r.session?.subject_name ?? 'Umum';
 
                 if (!bySubject[subject]) {
-bySubject[subject] = [];
-}
+                    bySubject[subject] = [];
+                }
 
                 bySubject[subject].push(r);
             });
@@ -96,26 +108,43 @@ bySubject[subject] = [];
                 {/* Header */}
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Grid Absensi</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                            Grid Absensi
+                        </h1>
                         <p className="mt-1 flex items-center gap-2 text-muted-foreground">
                             <CalendarDays className="h-4 w-4" />
                             {date}
                         </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                        <Button asChild variant="outline" size="sm" className="gap-2">
+                        <Button
+                            asChild
+                            variant="outline"
+                            size="sm"
+                            className="gap-2"
+                        >
                             <Link href="/teacher/attendance/qr">
                                 <QrCode className="h-4 w-4" />
                                 QR Aktif
                             </Link>
                         </Button>
-                        <Button asChild variant="outline" size="sm" className="gap-2">
+                        <Button
+                            asChild
+                            variant="outline"
+                            size="sm"
+                            className="gap-2"
+                        >
                             <Link href="/teacher/attendance/manual">
                                 <ClipboardList className="h-4 w-4" />
                                 Absensi Manual
                             </Link>
                         </Button>
-                        <Button asChild variant="secondary" size="sm" className="gap-2">
+                        <Button
+                            asChild
+                            variant="secondary"
+                            size="sm"
+                            className="gap-2"
+                        >
                             <Link href="/teacher/attendance">
                                 <LayoutGrid className="h-4 w-4" />
                                 Workflow
@@ -133,8 +162,12 @@ bySubject[subject] = [];
                                     <Users className="h-5 w-5 text-slate-600" />
                                 </div>
                                 <div>
-                                    <p className="text-sm text-muted-foreground">Total Catatan</p>
-                                    <p className="text-2xl font-bold">{totalRecords}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        Total Catatan
+                                    </p>
+                                    <p className="text-2xl font-bold">
+                                        {totalRecords}
+                                    </p>
                                 </div>
                             </div>
                         </CardContent>
@@ -146,8 +179,12 @@ bySubject[subject] = [];
                                     <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                                 </div>
                                 <div>
-                                    <p className="text-sm text-muted-foreground">Hadir</p>
-                                    <p className="text-2xl font-bold text-emerald-600">{presentCount}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        Hadir
+                                    </p>
+                                    <p className="text-2xl font-bold text-emerald-600">
+                                        {presentCount}
+                                    </p>
                                 </div>
                             </div>
                         </CardContent>
@@ -159,8 +196,12 @@ bySubject[subject] = [];
                                     <Clock className="h-5 w-5 text-amber-600" />
                                 </div>
                                 <div>
-                                    <p className="text-sm text-muted-foreground">Terlambat</p>
-                                    <p className="text-2xl font-bold text-amber-600">{lateCount}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        Terlambat
+                                    </p>
+                                    <p className="text-2xl font-bold text-amber-600">
+                                        {lateCount}
+                                    </p>
                                 </div>
                             </div>
                         </CardContent>
@@ -172,8 +213,12 @@ bySubject[subject] = [];
                                     <CheckCircle2 className="h-5 w-5 text-red-600" />
                                 </div>
                                 <div>
-                                    <p className="text-sm text-muted-foreground">Tidak Hadir</p>
-                                    <p className="text-2xl font-bold text-red-600">{absentCount}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        Tidak Hadir
+                                    </p>
+                                    <p className="text-2xl font-bold text-red-600">
+                                        {absentCount}
+                                    </p>
                                 </div>
                             </div>
                         </CardContent>
@@ -192,16 +237,33 @@ bySubject[subject] = [];
                                     </div>
                                     <div>
                                         <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
-                                            Sesi Aktif: {sessionTypeLabels[activeSession.type] ?? activeSession.type}
+                                            Sesi Aktif:{' '}
+                                            {sessionTypeLabels[
+                                                activeSession.type
+                                            ] ?? activeSession.type}
                                         </p>
                                         <p className="text-xs text-emerald-600 dark:text-emerald-400">
-                                            {activeSession.subject_name ?? 'Tanpa mata pelajaran'} &middot; Berakhir {new Date(activeSession.ends_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                                            {activeSession.subject_name ??
+                                                'Tanpa mata pelajaran'}{' '}
+                                            &middot; Berakhir{' '}
+                                            {new Date(
+                                                activeSession.ends_at,
+                                            ).toLocaleTimeString('id-ID', {
+                                                hour: '2-digit',
+                                                minute: '2-digit',
+                                            })}
                                         </p>
                                     </div>
                                 </div>
-                                <Button asChild size="sm" variant="outline" className="gap-1.5">
+                                <Button
+                                    asChild
+                                    size="sm"
+                                    variant="outline"
+                                    className="gap-1.5"
+                                >
                                     <Link href="/teacher/attendance/qr">
-                                        Lihat QR <ArrowRight className="h-3.5 w-3.5" />
+                                        Lihat QR{' '}
+                                        <ArrowRight className="h-3.5 w-3.5" />
                                     </Link>
                                 </Button>
                             </div>
@@ -214,12 +276,16 @@ bySubject[subject] = [];
                     {['morning', 'class', 'dismissal'].map((phase) => {
                         const subjectMap = groupedAttendance[phase];
                         const phaseRecords = attendance[phase] ?? [];
-                        const hasMultipleSubjects = subjectMap && Object.keys(subjectMap).length > 1;
+                        const hasMultipleSubjects =
+                            subjectMap && Object.keys(subjectMap).length > 1;
 
                         return (
                             <Card key={phase}>
                                 <CardHeader>
-                                    <CardTitle className="capitalize">{sessionTypeLabels[phase] ?? phase} - Absensi</CardTitle>
+                                    <CardTitle className="capitalize">
+                                        {sessionTypeLabels[phase] ?? phase} -
+                                        Absensi
+                                    </CardTitle>
                                     <CardDescription>
                                         {phaseRecords.length} siswa tercatat
                                     </CardDescription>
@@ -229,24 +295,38 @@ bySubject[subject] = [];
                                     {phaseRecords.length > 0 ? (
                                         hasMultipleSubjects ? (
                                             <div className="space-y-4">
-                                                {Object.entries(subjectMap).map(([subject, recs]) => (
-                                                    <div key={subject}>
-                                                        <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-                                                            <BookOpen className="h-4 w-4" />
-                                                            <span>{subject}</span>
-                                                            <Badge variant="secondary" className="ml-1 text-xs">{recs.length}</Badge>
+                                                {Object.entries(subjectMap).map(
+                                                    ([subject, recs]) => (
+                                                        <div key={subject}>
+                                                            <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+                                                                <BookOpen className="h-4 w-4" />
+                                                                <span>
+                                                                    {subject}
+                                                                </span>
+                                                                <Badge
+                                                                    variant="secondary"
+                                                                    className="ml-1 text-xs"
+                                                                >
+                                                                    {
+                                                                        recs.length
+                                                                    }
+                                                                </Badge>
+                                                            </div>
+                                                            <Table
+                                                                records={recs}
+                                                            />
                                                         </div>
-                                                        <Table records={recs} />
-                                                    </div>
-                                                ))}
+                                                    ),
+                                                )}
                                             </div>
                                         ) : (
                                             <Table records={phaseRecords} />
                                         )
                                     ) : (
-                                        <div className="text-center py-12">
+                                        <div className="py-12 text-center">
                                             <p className="text-muted-foreground">
-                                                Belum ada catatan absensi untuk fase ini
+                                                Belum ada catatan absensi untuk
+                                                fase ini
                                             </p>
                                         </div>
                                     )}
@@ -262,7 +342,8 @@ bySubject[subject] = [];
                         <CardHeader>
                             <CardTitle>Absensi Manual</CardTitle>
                             <CardDescription>
-                                Gunakan ketika pemindaian QR tidak tersedia atau untuk pembaruan massal.
+                                Gunakan ketika pemindaian QR tidak tersedia atau
+                                untuk pembaruan massal.
                             </CardDescription>
                         </CardHeader>
 
@@ -287,7 +368,11 @@ bySubject[subject] = [];
                         </CardHeader>
 
                         <CardContent>
-                            <Button asChild variant="outline" className="w-full">
+                            <Button
+                                asChild
+                                variant="outline"
+                                className="w-full"
+                            >
                                 <Link href="/teacher/attendance/export">
                                     Buka Halaman Ekspor
                                 </Link>
@@ -299,12 +384,17 @@ bySubject[subject] = [];
                         <CardHeader>
                             <CardTitle>Rekap Absensi</CardTitle>
                             <CardDescription>
-                                Lihat rekap kehadiran siswa berdasarkan rentang tanggal.
+                                Lihat rekap kehadiran siswa berdasarkan rentang
+                                tanggal.
                             </CardDescription>
                         </CardHeader>
 
                         <CardContent>
-                            <Button asChild variant="outline" className="w-full">
+                            <Button
+                                asChild
+                                variant="outline"
+                                className="w-full"
+                            >
                                 <Link href="/teacher/attendance/recap">
                                     Lihat Rekap
                                 </Link>
@@ -324,13 +414,21 @@ function Table({ records }: { records: AttendanceRecord[] }) {
             {/* Mobile cards */}
             <div className="space-y-2 sm:hidden">
                 {records.map((record) => (
-                    <div key={record.id} className="rounded-lg border border-border bg-card p-4">
+                    <div
+                        key={record.id}
+                        className="rounded-lg border border-border bg-card p-4"
+                    >
                         <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">{record.student.name}</span>
+                            <span className="text-sm font-medium">
+                                {record.student.name}
+                            </span>
                             <StatusBadge status={record.status} />
                         </div>
                         <p className="mt-1 text-xs text-muted-foreground">
-                            {new Date(record.scanned_at).toLocaleTimeString('id-ID')} · {record.source}
+                            {new Date(record.scanned_at).toLocaleTimeString(
+                                'id-ID',
+                            )}{' '}
+                            · {record.source}
                         </p>
                     </div>
                 ))}
@@ -341,23 +439,40 @@ function Table({ records }: { records: AttendanceRecord[] }) {
                 <table className="w-full text-sm">
                     <thead>
                         <tr className="border-b bg-muted/50">
-                            <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Siswa</th>
-                            <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
-                            <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Waktu</th>
-                            <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sumber</th>
+                            <th className="px-4 py-2.5 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                                Siswa
+                            </th>
+                            <th className="px-4 py-2.5 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                                Status
+                            </th>
+                            <th className="px-4 py-2.5 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                                Waktu
+                            </th>
+                            <th className="px-4 py-2.5 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                                Sumber
+                            </th>
                         </tr>
                     </thead>
                     <tbody className="divide-y">
                         {records.map((record) => (
-                            <tr key={record.id} className="transition-colors hover:bg-muted/30">
-                                <td className="px-4 py-2.5 font-medium">{record.student.name}</td>
+                            <tr
+                                key={record.id}
+                                className="transition-colors hover:bg-muted/30"
+                            >
+                                <td className="px-4 py-2.5 font-medium">
+                                    {record.student.name}
+                                </td>
                                 <td className="px-4 py-2.5">
                                     <StatusBadge status={record.status} />
                                 </td>
                                 <td className="px-4 py-2.5 text-sm text-muted-foreground">
-                                    {new Date(record.scanned_at).toLocaleTimeString('id-ID')}
+                                    {new Date(
+                                        record.scanned_at,
+                                    ).toLocaleTimeString('id-ID')}
                                 </td>
-                                <td className="px-4 py-2.5 text-sm text-muted-foreground">{record.source}</td>
+                                <td className="px-4 py-2.5 text-sm text-muted-foreground">
+                                    {record.source}
+                                </td>
                             </tr>
                         ))}
                     </tbody>

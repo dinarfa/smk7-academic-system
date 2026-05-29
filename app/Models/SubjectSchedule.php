@@ -181,17 +181,17 @@ class SubjectSchedule extends Model
         $version = cache()->get('teacher_schedules_version', 1);
         $cacheKey = "teacher_schedules:{$version}:{$teacher->id}:day_{$at->dayOfWeek}:hour_{$at->format('H')}";
 
-        return cache()->remember($cacheKey, 300, function () use ($teacher, $at) {
+        // Cache only the IDs to avoid __PHP_Incomplete_Class on deserialization
+        $ids = cache()->remember($cacheKey, 300, function () use ($teacher, $at): array {
             // 1. Homeroom classes: teacher sees ALL active slots
             $homeroomClassIds = $teacher->homeroomClasses()->pluck('school_classes.id');
 
-            $homeroomSlots = collect();
+            $homeroomSlotIds = collect();
             if ($homeroomClassIds->isNotEmpty()) {
-                $homeroomSlots = static::query()
+                $homeroomSlotIds = static::query()
                     ->whereIn('school_class_id', $homeroomClassIds->all())
                     ->activeNow($at)
-                    ->with(['subject:id,code,name', 'schoolClass:id,name'])
-                    ->get();
+                    ->pluck('id');
             }
 
             // 2. Subject-taught classes (non-homeroom): only teacher's own subjects + morning/dismissal
@@ -203,23 +203,30 @@ class SubjectSchedule extends Model
             $teacherSubjectIds = $teacher->subjects()->pluck('subjects.id');
             $nonHomeroomSubjectClassIds = $subjectClassIds->diff($homeroomClassIds);
 
-            $subjectSlots = collect();
+            $subjectSlotIds = collect();
             if ($nonHomeroomSubjectClassIds->isNotEmpty()) {
-                $subjectSlots = static::query()
+                $subjectSlotIds = static::query()
                     ->whereIn('school_class_id', $nonHomeroomSubjectClassIds->all())
                     ->activeNow($at)
                     ->where(function ($q) use ($teacherSubjectIds) {
                         $q->whereNull('subject_id')
                             ->orWhereIn('subject_id', $teacherSubjectIds->all());
                     })
-                    ->with(['subject:id,code,name', 'schoolClass:id,name'])
-                    ->get();
+                    ->pluck('id');
             }
 
-            return $homeroomSlots->merge($subjectSlots)
-                ->sortBy('starts_at')
-                ->values();
+            return $homeroomSlotIds->merge($subjectSlotIds)->unique()->values()->all();
         });
+
+        if (empty($ids)) {
+            return collect();
+        }
+
+        return static::query()
+            ->whereIn('id', $ids)
+            ->with(['subject:id,code,name', 'schoolClass:id,name'])
+            ->orderBy('starts_at')
+            ->get();
     }
 
     /**

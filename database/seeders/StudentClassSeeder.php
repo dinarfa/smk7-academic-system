@@ -35,12 +35,14 @@ class StudentClassSeeder extends Seeder
         ];
 
         $classes = collect($classNames)->map(function (string $name, int $i) use ($teachers) {
-            $class = SchoolClass::factory()->create([
-                'name' => $name,
-                'code' => str_replace(' ', '-', $name),
-                'homeroom_teacher_id' => $teachers[$i]->id,
-                'academic_year' => '2025/2026',
-            ]);
+            $class = SchoolClass::firstOrCreate(
+                ['name' => $name],
+                [
+                    'code' => str_replace(' ', '-', $name),
+                    'homeroom_teacher_id' => $teachers[$i]->id,
+                    'academic_year' => '2025/2026',
+                ],
+            );
 
             return $class;
         });

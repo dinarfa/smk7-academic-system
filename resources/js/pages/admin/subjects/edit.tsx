@@ -1,63 +1,74 @@
-import { Head, Link, useForm } from '@inertiajs/react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Head, Link, useForm } from '@inertiajs/react';
+import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from '@/components/ui/select'
-import admin from '@/routes/admin'
+} from '@/components/ui/select';
+import admin from '@/routes/admin';
 
 type Subject = {
-    id: number
-    code: string
-    name: string
-    school_class_ids: number[]
-    teacher_id: number | null
-}
+    id: number;
+    code: string;
+    name: string;
+    school_class_ids: number[];
+    teacher_id: number | null;
+};
 
 type SchoolClass = {
-    id: number
-    name: string
-}
+    id: number;
+    name: string;
+};
 
 type Teacher = {
-    id: number
-    name: string
-    email: string
-}
+    id: number;
+    name: string;
+    email: string;
+};
 
 type Props = {
-    subject: Subject
-    classes: SchoolClass[]
-    teachers: Teacher[]
-}
+    subject: Subject;
+    classes: SchoolClass[];
+    teachers: Teacher[];
+};
 
-export default function AdminSubjectEdit({ subject, classes, teachers }: Props) {
+export default function AdminSubjectEdit({
+    subject,
+    classes,
+    teachers,
+}: Props) {
     const { data, setData, put, processing, errors } = useForm({
         code: subject.code,
         name: subject.name,
         school_class_ids: subject.school_class_ids.map(String),
         teacher_id: subject.teacher_id ? String(subject.teacher_id) : '',
-    })
+    });
 
     function toggleClass(classId: string) {
-        setData('school_class_ids',
+        setData(
+            'school_class_ids',
             data.school_class_ids.includes(classId)
                 ? data.school_class_ids.filter((id) => id !== classId)
-                : [...data.school_class_ids, classId]
-        )
+                : [...data.school_class_ids, classId],
+        );
     }
 
     function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-        e.preventDefault()
+        e.preventDefault();
 
-        put(admin.subjects.update.url({ subject: subject.id }))
+        put(admin.subjects.update.url({ subject: subject.id }));
     }
 
     return (
@@ -67,8 +78,12 @@ export default function AdminSubjectEdit({ subject, classes, teachers }: Props) 
             <div className="space-y-6 p-4 sm:p-6 lg:p-8">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Edit Mata Pelajaran</h1>
-                        <p className="text-sm text-muted-foreground">Perbarui kode dan nama mata pelajaran.</p>
+                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                            Edit Mata Pelajaran
+                        </h1>
+                        <p className="text-sm text-muted-foreground">
+                            Perbarui kode dan nama mata pelajaran.
+                        </p>
                     </div>
                     <Button asChild variant="secondary">
                         <Link href={admin.subjects.index.url()}>Kembali</Link>
@@ -78,7 +93,9 @@ export default function AdminSubjectEdit({ subject, classes, teachers }: Props) 
                 <Card className="max-w-2xl">
                     <CardHeader>
                         <CardTitle>Detail Mata Pelajaran</CardTitle>
-                        <CardDescription>Perbarui informasi mata pelajaran.</CardDescription>
+                        <CardDescription>
+                            Perbarui informasi mata pelajaran.
+                        </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleSubmit} className="space-y-4">
@@ -88,10 +105,16 @@ export default function AdminSubjectEdit({ subject, classes, teachers }: Props) 
                                     id="code"
                                     name="code"
                                     value={data.code}
-                                    onChange={(event) => setData('code', event.target.value)}
+                                    onChange={(event) =>
+                                        setData('code', event.target.value)
+                                    }
                                     aria-invalid={Boolean(errors.code)}
                                 />
-                                {errors.code && <p className="text-sm text-destructive">{errors.code}</p>}
+                                {errors.code && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.code}
+                                    </p>
+                                )}
                             </div>
 
                             <div className="space-y-2">
@@ -100,18 +123,26 @@ export default function AdminSubjectEdit({ subject, classes, teachers }: Props) 
                                     {classes.map((schoolClass) => (
                                         <label
                                             key={schoolClass.id}
-                                            className="flex items-center gap-2 text-sm cursor-pointer"
+                                            className="flex cursor-pointer items-center gap-2 text-sm"
                                         >
                                             <Checkbox
-                                                checked={data.school_class_ids.includes(String(schoolClass.id))}
-                                                onCheckedChange={() => toggleClass(String(schoolClass.id))}
+                                                checked={data.school_class_ids.includes(
+                                                    String(schoolClass.id),
+                                                )}
+                                                onCheckedChange={() =>
+                                                    toggleClass(
+                                                        String(schoolClass.id),
+                                                    )
+                                                }
                                             />
                                             {schoolClass.name}
                                         </label>
                                     ))}
                                 </div>
                                 {errors.school_class_ids && (
-                                    <p className="text-sm text-destructive">{errors.school_class_ids}</p>
+                                    <p className="text-sm text-destructive">
+                                        {errors.school_class_ids}
+                                    </p>
                                 )}
                             </div>
 
@@ -119,42 +150,64 @@ export default function AdminSubjectEdit({ subject, classes, teachers }: Props) 
                                 <Label htmlFor="teacher_id">Guru</Label>
                                 <Select
                                     value={data.teacher_id}
-                                    onValueChange={(value) => setData('teacher_id', value)}
+                                    onValueChange={(value) =>
+                                        setData('teacher_id', value)
+                                    }
                                 >
-                                    <SelectTrigger className="w-full" id="teacher_id">
+                                    <SelectTrigger
+                                        className="w-full"
+                                        id="teacher_id"
+                                    >
                                         <SelectValue placeholder="Pilih Guru" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {teachers.map((teacher) => (
-                                            <SelectItem key={teacher.id} value={String(teacher.id)}>
+                                            <SelectItem
+                                                key={teacher.id}
+                                                value={String(teacher.id)}
+                                            >
                                                 {teacher.name} ({teacher.email})
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
                                 {errors.teacher_id && (
-                                    <p className="text-sm text-destructive">{errors.teacher_id}</p>
+                                    <p className="text-sm text-destructive">
+                                        {errors.teacher_id}
+                                    </p>
                                 )}
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="name">Nama Mata Pelajaran</Label>
+                                <Label htmlFor="name">
+                                    Nama Mata Pelajaran
+                                </Label>
                                 <Input
                                     id="name"
                                     name="name"
                                     value={data.name}
-                                    onChange={(event) => setData('name', event.target.value)}
+                                    onChange={(event) =>
+                                        setData('name', event.target.value)
+                                    }
                                     aria-invalid={Boolean(errors.name)}
                                 />
-                                {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
+                                {errors.name && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.name}
+                                    </p>
+                                )}
                             </div>
 
                             <div className="flex flex-wrap gap-3">
                                 <Button type="submit" disabled={processing}>
-                                    {processing ? 'Menyimpan...' : 'Simpan Perubahan'}
+                                    {processing
+                                        ? 'Menyimpan...'
+                                        : 'Simpan Perubahan'}
                                 </Button>
                                 <Button asChild variant="outline">
-                                    <Link href={admin.subjects.index.url()}>Batal</Link>
+                                    <Link href={admin.subjects.index.url()}>
+                                        Batal
+                                    </Link>
                                 </Button>
                             </div>
                         </form>
@@ -162,7 +215,7 @@ export default function AdminSubjectEdit({ subject, classes, teachers }: Props) 
                 </Card>
             </div>
         </>
-    )
+    );
 }
 
 AdminSubjectEdit.layout = {
@@ -171,4 +224,4 @@ AdminSubjectEdit.layout = {
         { title: 'Mata Pelajaran', href: admin.subjects.index.url() },
         { title: 'Edit', href: '#' },
     ],
-}
+};

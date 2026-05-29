@@ -21,7 +21,7 @@ export default function QRScanner({
 
     const [isScanning, setIsScanning] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const scanQRRef = useRef<() => void>(() => { });
+    const scanQRRef = useRef<() => void>(() => {});
     const stopCamera = useCallback(() => {
         scanningRef.current = false;
 
@@ -29,9 +29,10 @@ export default function QRScanner({
             cancelAnimationFrame(frameRef.current);
             frameRef.current = null;
         }
+
         if (videoRef.current?.srcObject) {
             const stream = videoRef.current.srcObject as MediaStream;
-            stream.getTracks().forEach(track => track.stop());
+            stream.getTracks().forEach((track) => track.stop());
             videoRef.current.srcObject = null;
         }
 
@@ -49,7 +50,7 @@ export default function QRScanner({
         const context = canvas.getContext('2d');
 
         if (!context) {
-            requestAnimationFrame(scanQRRef.current)
+            requestAnimationFrame(scanQRRef.current);
 
             return;
         }
@@ -73,14 +74,10 @@ export default function QRScanner({
             0,
             0,
             canvas.width,
-            canvas.height
+            canvas.height,
         );
 
-        const code = jsQR(
-            imageData.data,
-            imageData.width,
-            imageData.height
-        );
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
 
         // React-safe debounce without Date.now/performance.now
         if (code && !scanLockRef.current) {
@@ -132,8 +129,7 @@ export default function QRScanner({
                 setIsScanning(true);
             });
         } catch (error) {
-            const errorMessage =
-                'Camera access denied or camera not available';
+            const errorMessage = 'Camera access denied or camera not available';
 
             console.error(error);
 
@@ -178,23 +174,23 @@ export default function QRScanner({
 
                 {/* Scanner Overlay */}
                 <div className="pointer-events-none absolute inset-0">
-                    <div className="absolute left-1/2 top-1/2 h-40 w-64 -translate-x-1/2 -translate-y-1/2">
+                    <div className="absolute top-1/2 left-1/2 h-40 w-64 -translate-x-1/2 -translate-y-1/2">
                         <div className="absolute inset-0 rounded-lg border-2 border-dashed border-white/30" />
 
-                        <div className="animate-scan absolute left-0 right-0 top-1/2 h-0.5 bg-gradient-to-r from-transparent via-emerald-400 to-transparent" />
+                        <div className="animate-scan absolute top-1/2 right-0 left-0 h-0.5 bg-gradient-to-r from-transparent via-emerald-400 to-transparent" />
                     </div>
 
                     {/* Corner markers */}
-                    <div className="absolute left-1/2 top-1/2 h-40 w-64 -translate-x-1/2 -translate-y-1/2">
-                        <div className="absolute -left-3 -top-3 h-6 w-6 border-l-4 border-t-4 border-white/80" />
-                        <div className="absolute -top-3 right-[-12px] h-6 w-6 border-r-4 border-t-4 border-white/80" />
-                        <div className="absolute -left-3 bottom-[-12px] h-6 w-6 border-b-4 border-l-4 border-white/80" />
-                        <div className="absolute bottom-[-12px] right-[-12px] h-6 w-6 border-b-4 border-r-4 border-white/80" />
+                    <div className="absolute top-1/2 left-1/2 h-40 w-64 -translate-x-1/2 -translate-y-1/2">
+                        <div className="absolute -top-3 -left-3 h-6 w-6 border-t-4 border-l-4 border-white/80" />
+                        <div className="absolute -top-3 right-[-12px] h-6 w-6 border-t-4 border-r-4 border-white/80" />
+                        <div className="absolute bottom-[-12px] -left-3 h-6 w-6 border-b-4 border-l-4 border-white/80" />
+                        <div className="absolute right-[-12px] bottom-[-12px] h-6 w-6 border-r-4 border-b-4 border-white/80" />
                     </div>
                 </div>
 
                 {isScanning && (
-                    <div className="absolute left-3 top-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-3 py-1 text-xs text-white backdrop-blur-md">
+                    <div className="absolute top-3 left-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-3 py-1 text-xs text-white backdrop-blur-md">
                         <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
                         Scanning...
                     </div>

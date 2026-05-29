@@ -8,7 +8,12 @@ interface QRDisplayProps {
     onExpire?: () => void;
 }
 
-export default function QRDisplay({ qrSvg, endTime, sessionType, onExpire }: QRDisplayProps) {
+export default function QRDisplay({
+    qrSvg,
+    endTime,
+    sessionType,
+    onExpire,
+}: QRDisplayProps) {
     const [timeRemaining, setTimeRemaining] = useState('');
     const expiredRef = useRef(false);
 
@@ -33,7 +38,9 @@ export default function QRDisplay({ qrSvg, endTime, sessionType, onExpire }: QRD
 
             const minutes = Math.floor(diff / 60000);
             const seconds = Math.floor((diff % 60000) / 1000);
-            setTimeRemaining(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+            setTimeRemaining(
+                `${minutes}:${seconds.toString().padStart(2, '0')}`,
+            );
         };
 
         updateTimer();
@@ -46,24 +53,28 @@ export default function QRDisplay({ qrSvg, endTime, sessionType, onExpire }: QRD
 
     return (
         <div className="qr-display text-center">
-            <div className="inline-block p-6 bg-white border-2 border-gray-200 rounded-lg shadow-lg">
+            <div className="inline-block rounded-lg border-2 border-gray-200 bg-white p-6 shadow-lg">
                 <div
-                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(qrSvg) }}
-                    className="w-64 h-64 mx-auto"
+                    dangerouslySetInnerHTML={{
+                        __html: DOMPurify.sanitize(qrSvg),
+                    }}
+                    className="mx-auto h-64 w-64"
                 />
             </div>
 
             <div className="mt-4">
-                <div className={`text-3xl font-bold ${isExpired ? 'text-red-600' : 'text-blue-600'}`}>
+                <div
+                    className={`text-3xl font-bold ${isExpired ? 'text-red-600' : 'text-blue-600'}`}
+                >
                     {timeRemaining}
                 </div>
-                <div className="text-sm text-gray-600 mt-1">
+                <div className="mt-1 text-sm text-gray-600">
                     {sessionType} session
                 </div>
             </div>
 
             {isExpired && (
-                <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                <div className="mt-4 rounded border border-red-400 bg-red-100 p-3 text-red-700">
                     This QR code has expired. Generate a new one.
                 </div>
             )}

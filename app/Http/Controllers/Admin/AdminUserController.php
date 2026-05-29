@@ -21,12 +21,29 @@ class AdminUserController extends Controller
      */
     public function index(Request $request): Response
     {
-        $users = User::query()
-            ->select(['id', 'name', 'email', 'role', 'created_at', 'updated_at'])
-            ->paginate(15);
+        $query = User::query()
+            ->select(['id', 'name', 'email', 'role', 'created_at', 'updated_at']);
+
+        if ($request->filled('role')) {
+            $query->where('role', $request->input('role'));
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search): void {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        $users = $query->latest()->paginate(15)->withQueryString();
 
         return Inertia::render('admin/users/index', [
             'users' => $users,
+            'filters' => [
+                'role' => $request->input('role'),
+                'search' => $request->input('search'),
+            ],
         ]);
     }
 
