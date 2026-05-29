@@ -125,15 +125,18 @@ class SubjectController extends Controller
     {
         $validated = $request->validated();
         $classIds = $validated['school_class_ids'];
-        unset($validated['school_class_ids']);
+        $classTeachers = $validated['class_teachers'] ?? [];
+        unset($validated['school_class_ids'], $validated['class_teachers']);
 
         $subject = Subject::query()->create($validated);
-        $teacherId = $subject->teacher_id;
 
-        // Attach classes with teacher_id on pivot
+        // Attach classes with per-class teacher_id on pivot
         $attachData = [];
         foreach ($classIds as $classId) {
-            $attachData[$classId] = ['teacher_id' => $teacherId];
+            $pivotTeacherId = $classTeachers[$classId] ?? null;
+            $attachData[$classId] = [
+                'teacher_id' => $pivotTeacherId ?: $subject->teacher_id,
+            ];
         }
         $subject->schoolClasses()->attach($attachData);
 
@@ -149,15 +152,20 @@ class SubjectController extends Controller
     {
         $validated = $request->validated();
         $classIds = $validated['school_class_ids'] ?? null;
-        unset($validated['school_class_ids']);
+        $classTeachers = $validated['class_teachers'] ?? [];
+        unset($validated['school_class_ids'], $validated['class_teachers']);
 
         $subject->update($validated);
 
         if ($classIds !== null) {
-            // Sync with teacher_id on pivot (use subject's teacher_id as default)
+            // Sync with per-class teacher_id on pivot
+            // Fallback to subject's default teacher_id if not specified
             $syncData = [];
             foreach ($classIds as $classId) {
-                $syncData[$classId] = ['teacher_id' => $subject->teacher_id];
+                $pivotTeacherId = $classTeachers[$classId] ?? null;
+                $syncData[$classId] = [
+                    'teacher_id' => $pivotTeacherId ?: $subject->teacher_id,
+                ];
             }
             $subject->schoolClasses()->sync($syncData);
         }

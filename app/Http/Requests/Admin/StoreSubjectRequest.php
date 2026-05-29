@@ -34,6 +34,8 @@ class StoreSubjectRequest extends FormRequest
                 'integer',
                 Rule::exists('users', 'id')->where('role', UserRole::Teacher->value),
             ],
+            'class_teachers' => ['sometimes', 'array'],
+            'class_teachers.*' => ['nullable', 'integer', Rule::exists('users', 'id')->where('role', UserRole::Teacher->value)],
         ];
     }
 }
