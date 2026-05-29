@@ -138,7 +138,9 @@ export default function Security({
                                     disabled={processing}
                                     data-test="update-password-button"
                                 >
-                                    {processing ? 'Menyimpan...' : 'Simpan Password'}
+                                    {processing
+                                        ? 'Menyimpan...'
+                                        : 'Simpan Password'}
                                 </Button>
                             </div>
                         </>
@@ -169,7 +171,9 @@ export default function Security({
                                             type="submit"
                                             disabled={processing}
                                         >
-                                            {processing ? 'Menonaktifkan...' : 'Nonaktifkan 2FA'}
+                                            {processing
+                                                ? 'Menonaktifkan...'
+                                                : 'Nonaktifkan 2FA'}
                                         </Button>
                                     )}
                                 </Form>
@@ -210,7 +214,9 @@ export default function Security({
                                                 type="submit"
                                                 disabled={processing}
                                             >
-                                                {processing ? 'Mengaktifkan...' : 'Aktifkan 2FA'}
+                                                {processing
+                                                    ? 'Mengaktifkan...'
+                                                    : 'Aktifkan 2FA'}
                                             </Button>
                                         )}
                                     </Form>

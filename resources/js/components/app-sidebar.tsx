@@ -1,7 +1,17 @@
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpenCheck, CalendarDays, LayoutGrid, QrCode, School, Users, BookText, ScrollText } from 'lucide-react';
+import {
+    BookOpenCheck,
+    CalendarDays,
+    LayoutGrid,
+    QrCode,
+    School,
+    Users,
+    BookText,
+    ScrollText,
+} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
-import { NavMain, type NavSection } from '@/components/nav-main';
+import { NavMain } from '@/components/nav-main';
+import type { NavSection } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import {
     Sidebar,
@@ -18,19 +28,21 @@ import student from '@/routes/student';
 import teacher from '@/routes/teacher';
 import type { NavItem } from '@/types';
 
-
 export function AppSidebar() {
     const { auth } = usePage().props;
-    const user = auth.user as {
-        role?: 'admin' | 'teacher' | 'student';
-        homeroom_classes_count?: number;
-    } | undefined;
+    const user = auth.user as
+        | {
+              role?: 'admin' | 'teacher' | 'student';
+              homeroom_classes_count?: number;
+          }
+        | undefined;
     const role = user?.role;
-    const dashboardHref = role === 'teacher'
-        ? teacher.dashboard.url()
-        : role === 'student'
-            ? student.dashboard.url()
-            : role === 'admin'
+    const dashboardHref =
+        role === 'teacher'
+            ? teacher.dashboard.url()
+            : role === 'student'
+              ? student.dashboard.url()
+              : role === 'admin'
                 ? admin.dashboard.url()
                 : dashboard();
 
@@ -46,6 +58,7 @@ export function AppSidebar() {
         const canSeeHomeroomClassMenu = (user?.homeroom_classes_count ?? 0) > 0;
 
         const classItems: NavItem[] = [];
+
         if (canSeeHomeroomClassMenu) {
             classItems.push({
                 title: 'Kelas Wali',
@@ -53,6 +66,7 @@ export function AppSidebar() {
                 icon: School,
             });
         }
+
         classItems.push({
             title: 'Data Siswa',
             href: teacher.students.index.url(),
@@ -64,8 +78,16 @@ export function AppSidebar() {
             {
                 label: 'Absensi',
                 items: [
-                    { title: 'QR Absensi', href: teacher.attendance.qr.url(), icon: QrCode },
-                    { title: 'Rekap Absensi', href: teacher.attendance.recap.url(), icon: CalendarDays },
+                    {
+                        title: 'QR Absensi',
+                        href: teacher.attendance.qr.url(),
+                        icon: QrCode,
+                    },
+                    {
+                        title: 'Rekap Absensi',
+                        href: teacher.attendance.recap.url(),
+                        icon: CalendarDays,
+                    },
                 ],
             },
             {
@@ -75,7 +97,11 @@ export function AppSidebar() {
             {
                 label: 'Akademik',
                 items: [
-                    { title: 'Mata Pelajaran', href: teacher.subjects.index.url(), icon: BookOpenCheck },
+                    {
+                        title: 'Mata Pelajaran',
+                        href: teacher.subjects.index.url(),
+                        icon: BookOpenCheck,
+                    },
                     // { title: 'Ujian', href: teacher.exams.index.url(), icon: ClipboardList },
                 ],
             },
@@ -86,17 +112,41 @@ export function AppSidebar() {
             {
                 label: 'Kelola',
                 items: [
-                    { title: 'Pengguna', href: admin.users.index.url(), icon: Users },
-                    { title: 'Kelola Kelas', href: admin.classes.index.url(), icon: School },
-                    { title: 'Kelola Mapel', href: admin.subjects.index.url(), icon: BookOpenCheck },
-                    { title: 'Kelola Jadwal', href: admin.schedules.index.url(), icon: CalendarDays },
+                    {
+                        title: 'Pengguna',
+                        href: admin.users.index.url(),
+                        icon: Users,
+                    },
+                    {
+                        title: 'Kelola Kelas',
+                        href: admin.classes.index.url(),
+                        icon: School,
+                    },
+                    {
+                        title: 'Kelola Mapel',
+                        href: admin.subjects.index.url(),
+                        icon: BookOpenCheck,
+                    },
+                    {
+                        title: 'Kelola Jadwal',
+                        href: admin.schedules.index.url(),
+                        icon: CalendarDays,
+                    },
                 ],
             },
             {
                 label: 'Monitoring',
                 items: [
-                    { title: 'Laporan', href: admin.reports.overview.url(), icon: BookText },
-                    { title: 'Audit Log', href: admin.auditLogs.index.url(), icon: ScrollText },
+                    {
+                        title: 'Laporan',
+                        href: admin.reports.overview.url(),
+                        icon: BookText,
+                    },
+                    {
+                        title: 'Audit Log',
+                        href: admin.auditLogs.index.url(),
+                        icon: ScrollText,
+                    },
                 ],
             },
         );
@@ -106,7 +156,11 @@ export function AppSidebar() {
             {
                 label: 'Kehadiran',
                 items: [
-                    { title: 'Riwayat', href: student.attendance.index.url(), icon: QrCode },
+                    {
+                        title: 'Riwayat',
+                        href: student.attendance.index.url(),
+                        icon: QrCode,
+                    },
                 ],
             },
             // {

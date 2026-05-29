@@ -8,17 +8,26 @@ type RichEditorProps = {
     height?: number;
 };
 
-export default function RichEditor({ value, onChange, placeholder, height = 300 }: RichEditorProps) {
+export default function RichEditor({
+    value,
+    onChange,
+    placeholder,
+    height = 300,
+}: RichEditorProps) {
     const editor = useRef(null);
     const [isDark, setIsDark] = useState(
-        typeof document !== 'undefined' ? document.documentElement.classList.contains('dark') : false
+        typeof document !== 'undefined'
+            ? document.documentElement.classList.contains('dark')
+            : false,
     );
 
     useEffect(() => {
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
                 if (mutation.attributeName === 'class') {
-                    setIsDark(document.documentElement.classList.contains('dark'));
+                    setIsDark(
+                        document.documentElement.classList.contains('dark'),
+                    );
                 }
             });
         });
@@ -39,15 +48,39 @@ export default function RichEditor({ value, onChange, placeholder, height = 300 
             height: height,
             toolbarButtonSize: 'small' as const,
             buttons: [
-                'bold', 'italic', 'underline', 'strikethrough', '|',
-                'superscript', 'subscript', '|',
-                'ul', 'ol', '|',
-                'outdent', 'indent', '|',
-                'font', 'fontsize', 'brush', 'paragraph', '|',
-                'image', 'table', 'link', '|',
-                'align', 'undo', 'redo', '|',
-                'hr', 'eraser', 'copyformat', '|',
-                'fullsize', 'preview'
+                'bold',
+                'italic',
+                'underline',
+                'strikethrough',
+                '|',
+                'superscript',
+                'subscript',
+                '|',
+                'ul',
+                'ol',
+                '|',
+                'outdent',
+                'indent',
+                '|',
+                'font',
+                'fontsize',
+                'brush',
+                'paragraph',
+                '|',
+                'image',
+                'table',
+                'link',
+                '|',
+                'align',
+                'undo',
+                'redo',
+                '|',
+                'hr',
+                'eraser',
+                'copyformat',
+                '|',
+                'fullsize',
+                'preview',
             ],
             removeButtons: ['source', 'about', 'print', 'file', 'video'],
             showXPathInStatusbar: false,
@@ -55,7 +88,7 @@ export default function RichEditor({ value, onChange, placeholder, height = 300 
             showWordsCounter: false,
             toolbarAdaptive: true,
         }),
-        [placeholder, isDark, height]
+        [placeholder, isDark, height],
     );
 
     return (
@@ -64,8 +97,8 @@ export default function RichEditor({ value, onChange, placeholder, height = 300 
                 ref={editor}
                 value={value}
                 config={config}
-                onBlur={newContent => onChange(newContent)}
-            // onChange={newContent => {}} // We use onBlur for performance to avoid constant re-renders
+                onBlur={(newContent) => onChange(newContent)}
+                // onChange={newContent => {}} // We use onBlur for performance to avoid constant re-renders
             />
         </div>
     );

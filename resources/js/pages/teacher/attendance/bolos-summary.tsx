@@ -2,10 +2,23 @@ import { Head } from '@inertiajs/react';
 import { AlertTriangle, RefreshCw, Download, Users } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { dashboard } from '@/routes';
 
 type MissingEntry = {
@@ -17,7 +30,9 @@ type MissingEntry = {
 };
 
 export default function BolosSummary() {
-    const [date, setDate] = useState<string>(new Date().toISOString().slice(0, 10));
+    const [date, setDate] = useState<string>(
+        new Date().toISOString().slice(0, 10),
+    );
     const [loading, setLoading] = useState<boolean>(false);
     const [summary, setSummary] = useState<{
         missing_count: number;
@@ -26,16 +41,24 @@ export default function BolosSummary() {
     } | null>(null);
 
     const getCsrfToken = () =>
-        document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+        document
+            .querySelector('meta[name="csrf-token"]')
+            ?.getAttribute('content') ?? '';
 
     const fetchSummary = useCallback(async () => {
         setLoading(true);
 
         try {
-            const res = await fetch(`/teacher/attendance/bolos-summary?date=${date}`, {
-                credentials: 'same-origin',
-                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-            });
+            const res = await fetch(
+                `/teacher/attendance/bolos-summary?date=${date}`,
+                {
+                    credentials: 'same-origin',
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                },
+            );
 
             if (!res.ok) {
                 throw new Error('Failed to fetch');
@@ -63,9 +86,11 @@ export default function BolosSummary() {
                 credentials: 'same-origin',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'text/csv',
+                    Accept: 'text/csv',
                     'X-Requested-With': 'XMLHttpRequest',
-                    ...(getCsrfToken() ? { 'X-CSRF-TOKEN': getCsrfToken() } : {}),
+                    ...(getCsrfToken()
+                        ? { 'X-CSRF-TOKEN': getCsrfToken() }
+                        : {}),
                 },
                 body: JSON.stringify({ startDate: date, endDate: date }),
             });
@@ -95,15 +120,32 @@ export default function BolosSummary() {
             <div className="space-y-6 p-4">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Rekap Bolos</h1>
-                        <p className="text-muted-foreground">Siswa yang tidak memiliki catatan absensi</p>
+                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                            Rekap Bolos
+                        </h1>
+                        <p className="text-muted-foreground">
+                            Siswa yang tidak memiliki catatan absensi
+                        </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                        <Button variant="outline" size="sm" onClick={fetchSummary} disabled={loading} className="gap-2">
-                            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={fetchSummary}
+                            disabled={loading}
+                            className="gap-2"
+                        >
+                            <RefreshCw
+                                className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`}
+                            />
                             Refresh
                         </Button>
-                        <Button variant="secondary" size="sm" onClick={handleExport} className="gap-2">
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={handleExport}
+                            className="gap-2"
+                        >
                             <Download className="h-4 w-4" />
                             Ekspor CSV
                         </Button>
@@ -137,8 +179,12 @@ export default function BolosSummary() {
                                             <AlertTriangle className="h-5 w-5 text-red-600" />
                                         </div>
                                         <div>
-                                            <p className="text-sm text-muted-foreground">Bolos</p>
-                                            <p className="text-2xl font-bold text-red-600">{summary.missing_count}</p>
+                                            <p className="text-sm text-muted-foreground">
+                                                Bolos
+                                            </p>
+                                            <p className="text-2xl font-bold text-red-600">
+                                                {summary.missing_count}
+                                            </p>
                                         </div>
                                     </div>
                                 </CardContent>
@@ -150,8 +196,12 @@ export default function BolosSummary() {
                                             <Users className="h-5 w-5 text-slate-600" />
                                         </div>
                                         <div>
-                                            <p className="text-sm text-muted-foreground">Total Siswa</p>
-                                            <p className="text-2xl font-bold">{summary.expected_students}</p>
+                                            <p className="text-sm text-muted-foreground">
+                                                Total Siswa
+                                            </p>
+                                            <p className="text-2xl font-bold">
+                                                {summary.expected_students}
+                                            </p>
                                         </div>
                                     </div>
                                 </CardContent>
@@ -163,9 +213,12 @@ export default function BolosSummary() {
                                             <Users className="h-5 w-5 text-emerald-600" />
                                         </div>
                                         <div>
-                                            <p className="text-sm text-muted-foreground">Hadir</p>
+                                            <p className="text-sm text-muted-foreground">
+                                                Hadir
+                                            </p>
                                             <p className="text-2xl font-bold text-emerald-600">
-                                                {summary.expected_students - summary.missing_count}
+                                                {summary.expected_students -
+                                                    summary.missing_count}
                                             </p>
                                         </div>
                                     </div>
@@ -177,7 +230,8 @@ export default function BolosSummary() {
                             <CardHeader>
                                 <CardTitle>Daftar Siswa Bolos</CardTitle>
                                 <CardDescription>
-                                    {summary.missing_count} siswa tidak memiliki catatan absensi pada tanggal {date}
+                                    {summary.missing_count} siswa tidak memiliki
+                                    catatan absensi pada tanggal {date}
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
@@ -186,18 +240,31 @@ export default function BolosSummary() {
                                         <TableHeader>
                                             <TableRow>
                                                 <TableHead>No</TableHead>
-                                                <TableHead>Nama Siswa</TableHead>
+                                                <TableHead>
+                                                    Nama Siswa
+                                                </TableHead>
                                                 <TableHead>Sesi</TableHead>
                                                 <TableHead>Tipe</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
                                             {summary.missing.map((m, idx) => (
-                                                <TableRow key={`${m.session_id}-${m.student_id}`}>
-                                                    <TableCell className="text-muted-foreground">{idx + 1}</TableCell>
-                                                    <TableCell className="font-medium">{m.student_name ?? '-'}</TableCell>
-                                                    <TableCell>{m.session_subject ?? '-'}</TableCell>
-                                                    <TableCell className="capitalize">{m.session_type}</TableCell>
+                                                <TableRow
+                                                    key={`${m.session_id}-${m.student_id}`}
+                                                >
+                                                    <TableCell className="text-muted-foreground">
+                                                        {idx + 1}
+                                                    </TableCell>
+                                                    <TableCell className="font-medium">
+                                                        {m.student_name ?? '-'}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {m.session_subject ??
+                                                            '-'}
+                                                    </TableCell>
+                                                    <TableCell className="capitalize">
+                                                        {m.session_type}
+                                                    </TableCell>
                                                 </TableRow>
                                             ))}
                                         </TableBody>
@@ -205,7 +272,10 @@ export default function BolosSummary() {
                                 ) : (
                                     <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                                         <Users className="mb-3 h-10 w-10 opacity-40" />
-                                        <p className="text-sm">Semua siswa memiliki catatan absensi hari ini</p>
+                                        <p className="text-sm">
+                                            Semua siswa memiliki catatan absensi
+                                            hari ini
+                                        </p>
                                     </div>
                                 )}
                             </CardContent>

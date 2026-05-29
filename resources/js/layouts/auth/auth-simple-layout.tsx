@@ -33,7 +33,7 @@ export default function AuthSimpleLayout({
                     </Link>
 
                     <div className="space-y-6">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted px-4 py-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted px-4 py-2 text-xs font-medium tracking-wider text-muted-foreground uppercase">
                             <Sparkles className="size-3.5 text-primary" />
                             Fast access for school operations
                         </div>
@@ -86,7 +86,7 @@ export default function AuthSimpleLayout({
                                 <AppLogoIcon className="size-5 fill-current" />
                             </span>
                             <div>
-                                <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+                                <p className="text-sm font-medium tracking-wider text-muted-foreground uppercase">
                                     Secure access
                                 </p>
                                 <p className="text-sm text-muted-foreground">

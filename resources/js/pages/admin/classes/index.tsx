@@ -1,5 +1,5 @@
 import { Head, useForm, router } from '@inertiajs/react';
-import { Plus, Trash2, Pencil, GraduationCap } from 'lucide-react';
+import { Plus, Trash2, Pencil, GraduationCap, Search } from 'lucide-react';
 import { useState } from 'react';
 import SchoolClassController from '@/actions/App/Http/Controllers/Admin/SchoolClassController';
 import { Button } from '@/components/ui/button';
@@ -46,9 +46,28 @@ type Props = {
         next_page_url: string | null;
     };
     teachers: Teacher[];
+    filters?: {
+        search?: string;
+    };
 };
 
-export default function AdminSchoolClassesIndex({ classes, teachers }: Props) {
+export default function AdminSchoolClassesIndex({
+    classes,
+    teachers,
+    filters,
+}: Props) {
+    const [search, setSearch] = useState(filters?.search ?? '');
+
+    function handleSearch() {
+        const params: Record<string, string> = {};
+
+        if (search) {
+            params.search = search;
+        }
+
+        router.get(admin.classes.index.url(), params, { preserveState: true });
+    }
+
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         teacher_id: '',
@@ -72,7 +91,9 @@ export default function AdminSchoolClassesIndex({ classes, teachers }: Props) {
         setEditingClass(schoolClass);
         editForm.setData({
             name: schoolClass.name,
-            homeroom_teacher_id: schoolClass.homeroom_teacher ? String(schoolClass.homeroom_teacher.id) : '',
+            homeroom_teacher_id: schoolClass.homeroom_teacher
+                ? String(schoolClass.homeroom_teacher.id)
+                : '',
         });
     }
 
@@ -80,23 +101,32 @@ export default function AdminSchoolClassesIndex({ classes, teachers }: Props) {
         e.preventDefault();
 
         if (!editingClass) {
-return;
-}
-
-        editForm.put(SchoolClassController.update.url({ schoolClass: editingClass.id }), {
-            onSuccess: () => {
-                setEditingClass(null);
-                editForm.reset();
-            },
-        });
-    }
-
-    function handleDelete(schoolClass: SchoolClass) {
-        if (!confirm(`Hapus kelas "${schoolClass.name}"? Semua data terkait akan ikut terhapus.`)) {
             return;
         }
 
-        router.delete(SchoolClassController.destroy.url({ schoolClass: schoolClass.id }));
+        editForm.put(
+            SchoolClassController.update.url({ schoolClass: editingClass.id }),
+            {
+                onSuccess: () => {
+                    setEditingClass(null);
+                    editForm.reset();
+                },
+            },
+        );
+    }
+
+    function handleDelete(schoolClass: SchoolClass) {
+        if (
+            !confirm(
+                `Hapus kelas "${schoolClass.name}"? Semua data terkait akan ikut terhapus.`,
+            )
+        ) {
+            return;
+        }
+
+        router.delete(
+            SchoolClassController.destroy.url({ schoolClass: schoolClass.id }),
+        );
     }
 
     return (
@@ -105,8 +135,30 @@ return;
 
             <div className="space-y-6 p-4 sm:p-6 lg:p-8">
                 <div>
-                    <h1 className="text-2xl font-semibold tracking-tight text-foreground">Kelola Kelas</h1>
-                    <p className="text-sm text-muted-foreground">Buat kelas dan tetapkan wali kelasnya.</p>
+                    <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                        Kelola Kelas
+                    </h1>
+                    <p className="text-sm text-muted-foreground">
+                        Buat kelas dan tetapkan wali kelasnya.
+                    </p>
+                </div>
+
+                <div className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-card p-4">
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-muted-foreground">
+                            Cari Kelas
+                        </label>
+                        <Input
+                            placeholder="Nama kelas..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="w-56"
+                        />
+                    </div>
+                    <Button onClick={handleSearch} size="sm">
+                        <Search className="mr-2 h-4 w-4" />
+                        Filter
+                    </Button>
                 </div>
 
                 <div className="grid gap-6 lg:grid-cols-[1fr_2fr]">
@@ -122,38 +174,62 @@ return;
                                         id="name"
                                         name="name"
                                         value={data.name}
-                                        onChange={(event) => setData('name', event.target.value)}
+                                        onChange={(event) =>
+                                            setData('name', event.target.value)
+                                        }
                                         placeholder="Kelas 10A"
                                         aria-invalid={Boolean(errors.name)}
                                     />
-                                    {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
+                                    {errors.name && (
+                                        <p className="text-xs text-destructive">
+                                            {errors.name}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="teacher_id">Wali Kelas</Label>
+                                    <Label htmlFor="teacher_id">
+                                        Wali Kelas
+                                    </Label>
                                     <Select
                                         value={data.teacher_id}
-                                        onValueChange={(value) => setData('teacher_id', value)}
+                                        onValueChange={(value) =>
+                                            setData('teacher_id', value)
+                                        }
                                     >
-                                        <SelectTrigger className="w-full" id="teacher_id">
+                                        <SelectTrigger
+                                            className="w-full"
+                                            id="teacher_id"
+                                        >
                                             <SelectValue placeholder="Pilih Guru" />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {teachers.map((teacher) => (
-                                                <SelectItem key={teacher.id} value={String(teacher.id)}>
+                                                <SelectItem
+                                                    key={teacher.id}
+                                                    value={String(teacher.id)}
+                                                >
                                                     {teacher.name}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
                                     {errors.teacher_id && (
-                                        <p className="text-xs text-destructive">{errors.teacher_id}</p>
+                                        <p className="text-xs text-destructive">
+                                            {errors.teacher_id}
+                                        </p>
                                     )}
                                 </div>
 
-                                <Button type="submit" disabled={processing} className="w-full">
+                                <Button
+                                    type="submit"
+                                    disabled={processing}
+                                    className="w-full"
+                                >
                                     <Plus className="mr-2 h-4 w-4" />
-                                    {processing ? 'Menyimpan...' : 'Simpan Kelas'}
+                                    {processing
+                                        ? 'Menyimpan...'
+                                        : 'Simpan Kelas'}
                                 </Button>
                             </form>
                         </CardContent>
@@ -167,19 +243,30 @@ return;
                             {classes.data.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center py-16 text-center">
                                     <GraduationCap className="h-10 w-10 text-muted-foreground/50" />
-                                    <h3 className="mt-4 text-sm font-medium text-foreground">Belum Ada Kelas</h3>
+                                    <h3 className="mt-4 text-sm font-medium text-foreground">
+                                        Belum Ada Kelas
+                                    </h3>
                                     <p className="mt-1 text-sm text-muted-foreground">
-                                        Buat kelas baru menggunakan formulir di sebelah kiri.
+                                        Buat kelas baru menggunakan formulir di
+                                        sebelah kiri.
                                     </p>
                                 </div>
                             ) : (
                                 <div className="space-y-2">
                                     {classes.data.map((schoolClass) => (
-                                        <div key={schoolClass.id} className="flex items-center justify-between rounded-lg border border-border p-4">
+                                        <div
+                                            key={schoolClass.id}
+                                            className="flex items-center justify-between rounded-lg border border-border p-4"
+                                        >
                                             <div>
-                                                <p className="font-medium text-foreground">{schoolClass.name}</p>
+                                                <p className="font-medium text-foreground">
+                                                    {schoolClass.name}
+                                                </p>
                                                 <p className="text-sm text-muted-foreground">
-                                                    Wali Kelas: {schoolClass.homeroom_teacher?.name ?? '-'}
+                                                    Wali Kelas:{' '}
+                                                    {schoolClass
+                                                        .homeroom_teacher
+                                                        ?.name ?? '-'}
                                                 </p>
                                             </div>
 
@@ -188,7 +275,9 @@ return;
                                                     variant="ghost"
                                                     size="icon"
                                                     className="h-8 w-8"
-                                                    onClick={() => openEdit(schoolClass)}
+                                                    onClick={() =>
+                                                        openEdit(schoolClass)
+                                                    }
                                                     aria-label="Edit kelas"
                                                 >
                                                     <Pencil className="h-3.5 w-3.5" />
@@ -197,7 +286,11 @@ return;
                                                     variant="ghost"
                                                     size="icon"
                                                     className="h-8 w-8 text-destructive hover:text-destructive"
-                                                    onClick={() => handleDelete(schoolClass)}
+                                                    onClick={() =>
+                                                        handleDelete(
+                                                            schoolClass,
+                                                        )
+                                                    }
                                                     aria-label="Hapus kelas"
                                                 >
                                                     <Trash2 className="h-3.5 w-3.5" />
@@ -211,12 +304,15 @@ return;
                     </Card>
                 </div>
 
-                <Dialog open={editingClass !== null} onOpenChange={(open) => {
-                    if (!open) {
-                        setEditingClass(null);
-                        editForm.reset();
-                    }
-                }}>
+                <Dialog
+                    open={editingClass !== null}
+                    onOpenChange={(open) => {
+                        if (!open) {
+                            setEditingClass(null);
+                            editForm.reset();
+                        }
+                    }}
+                >
                     <DialogContent className="max-w-md">
                         <DialogHeader>
                             <DialogTitle>Edit Kelas</DialogTitle>
@@ -227,12 +323,16 @@ return;
                                 <Input
                                     id="edit-name"
                                     value={editForm.data.name}
-                                    onChange={(e) => editForm.setData('name', e.target.value)}
+                                    onChange={(e) =>
+                                        editForm.setData('name', e.target.value)
+                                    }
                                     placeholder="Kelas 10A"
                                     aria-invalid={Boolean(editForm.errors.name)}
                                 />
                                 {editForm.errors.name && (
-                                    <p className="text-sm text-destructive">{editForm.errors.name}</p>
+                                    <p className="text-sm text-destructive">
+                                        {editForm.errors.name}
+                                    </p>
                                 )}
                             </div>
 
@@ -240,33 +340,55 @@ return;
                                 <Label htmlFor="edit-teacher">Wali Kelas</Label>
                                 <Select
                                     value={editForm.data.homeroom_teacher_id}
-                                    onValueChange={(value) => editForm.setData('homeroom_teacher_id', value)}
+                                    onValueChange={(value) =>
+                                        editForm.setData(
+                                            'homeroom_teacher_id',
+                                            value,
+                                        )
+                                    }
                                 >
-                                    <SelectTrigger className="w-full" id="edit-teacher">
+                                    <SelectTrigger
+                                        className="w-full"
+                                        id="edit-teacher"
+                                    >
                                         <SelectValue placeholder="Pilih Guru" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {teachers.map((teacher) => (
-                                            <SelectItem key={teacher.id} value={String(teacher.id)}>
+                                            <SelectItem
+                                                key={teacher.id}
+                                                value={String(teacher.id)}
+                                            >
                                                 {teacher.name}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
                                 {editForm.errors.homeroom_teacher_id && (
-                                    <p className="text-sm text-destructive">{editForm.errors.homeroom_teacher_id}</p>
+                                    <p className="text-sm text-destructive">
+                                        {editForm.errors.homeroom_teacher_id}
+                                    </p>
                                 )}
                             </div>
 
                             <DialogFooter>
-                                <Button type="button" variant="outline" onClick={() => {
-                                    setEditingClass(null);
-                                    editForm.reset();
-                                }}>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => {
+                                        setEditingClass(null);
+                                        editForm.reset();
+                                    }}
+                                >
                                     Batal
                                 </Button>
-                                <Button type="submit" disabled={editForm.processing}>
-                                    {editForm.processing ? 'Menyimpan...' : 'Simpan Perubahan'}
+                                <Button
+                                    type="submit"
+                                    disabled={editForm.processing}
+                                >
+                                    {editForm.processing
+                                        ? 'Menyimpan...'
+                                        : 'Simpan Perubahan'}
                                 </Button>
                             </DialogFooter>
                         </form>

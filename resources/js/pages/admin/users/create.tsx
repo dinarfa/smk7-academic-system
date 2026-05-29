@@ -4,7 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import admin from '@/routes/admin';
 
 type FormData = {
@@ -36,8 +42,12 @@ export default function AdminUsersCreate() {
             <div className="space-y-6 p-4 sm:p-6 lg:p-8">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Tambah Pengguna</h1>
-                        <p className="text-sm text-muted-foreground">Buat akun baru untuk admin, guru, atau siswa.</p>
+                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                            Tambah Pengguna
+                        </h1>
+                        <p className="text-sm text-muted-foreground">
+                            Buat akun baru untuk admin, guru, atau siswa.
+                        </p>
                     </div>
                     <Button asChild variant="outline" size="sm">
                         <Link href={admin.users.index.url()}>Kembali</Link>
@@ -56,12 +66,18 @@ export default function AdminUsersCreate() {
                                     <Input
                                         id="name"
                                         value={data.name}
-                                        onChange={(event) => setData('name', event.target.value)}
+                                        onChange={(event) =>
+                                            setData('name', event.target.value)
+                                        }
                                         placeholder="Nama lengkap"
                                         aria-invalid={Boolean(errors.name)}
                                         required
                                     />
-                                    {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
+                                    {errors.name && (
+                                        <p className="text-sm text-destructive">
+                                            {errors.name}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div className="space-y-2">
@@ -70,29 +86,53 @@ export default function AdminUsersCreate() {
                                         id="email"
                                         type="email"
                                         value={data.email}
-                                        onChange={(event) => setData('email', event.target.value)}
+                                        onChange={(event) =>
+                                            setData('email', event.target.value)
+                                        }
                                         placeholder="nama@example.com"
                                         aria-invalid={Boolean(errors.email)}
                                         required
                                     />
-                                    {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
+                                    {errors.email && (
+                                        <p className="text-sm text-destructive">
+                                            {errors.email}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
 
                             <div className="grid gap-6 sm:grid-cols-2">
                                 <div className="space-y-2">
                                     <Label htmlFor="role">Role</Label>
-                                    <Select value={data.role} onValueChange={(value) => setData('role', value as FormData['role'])}>
+                                    <Select
+                                        value={data.role}
+                                        onValueChange={(value) =>
+                                            setData(
+                                                'role',
+                                                value as FormData['role'],
+                                            )
+                                        }
+                                    >
                                         <SelectTrigger id="role">
                                             <SelectValue placeholder="Pilih role" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="admin">Admin</SelectItem>
-                                            <SelectItem value="teacher">Guru</SelectItem>
-                                            <SelectItem value="student">Siswa</SelectItem>
+                                            <SelectItem value="admin">
+                                                Admin
+                                            </SelectItem>
+                                            <SelectItem value="teacher">
+                                                Guru
+                                            </SelectItem>
+                                            <SelectItem value="student">
+                                                Siswa
+                                            </SelectItem>
                                         </SelectContent>
                                     </Select>
-                                    {errors.role && <p className="text-sm text-destructive">{errors.role}</p>}
+                                    {errors.role && (
+                                        <p className="text-sm text-destructive">
+                                            {errors.role}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div className="space-y-2">
@@ -101,37 +141,61 @@ export default function AdminUsersCreate() {
                                         id="password"
                                         type="password"
                                         value={data.password}
-                                        onChange={(event) => setData('password', event.target.value)}
+                                        onChange={(event) =>
+                                            setData(
+                                                'password',
+                                                event.target.value,
+                                            )
+                                        }
                                         placeholder="Minimal 8 karakter"
                                         aria-invalid={Boolean(errors.password)}
                                         required
                                     />
-                                    {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
+                                    {errors.password && (
+                                        <p className="text-sm text-destructive">
+                                            {errors.password}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="password_confirmation">Konfirmasi Password</Label>
+                                <Label htmlFor="password_confirmation">
+                                    Konfirmasi Password
+                                </Label>
                                 <Input
                                     id="password_confirmation"
                                     type="password"
                                     value={data.password_confirmation}
-                                    onChange={(event) => setData('password_confirmation', event.target.value)}
+                                    onChange={(event) =>
+                                        setData(
+                                            'password_confirmation',
+                                            event.target.value,
+                                        )
+                                    }
                                     placeholder="Ulangi password"
-                                    aria-invalid={Boolean(errors.password_confirmation)}
+                                    aria-invalid={Boolean(
+                                        errors.password_confirmation,
+                                    )}
                                     required
                                 />
                                 {errors.password_confirmation && (
-                                    <p className="text-sm text-destructive">{errors.password_confirmation}</p>
+                                    <p className="text-sm text-destructive">
+                                        {errors.password_confirmation}
+                                    </p>
                                 )}
                             </div>
 
                             <div className="flex flex-wrap gap-3">
                                 <Button type="submit" disabled={processing}>
-                                    {processing ? 'Menyimpan...' : 'Simpan Pengguna'}
+                                    {processing
+                                        ? 'Menyimpan...'
+                                        : 'Simpan Pengguna'}
                                 </Button>
                                 <Button asChild variant="outline">
-                                    <Link href={admin.users.index.url()}>Batal</Link>
+                                    <Link href={admin.users.index.url()}>
+                                        Batal
+                                    </Link>
                                 </Button>
                             </div>
                         </form>

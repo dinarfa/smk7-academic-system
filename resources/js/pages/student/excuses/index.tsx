@@ -3,8 +3,21 @@ import { Link } from '@inertiajs/react';
 import { StatusBadge } from '@/components/status-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { dashboard } from '@/routes';
 import student from '@/routes/student';
 
@@ -47,8 +60,12 @@ export default function Index({ excuses }: Props) {
             <div className="space-y-6 p-4">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Ajuan Izin</h1>
-                        <p className="mt-2 text-muted-foreground">Kelola ajuan izin dan ketidakhadiran Anda</p>
+                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                            Ajuan Izin
+                        </h1>
+                        <p className="mt-2 text-muted-foreground">
+                            Kelola ajuan izin dan ketidakhadiran Anda
+                        </p>
                     </div>
                     <Link href={student.excuses.create()}>
                         <Button>Ajukan Izin Baru</Button>
@@ -85,20 +102,33 @@ export default function Index({ excuses }: Props) {
                                                 </Badge>
                                             </TableCell>
                                             <TableCell className="font-medium">
-                                                {new Date(excuse.excused_date).toLocaleDateString('id-ID')}
+                                                {new Date(
+                                                    excuse.excused_date,
+                                                ).toLocaleDateString('id-ID')}
                                             </TableCell>
                                             <TableCell>
-                                                <StatusBadge status={excuse.status} />
+                                                <StatusBadge
+                                                    status={excuse.status}
+                                                />
                                             </TableCell>
-                                            <TableCell className="text-sm text-muted-foreground line-clamp-2">
+                                            <TableCell className="line-clamp-2 text-sm text-muted-foreground">
                                                 {excuse.reason}
                                             </TableCell>
                                             <TableCell className="text-sm text-muted-foreground">
-                                                {new Date(excuse.created_at).toLocaleDateString('id-ID')}
+                                                {new Date(
+                                                    excuse.created_at,
+                                                ).toLocaleDateString('id-ID')}
                                             </TableCell>
                                             <TableCell>
-                                                <Link href={student.excuses.show(excuse.id)}>
-                                                    <Button variant="ghost" size="sm">
+                                                <Link
+                                                    href={student.excuses.show(
+                                                        excuse.id,
+                                                    )}
+                                                >
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                    >
                                                         Lihat
                                                     </Button>
                                                 </Link>
@@ -108,8 +138,10 @@ export default function Index({ excuses }: Props) {
                                 </TableBody>
                             </Table>
                         ) : (
-                            <div className="text-center py-12">
-                                <p className="text-muted-foreground">Belum ada ajuan izin</p>
+                            <div className="py-12 text-center">
+                                <p className="text-muted-foreground">
+                                    Belum ada ajuan izin
+                                </p>
                                 <Link href={student.excuses.create()}>
                                     <Button variant="outline" className="mt-4">
                                         Ajukan Izin Pertama

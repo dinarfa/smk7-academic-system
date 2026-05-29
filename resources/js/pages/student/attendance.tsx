@@ -1,9 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import {
-    ClipboardList,
-    QrCode,
-    ArrowRight,
-} from 'lucide-react';
+import { ClipboardList, QrCode, ArrowRight } from 'lucide-react';
 import { useMemo } from 'react';
 import AttendanceController from '@/actions/App/Http/Controllers/Student/AttendanceController';
 import { StatCard } from '@/components/stat-card';
@@ -44,7 +40,12 @@ const sessionTypeLabels: Record<string, string> = {
 
 export default function StudentAttendance({ records, overallStats }: Props) {
     const computedStats = useMemo(() => {
-        const counts = { total: records.data.length, present: 0, late: 0, absent: 0 };
+        const counts = {
+            total: records.data.length,
+            present: 0,
+            late: 0,
+            absent: 0,
+        };
         records.data.forEach((r) => {
             if (r.status === 'present') {
                 counts.present++;
@@ -67,8 +68,12 @@ export default function StudentAttendance({ records, overallStats }: Props) {
             <div className="space-y-6 p-4 sm:p-6 lg:p-8">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Kehadiran Saya</h1>
-                        <p className="text-sm text-muted-foreground">Riwayat kehadiran dan status absensi Anda</p>
+                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                            Kehadiran Saya
+                        </h1>
+                        <p className="text-sm text-muted-foreground">
+                            Riwayat kehadiran dan status absensi Anda
+                        </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
                         <Button asChild variant="outline" size="sm">
@@ -87,10 +92,26 @@ export default function StudentAttendance({ records, overallStats }: Props) {
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <StatCard icon={ClipboardList} label="Total Absensi" value={stats.total} />
-                    <StatCard icon={ClipboardList} label="Hadir" value={stats.present} />
-                    <StatCard icon={ClipboardList} label="Terlambat" value={stats.late} />
-                    <StatCard icon={ClipboardList} label="Tidak Hadir" value={stats.absent} />
+                    <StatCard
+                        icon={ClipboardList}
+                        label="Total Absensi"
+                        value={stats.total}
+                    />
+                    <StatCard
+                        icon={ClipboardList}
+                        label="Hadir"
+                        value={stats.present}
+                    />
+                    <StatCard
+                        icon={ClipboardList}
+                        label="Terlambat"
+                        value={stats.late}
+                    />
+                    <StatCard
+                        icon={ClipboardList}
+                        label="Tidak Hadir"
+                        value={stats.absent}
+                    />
                 </div>
 
                 <Card>
@@ -108,7 +129,9 @@ export default function StudentAttendance({ records, overallStats }: Props) {
                                 <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-muted">
                                     <ClipboardList className="h-8 w-8 text-muted-foreground" />
                                 </div>
-                                <p className="text-sm font-medium text-foreground">Belum ada kehadiran tercatat</p>
+                                <p className="text-sm font-medium text-foreground">
+                                    Belum ada kehadiran tercatat
+                                </p>
                                 <p className="mt-1 text-xs text-muted-foreground">
                                     Scan QR dari guru untuk mulai absensi
                                 </p>
@@ -122,12 +145,17 @@ export default function StudentAttendance({ records, overallStats }: Props) {
                         ) : (
                             <div>
                                 {records.data.map((record) => {
-                                    const typeLabel = sessionTypeLabels[record.session.type ?? ''] ?? record.session.type ?? 'Sesi';
+                                    const typeLabel =
+                                        sessionTypeLabels[
+                                            record.session.type ?? ''
+                                        ] ??
+                                        record.session.type ??
+                                        'Sesi';
 
                                     return (
                                         <div
                                             key={record.id}
-                                            className="flex items-center justify-between py-3 border-b border-border last:border-0"
+                                            className="flex items-center justify-between border-b border-border py-3 last:border-0"
                                         >
                                             <div className="flex min-w-0 flex-1 items-center gap-3">
                                                 <div className="min-w-0">
@@ -135,23 +163,34 @@ export default function StudentAttendance({ records, overallStats }: Props) {
                                                         <p className="text-sm font-medium text-foreground">
                                                             {typeLabel}
                                                         </p>
-                                                        <StatusBadge status={record.status} />
+                                                        <StatusBadge
+                                                            status={
+                                                                record.status
+                                                            }
+                                                        />
                                                     </div>
                                                     <p className="mt-0.5 text-xs text-muted-foreground">
-                                                        {record.session.subject ?? 'Tanpa mata pelajaran'}
+                                                        {record.session
+                                                            .subject ??
+                                                            'Tanpa mata pelajaran'}
                                                     </p>
                                                 </div>
                                             </div>
                                             <div className="ml-4 shrink-0 text-right">
-                                                <p className="text-xs tabular-nums text-muted-foreground">
+                                                <p className="text-xs text-muted-foreground tabular-nums">
                                                     {record.scanned_at
-                                                        ? new Date(record.scanned_at).toLocaleString('id-ID', {
-                                                            day: 'numeric',
-                                                            month: 'short',
-                                                            year: 'numeric',
-                                                            hour: '2-digit',
-                                                            minute: '2-digit',
-                                                        })
+                                                        ? new Date(
+                                                              record.scanned_at,
+                                                          ).toLocaleString(
+                                                              'id-ID',
+                                                              {
+                                                                  day: 'numeric',
+                                                                  month: 'short',
+                                                                  year: 'numeric',
+                                                                  hour: '2-digit',
+                                                                  minute: '2-digit',
+                                                              },
+                                                          )
                                                         : '-'}
                                                 </p>
                                             </div>
@@ -165,7 +204,9 @@ export default function StudentAttendance({ records, overallStats }: Props) {
 
                 {records.data.length > 0 && (
                     <div className="flex flex-wrap items-center gap-4 rounded-lg border border-border bg-card px-4 py-3">
-                        <span className="text-xs font-medium text-muted-foreground">Keterangan:</span>
+                        <span className="text-xs font-medium text-muted-foreground">
+                            Keterangan:
+                        </span>
                         <StatusBadge status="present" />
                         <StatusBadge status="late" />
                         <StatusBadge status="absent" label="Tidak Hadir" />

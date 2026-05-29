@@ -1,11 +1,19 @@
 import { Head, Form, router } from '@inertiajs/react';
 import { Clock, Users, Zap } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
+import {
+    Bar,
+    BarChart,
+    CartesianGrid,
+    XAxis,
+    YAxis,
+    ResponsiveContainer,
+    Tooltip,
+} from 'recharts';
 import AttendanceSessionController from '@/actions/App/Http/Controllers/Teacher/AttendanceSessionController';
 import { StatCard } from '@/components/stat-card';
-import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/status-badge';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { dashboard } from '@/routes';
@@ -87,11 +95,15 @@ export default function TeacherDashboard({
                 return false;
             }
 
-            return new Date(session.ends_at).getTime() - currentTime.getTime() <= 0;
+            return (
+                new Date(session.ends_at).getTime() - currentTime.getTime() <= 0
+            );
         });
 
         if (hasExpired) {
-            router.reload({ only: ['summary', 'activeSessions', 'recentRecords'] });
+            router.reload({
+                only: ['summary', 'activeSessions', 'recentRecords'],
+            });
         }
     }, [currentTime, activeSessions]);
 
@@ -114,7 +126,9 @@ export default function TeacherDashboard({
 
     // Filter out expired sessions client-side for immediate UI update
     const visibleSessions = activeSessions.filter(
-        (s) => !s.ends_at || new Date(s.ends_at).getTime() - currentTime.getTime() > 0,
+        (s) =>
+            !s.ends_at ||
+            new Date(s.ends_at).getTime() - currentTime.getTime() > 0,
     );
 
     return (
@@ -123,27 +137,59 @@ export default function TeacherDashboard({
 
             <div className="space-y-6 p-4 sm:p-6 lg:p-8">
                 <div>
-                    <h1 className="text-2xl font-semibold tracking-tight text-foreground">Dashboard Guru</h1>
-                    <p className="text-sm text-muted-foreground">Kelola absensi dan aktivitas siswa</p>
+                    <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                        Dashboard Guru
+                    </h1>
+                    <p className="text-sm text-muted-foreground">
+                        Kelola absensi dan aktivitas siswa
+                    </p>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    <StatCard icon={Users} label="Total Siswa" value={summary.students_count} />
-                    <StatCard icon={Zap} label="Sesi Aktif" value={summary.active_sessions_count} />
-                    <StatCard icon={Clock} label="Absensi Hari Ini" value={summary.today_records_count} />
+                    <StatCard
+                        icon={Users}
+                        label="Total Siswa"
+                        value={summary.students_count}
+                    />
+                    <StatCard
+                        icon={Zap}
+                        label="Sesi Aktif"
+                        value={summary.active_sessions_count}
+                    />
+                    <StatCard
+                        icon={Clock}
+                        label="Absensi Hari Ini"
+                        value={summary.today_records_count}
+                    />
                 </div>
 
                 <Card>
                     <CardHeader>
                         <CardTitle>Absensi Mingguan</CardTitle>
-                        <p className="text-sm text-muted-foreground">Jumlah kehadiran 7 hari terakhir</p>
+                        <p className="text-sm text-muted-foreground">
+                            Jumlah kehadiran 7 hari terakhir
+                        </p>
                     </CardHeader>
                     <CardContent>
                         <ResponsiveContainer width="100%" height={250}>
                             <BarChart data={weeklyAttendance}>
-                                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                                <XAxis dataKey="day" className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                                <YAxis className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                                <CartesianGrid
+                                    strokeDasharray="3 3"
+                                    className="stroke-muted"
+                                />
+                                <XAxis
+                                    dataKey="day"
+                                    className="text-xs"
+                                    tick={{
+                                        fill: 'hsl(var(--muted-foreground))',
+                                    }}
+                                />
+                                <YAxis
+                                    className="text-xs"
+                                    tick={{
+                                        fill: 'hsl(var(--muted-foreground))',
+                                    }}
+                                />
                                 <Tooltip
                                     contentStyle={{
                                         backgroundColor: 'hsl(var(--card))',
@@ -152,8 +198,18 @@ export default function TeacherDashboard({
                                         fontSize: '12px',
                                     }}
                                 />
-                                <Bar dataKey="hadir" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Hadir" />
-                                <Bar dataKey="terlambat" fill="hsl(var(--chart-4))" radius={[4, 4, 0, 0]} name="Terlambat" />
+                                <Bar
+                                    dataKey="hadir"
+                                    fill="hsl(var(--primary))"
+                                    radius={[4, 4, 0, 0]}
+                                    name="Hadir"
+                                />
+                                <Bar
+                                    dataKey="terlambat"
+                                    fill="hsl(var(--chart-4))"
+                                    radius={[4, 4, 0, 0]}
+                                    name="Terlambat"
+                                />
                             </BarChart>
                         </ResponsiveContainer>
                     </CardContent>
@@ -162,8 +218,12 @@ export default function TeacherDashboard({
                 {visibleSessions.length > 0 && (
                     <div className="space-y-4">
                         <div className="flex items-center gap-2">
-                            <h2 className="text-lg font-medium text-foreground">Sesi Aktif</h2>
-                            <Badge variant="secondary">{visibleSessions.length}</Badge>
+                            <h2 className="text-lg font-medium text-foreground">
+                                Sesi Aktif
+                            </h2>
+                            <Badge variant="secondary">
+                                {visibleSessions.length}
+                            </Badge>
                         </div>
                         <div className="grid gap-4 md:grid-cols-2">
                             {visibleSessions.map((session) => (
@@ -175,20 +235,25 @@ export default function TeacherDashboard({
                                                     {typeLabel(session.type)}
                                                 </CardTitle>
                                                 <p className="text-sm text-muted-foreground">
-                                                    {session.subject ?? 'Tanpa mata pelajaran'}
+                                                    {session.subject ??
+                                                        'Tanpa mata pelajaran'}
                                                 </p>
                                             </div>
-                                            <div className="text-right space-y-1">
+                                            <div className="space-y-1 text-right">
                                                 <StatusBadge status="active" />
-                                                <p className="text-lg font-semibold tabular-nums text-foreground">
-                                                    {getTimeRemaining(session.ends_at)}
+                                                <p className="text-lg font-semibold text-foreground tabular-nums">
+                                                    {getTimeRemaining(
+                                                        session.ends_at,
+                                                    )}
                                                 </p>
                                             </div>
                                         </div>
                                     </CardHeader>
                                     <CardContent className="space-y-4">
                                         <div className="flex items-center justify-between rounded-lg bg-muted/50 px-4 py-2.5">
-                                            <span className="text-sm text-muted-foreground">Tercatat</span>
+                                            <span className="text-sm text-muted-foreground">
+                                                Tercatat
+                                            </span>
                                             <span className="text-sm font-medium text-foreground">
                                                 {session.records_count} siswa
                                             </span>
@@ -196,7 +261,9 @@ export default function TeacherDashboard({
 
                                         {session.is_active && (
                                             <Form
-                                                {...AttendanceSessionController.close.form(session.id)}
+                                                {...AttendanceSessionController.close.form(
+                                                    session.id,
+                                                )}
                                             >
                                                 {({ processing }) => (
                                                     <Button
@@ -205,7 +272,9 @@ export default function TeacherDashboard({
                                                         className="w-full"
                                                         disabled={processing}
                                                     >
-                                                        {processing ? 'Menutup...' : 'Tutup Sesi'}
+                                                        {processing
+                                                            ? 'Menutup...'
+                                                            : 'Tutup Sesi'}
                                                     </Button>
                                                 )}
                                             </Form>

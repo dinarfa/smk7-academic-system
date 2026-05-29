@@ -1,6 +1,6 @@
 import { Head } from '@inertiajs/react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { StatusBadge } from '@/components/status-badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -43,11 +43,15 @@ export default function Show({ excuse }: Props) {
         <>
             <Head title="Detail Ajuan Izin" />
 
-            <div className="space-y-6 p-4 max-w-2xl mx-auto">
+            <div className="mx-auto max-w-2xl space-y-6 p-4">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Detail Ajuan Izin</h1>
-                        <p className="mt-2 text-muted-foreground">ID Ajuan: #{excuse.id}</p>
+                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                            Detail Ajuan Izin
+                        </h1>
+                        <p className="mt-2 text-muted-foreground">
+                            ID Ajuan: #{excuse.id}
+                        </p>
                     </div>
                     <StatusBadge status={excuse.status} />
                 </div>
@@ -60,13 +64,21 @@ export default function Show({ excuse }: Props) {
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div>
-                                <p className="text-sm text-muted-foreground">Jenis Izin</p>
-                                <p className="font-medium">{getTypeLabel(excuse.type)}</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Jenis Izin
+                                </p>
+                                <p className="font-medium">
+                                    {getTypeLabel(excuse.type)}
+                                </p>
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">Tanggal Ketidakhadiran</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Tanggal Ketidakhadiran
+                                </p>
                                 <p className="font-medium">
-                                    {new Date(excuse.excused_date).toLocaleDateString('id-ID', {
+                                    {new Date(
+                                        excuse.excused_date,
+                                    ).toLocaleDateString('id-ID', {
                                         weekday: 'long',
                                         year: 'numeric',
                                         month: 'long',
@@ -75,9 +87,13 @@ export default function Show({ excuse }: Props) {
                                 </p>
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">Diajukan Pada</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Diajukan Pada
+                                </p>
                                 <p className="font-medium">
-                                    {new Date(excuse.created_at).toLocaleDateString('id-ID', {
+                                    {new Date(
+                                        excuse.created_at,
+                                    ).toLocaleDateString('id-ID', {
                                         year: 'numeric',
                                         month: 'long',
                                         day: 'numeric',
@@ -87,8 +103,12 @@ export default function Show({ excuse }: Props) {
                                 </p>
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">Diajukan Oleh</p>
-                                <p className="font-medium">{excuse.submittedBy.name}</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Diajukan Oleh
+                                </p>
+                                <p className="font-medium">
+                                    {excuse.submittedBy.name}
+                                </p>
                             </div>
                         </CardContent>
                     </Card>
@@ -100,23 +120,33 @@ export default function Show({ excuse }: Props) {
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div>
-                                <p className="text-sm text-muted-foreground">Status</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Status
+                                </p>
                                 <p className="font-medium">
-                                    {excuse.status === 'pending' ? 'Menunggu Persetujuan' :
-                                        excuse.status === 'approved' ? 'Disetujui' :
-                                            'Ditolak'}
+                                    {excuse.status === 'pending'
+                                        ? 'Menunggu Persetujuan'
+                                        : excuse.status === 'approved'
+                                          ? 'Disetujui'
+                                          : 'Ditolak'}
                                 </p>
                             </div>
                             {excuse.reviewedBy && (
                                 <div>
-                                    <p className="text-sm text-muted-foreground">Diproses Oleh</p>
-                                    <p className="font-medium">{excuse.reviewedBy.name}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        Diproses Oleh
+                                    </p>
+                                    <p className="font-medium">
+                                        {excuse.reviewedBy.name}
+                                    </p>
                                 </div>
                             )}
                             {excuse.review_notes && (
                                 <div>
-                                    <p className="text-sm text-muted-foreground">Catatan</p>
-                                    <p className="font-medium text-sm bg-muted p-2 rounded">
+                                    <p className="text-sm text-muted-foreground">
+                                        Catatan
+                                    </p>
+                                    <p className="rounded bg-muted p-2 text-sm font-medium">
                                         {excuse.review_notes}
                                     </p>
                                 </div>
@@ -131,7 +161,7 @@ export default function Show({ excuse }: Props) {
                         <CardTitle>Alasan Ketidakhadiran</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-foreground whitespace-pre-wrap">
+                        <p className="whitespace-pre-wrap text-foreground">
                             {excuse.reason}
                         </p>
                     </CardContent>
@@ -141,7 +171,8 @@ export default function Show({ excuse }: Props) {
                 {excuse.status === 'pending' && (
                     <Alert>
                         <AlertDescription>
-                            Ajuan Anda sedang diproses oleh guru Anda. Harap menunggu keputusan.
+                            Ajuan Anda sedang diproses oleh guru Anda. Harap
+                            menunggu keputusan.
                         </AlertDescription>
                     </Alert>
                 )}
@@ -149,7 +180,8 @@ export default function Show({ excuse }: Props) {
                 {excuse.status === 'approved' && (
                     <Alert className="border-green-200 bg-green-50">
                         <AlertDescription className="text-green-800">
-                            Ajuan Anda telah disetujui. Ketidakhadiran Anda telah dicatat sebagai izin.
+                            Ajuan Anda telah disetujui. Ketidakhadiran Anda
+                            telah dicatat sebagai izin.
                         </AlertDescription>
                     </Alert>
                 )}
@@ -157,7 +189,8 @@ export default function Show({ excuse }: Props) {
                 {excuse.status === 'rejected' && (
                     <Alert className="border-red-200 bg-red-50">
                         <AlertDescription className="text-red-800">
-                            Ajuan Anda telah ditolak. Silakan hubungi guru Anda untuk keterangan lebih lanjut.
+                            Ajuan Anda telah ditolak. Silakan hubungi guru Anda
+                            untuk keterangan lebih lanjut.
                         </AlertDescription>
                     </Alert>
                 )}
@@ -170,10 +203,7 @@ export default function Show({ excuse }: Props) {
                     >
                         Kembali
                     </Button>
-                    <Button
-                        variant="outline"
-                        onClick={() => window.print()}
-                    >
+                    <Button variant="outline" onClick={() => window.print()}>
                         Cetak
                     </Button>
                 </div>

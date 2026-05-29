@@ -1,11 +1,17 @@
 import { Head, Link, router } from '@inertiajs/react';
 import DOMPurify from 'dompurify';
-import type { FormEvent} from 'react';
+import type { FormEvent } from 'react';
 import { useEffect, useState, useCallback } from 'react';
 import ExamResponseController from '@/actions/App/Http/Controllers/Student/ExamResponseController';
 import ExamSubmissionController from '@/actions/App/Http/Controllers/Student/ExamSubmissionController';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { dashboard } from '@/routes';
 import student from '@/routes/student';
@@ -55,12 +61,24 @@ function formatDateTime(value: string | null): string {
     return new Date(value).toLocaleString('id-ID');
 }
 
-function QuestionCard({ examId, attemptId, question }: { examId: number; attemptId: number; question: Question }) {
-    const selectedAnswerId = question.response?.answer_option_id?.toString() ?? '';
+function QuestionCard({
+    examId,
+    attemptId,
+    question,
+}: {
+    examId: number;
+    attemptId: number;
+    question: Question;
+}) {
+    const selectedAnswerId =
+        question.response?.answer_option_id?.toString() ?? '';
 
     function saveChoice(answerOptionId: number): void {
         router.post(
-            ExamResponseController.store.url({ exam: examId, attempt: attemptId }),
+            ExamResponseController.store.url({
+                exam: examId,
+                attempt: attemptId,
+            }),
             {
                 question_id: question.id,
                 answer_option_id: answerOptionId,
@@ -80,7 +98,10 @@ function QuestionCard({ examId, attemptId, question }: { examId: number; attempt
         const responseText = String(formData.get('response_text') ?? '').trim();
 
         router.post(
-            ExamResponseController.store.url({ exam: examId, attempt: attemptId }),
+            ExamResponseController.store.url({
+                exam: examId,
+                attempt: attemptId,
+            }),
             {
                 question_id: question.id,
                 answer_option_id: null,
@@ -98,12 +119,16 @@ function QuestionCard({ examId, attemptId, question }: { examId: number; attempt
             <CardHeader>
                 <CardDescription>Poin {question.points}</CardDescription>
                 <div
-                    className="text-lg leading-7 font-medium prose prose-sm max-w-none dark:prose-invert"
-                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(question.prompt) }}
+                    className="prose prose-sm max-w-none text-lg leading-7 font-medium dark:prose-invert"
+                    dangerouslySetInnerHTML={{
+                        __html: DOMPurify.sanitize(question.prompt),
+                    }}
                 />
             </CardHeader>
             <CardContent className="space-y-4">
-                {(question.type === 'multiple_choice' || question.type === 'objective') && question.answer_options.length > 0 ? (
+                {(question.type === 'multiple_choice' ||
+                    question.type === 'objective') &&
+                question.answer_options.length > 0 ? (
                     <div className="space-y-3">
                         {question.answer_options.map((option) => (
                             <label
@@ -113,13 +138,20 @@ function QuestionCard({ examId, attemptId, question }: { examId: number; attempt
                                 <input
                                     type="radio"
                                     name={`question-${question.id}`}
-                                    checked={selectedAnswerId === option.id.toString()}
+                                    checked={
+                                        selectedAnswerId ===
+                                        option.id.toString()
+                                    }
                                     onChange={() => saveChoice(option.id)}
                                     className="mt-1"
                                 />
                                 <div
                                     className="prose prose-sm max-w-none dark:prose-invert"
-                                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(option.option_text) }}
+                                    dangerouslySetInnerHTML={{
+                                        __html: DOMPurify.sanitize(
+                                            option.option_text,
+                                        ),
+                                    }}
                                 />
                             </label>
                         ))}
@@ -128,7 +160,9 @@ function QuestionCard({ examId, attemptId, question }: { examId: number; attempt
                     <form onSubmit={saveText} className="space-y-3">
                         <Textarea
                             name="response_text"
-                            defaultValue={question.response?.response_text ?? ''}
+                            defaultValue={
+                                question.response?.response_text ?? ''
+                            }
                             placeholder="Tulis jawaban Anda di sini"
                             rows={5}
                         />
@@ -145,8 +179,8 @@ function QuestionCard({ examId, attemptId, question }: { examId: number; attempt
 export default function StudentExamShow({ exam, attempt, questions }: Props) {
     const [timeLeft, setTimeLeft] = useState<number>(() => {
         if (!attempt.started_at || attempt.status !== 'in_progress') {
-return 0;
-}
+            return 0;
+        }
 
         const started = new Date(attempt.started_at).getTime();
         const durationMs = exam.duration_minutes * 60 * 1000;
@@ -157,13 +191,19 @@ return 0;
     });
 
     const submitExam = useCallback(() => {
-        router.post(ExamSubmissionController.store.url({ exam: exam.id, attempt: attempt.id }), {});
+        router.post(
+            ExamSubmissionController.store.url({
+                exam: exam.id,
+                attempt: attempt.id,
+            }),
+            {},
+        );
     }, [exam.id, attempt.id]);
 
     useEffect(() => {
         if (!attempt.started_at || attempt.status !== 'in_progress') {
-return;
-}
+            return;
+        }
 
         const started = new Date(attempt.started_at).getTime();
         const durationMs = exam.duration_minutes * 60 * 1000;
@@ -190,8 +230,8 @@ return;
 
     function formatTimeLeft(ms: number) {
         if (ms <= 0) {
-return '00:00:00';
-}
+            return '00:00:00';
+        }
 
         const totalSeconds = Math.floor(ms / 1000);
         const hours = Math.floor(totalSeconds / 3600);
@@ -199,11 +239,9 @@ return '00:00:00';
         const seconds = totalSeconds % 60;
 
         return [hours, minutes, seconds]
-            .map(v => v < 10 ? '0' + v : v)
+            .map((v) => (v < 10 ? '0' + v : v))
             .join(':');
     }
-
-
 
     return (
         <>
@@ -212,20 +250,26 @@ return '00:00:00';
             <div className="space-y-6 p-4">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">{exam.title}</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                            {exam.title}
+                        </h1>
                         <p className="mt-2 text-muted-foreground">
-                            {exam.subject ?? '-'} · Durasi {exam.duration_minutes} menit
+                            {exam.subject ?? '-'} · Durasi{' '}
+                            {exam.duration_minutes} menit
                         </p>
                         <p className="mt-1 text-sm text-muted-foreground">
-                            Mulai: {formatDateTime(exam.starts_at)} · Selesai: {formatDateTime(exam.ends_at)}
+                            Mulai: {formatDateTime(exam.starts_at)} · Selesai:{' '}
+                            {formatDateTime(exam.ends_at)}
                         </p>
                     </div>
 
                     <div className="flex flex-col items-end gap-2">
                         {attempt.status === 'in_progress' && (
                             <div className="rounded-md bg-red-500/10 px-4 py-2 text-center text-red-600 dark:text-red-400">
-                                <p className="text-xs font-semibold uppercase tracking-wider">Sisa Waktu</p>
-                                <p className="text-xl font-bold tabular-nums leading-none">
+                                <p className="text-xs font-semibold tracking-wider uppercase">
+                                    Sisa Waktu
+                                </p>
+                                <p className="text-xl leading-none font-bold tabular-nums">
                                     {formatTimeLeft(timeLeft)}
                                 </p>
                             </div>
@@ -234,7 +278,11 @@ return '00:00:00';
                             Attempt #{attempt.id}
                         </span>
                         {attempt.status === 'in_progress' && (
-                            <Button type="button" variant="destructive" onClick={submitExam}>
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                onClick={submitExam}
+                            >
                                 Kumpulkan Ujian
                             </Button>
                         )}
@@ -245,7 +293,8 @@ return '00:00:00';
                     <CardHeader>
                         <CardTitle>Instruksi Pengerjaan</CardTitle>
                         <CardDescription>
-                            Simpan jawaban setiap soal sebelum mengumpulkan ujian.
+                            Simpan jawaban setiap soal sebelum mengumpulkan
+                            ujian.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="grid gap-3 text-sm text-muted-foreground md:grid-cols-3">
@@ -268,17 +317,27 @@ return '00:00:00';
                                 <div className="text-sm font-medium text-muted-foreground">
                                     Soal {index + 1}
                                 </div>
-                                <QuestionCard examId={exam.id} attemptId={attempt.id} question={question} />
+                                <QuestionCard
+                                    examId={exam.id}
+                                    attemptId={attempt.id}
+                                    question={question}
+                                />
                             </div>
                         ))}
                     </div>
                 )}
 
                 <div className="flex items-center justify-between">
-                    <Link href={student.exams.index.url()} className="text-sm text-primary hover:underline">
+                    <Link
+                        href={student.exams.index.url()}
+                        className="text-sm text-primary hover:underline"
+                    >
                         Kembali ke daftar ujian
                     </Link>
-                    <Link href={dashboard()} className="text-sm text-muted-foreground hover:underline">
+                    <Link
+                        href={dashboard()}
+                        className="text-sm text-muted-foreground hover:underline"
+                    >
                         Dashboard
                     </Link>
                 </div>

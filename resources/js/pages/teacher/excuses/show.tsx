@@ -59,11 +59,15 @@ export default function Show({ excuse }: Props) {
         <>
             <Head title="Review Ajuan Izin" />
 
-            <div className="space-y-6 p-4 max-w-4xl mx-auto">
+            <div className="mx-auto max-w-4xl space-y-6 p-4">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Review Ajuan Izin</h1>
-                        <p className="mt-2 text-muted-foreground">ID Ajuan: #{excuse.id}</p>
+                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                            Review Ajuan Izin
+                        </h1>
+                        <p className="mt-2 text-muted-foreground">
+                            ID Ajuan: #{excuse.id}
+                        </p>
                     </div>
                     <StatusBadge status={excuse.status} />
                 </div>
@@ -82,7 +86,9 @@ export default function Show({ excuse }: Props) {
                     {/* Type */}
                     <Card>
                         <CardHeader>
-                            <CardTitle className="text-base">Jenis Izin</CardTitle>
+                            <CardTitle className="text-base">
+                                Jenis Izin
+                            </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <Badge variant="outline">
@@ -98,7 +104,9 @@ export default function Show({ excuse }: Props) {
                         </CardHeader>
                         <CardContent>
                             <p className="font-medium">
-                                {new Date(excuse.excused_date).toLocaleDateString('id-ID')}
+                                {new Date(
+                                    excuse.excused_date,
+                                ).toLocaleDateString('id-ID')}
                             </p>
                         </CardContent>
                     </Card>
@@ -110,7 +118,7 @@ export default function Show({ excuse }: Props) {
                         <CardTitle>Alasan Ketidakhadiran</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-foreground whitespace-pre-wrap bg-muted p-3 rounded">
+                        <p className="rounded bg-muted p-3 whitespace-pre-wrap text-foreground">
                             {excuse.reason}
                         </p>
                     </CardContent>
@@ -123,19 +131,28 @@ export default function Show({ excuse }: Props) {
                     </CardHeader>
                     <CardContent className="space-y-3">
                         <div>
-                            <p className="text-sm text-muted-foreground">Diajukan Oleh</p>
-                            <p className="font-medium">{excuse.submittedBy.name}</p>
+                            <p className="text-sm text-muted-foreground">
+                                Diajukan Oleh
+                            </p>
+                            <p className="font-medium">
+                                {excuse.submittedBy.name}
+                            </p>
                         </div>
                         <div>
-                            <p className="text-sm text-muted-foreground">Tanggal Pengajuan</p>
+                            <p className="text-sm text-muted-foreground">
+                                Tanggal Pengajuan
+                            </p>
                             <p className="font-medium">
-                                {new Date(excuse.created_at).toLocaleDateString('id-ID', {
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                })}
+                                {new Date(excuse.created_at).toLocaleDateString(
+                                    'id-ID',
+                                    {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                    },
+                                )}
                             </p>
                         </div>
                     </CardContent>
@@ -146,7 +163,8 @@ export default function Show({ excuse }: Props) {
                     <>
                         <Alert>
                             <AlertDescription>
-                                Silakan review ajuan ini dan memberikan keputusan. Masukkan catatan jika diperlukan.
+                                Silakan review ajuan ini dan memberikan
+                                keputusan. Masukkan catatan jika diperlukan.
                             </AlertDescription>
                         </Alert>
 
@@ -156,12 +174,19 @@ export default function Show({ excuse }: Props) {
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div>
-                                    <Label htmlFor="review_notes">Catatan (Opsional)</Label>
+                                    <Label htmlFor="review_notes">
+                                        Catatan (Opsional)
+                                    </Label>
                                     <Textarea
                                         id="review_notes"
                                         placeholder="Tambahkan catatan atau alasan keputusan Anda..."
                                         value={data.review_notes}
-                                        onChange={(e) => setData('review_notes', e.target.value)}
+                                        onChange={(e) =>
+                                            setData(
+                                                'review_notes',
+                                                e.target.value,
+                                            )
+                                        }
                                         rows={4}
                                     />
                                 </div>
@@ -171,7 +196,9 @@ export default function Show({ excuse }: Props) {
                                         onClick={handleApprove}
                                         disabled={processing}
                                     >
-                                        {processing ? 'Memproses...' : 'Setujui'}
+                                        {processing
+                                            ? 'Memproses...'
+                                            : 'Setujui'}
                                     </Button>
                                     <Button
                                         onClick={handleReject}
@@ -194,21 +221,31 @@ export default function Show({ excuse }: Props) {
                         </CardHeader>
                         <CardContent className="space-y-3">
                             <div>
-                                <p className="text-sm text-muted-foreground">Status</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Status
+                                </p>
                                 <p className="font-medium">
-                                    {excuse.status === 'approved' ? 'Disetujui' : 'Ditolak'}
+                                    {excuse.status === 'approved'
+                                        ? 'Disetujui'
+                                        : 'Ditolak'}
                                 </p>
                             </div>
                             {excuse.reviewedBy && (
                                 <div>
-                                    <p className="text-sm text-muted-foreground">Diproses Oleh</p>
-                                    <p className="font-medium">{excuse.reviewedBy.name}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        Diproses Oleh
+                                    </p>
+                                    <p className="font-medium">
+                                        {excuse.reviewedBy.name}
+                                    </p>
                                 </div>
                             )}
                             {excuse.review_notes && (
                                 <div>
-                                    <p className="text-sm text-muted-foreground">Catatan</p>
-                                    <p className="text-foreground whitespace-pre-wrap bg-muted p-3 rounded">
+                                    <p className="text-sm text-muted-foreground">
+                                        Catatan
+                                    </p>
+                                    <p className="rounded bg-muted p-3 whitespace-pre-wrap text-foreground">
                                         {excuse.review_notes}
                                     </p>
                                 </div>
@@ -218,10 +255,7 @@ export default function Show({ excuse }: Props) {
                 )}
 
                 {/* Back Button */}
-                <Button
-                    variant="outline"
-                    onClick={() => window.history.back()}
-                >
+                <Button variant="outline" onClick={() => window.history.back()}>
                     Kembali
                 </Button>
             </div>

@@ -1,10 +1,22 @@
 import { Head, useForm } from '@inertiajs/react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { dashboard } from '@/routes';
 import student from '@/routes/student';
@@ -38,17 +50,22 @@ export default function Create({ pendingAbsences }: Props) {
         <>
             <Head title="Ajukan Izin" />
 
-            <div className="space-y-6 p-4 max-w-2xl mx-auto">
+            <div className="mx-auto max-w-2xl space-y-6 p-4">
                 <div>
-                    <h1 className="text-2xl font-semibold tracking-tight text-foreground">Ajukan Izin</h1>
-                    <p className="mt-2 text-muted-foreground">Ajukan izin untuk ketidakhadiran Anda</p>
+                    <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                        Ajukan Izin
+                    </h1>
+                    <p className="mt-2 text-muted-foreground">
+                        Ajukan izin untuk ketidakhadiran Anda
+                    </p>
                 </div>
 
                 <Card>
                     <CardHeader>
                         <CardTitle>Form Ajuan Izin</CardTitle>
                         <CardDescription>
-                            Isi formulir dengan informasi lengkap tentang alasan ketidakhadiran Anda
+                            Isi formulir dengan informasi lengkap tentang alasan
+                            ketidakhadiran Anda
                         </CardDescription>
                     </CardHeader>
 
@@ -57,30 +74,53 @@ export default function Create({ pendingAbsences }: Props) {
                             {/* Type Selection */}
                             <div>
                                 <Label htmlFor="type">Jenis Izin *</Label>
-                                <Select value={data.type} onValueChange={(value) => setData('type', value)}>
+                                <Select
+                                    value={data.type}
+                                    onValueChange={(value) =>
+                                        setData('type', value)
+                                    }
+                                >
                                     <SelectTrigger id="type">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="sick">Sakit</SelectItem>
-                                        <SelectItem value="permission">Izin</SelectItem>
-                                        <SelectItem value="other">Lainnya</SelectItem>
+                                        <SelectItem value="sick">
+                                            Sakit
+                                        </SelectItem>
+                                        <SelectItem value="permission">
+                                            Izin
+                                        </SelectItem>
+                                        <SelectItem value="other">
+                                            Lainnya
+                                        </SelectItem>
                                     </SelectContent>
                                 </Select>
-                                {errors.type && <p className="text-sm text-destructive mt-1">{errors.type}</p>}
+                                {errors.type && (
+                                    <p className="mt-1 text-sm text-destructive">
+                                        {errors.type}
+                                    </p>
+                                )}
                             </div>
 
                             {/* Date Selection */}
                             <div>
-                                <Label htmlFor="excused_date">Tanggal Ketidakhadiran *</Label>
+                                <Label htmlFor="excused_date">
+                                    Tanggal Ketidakhadiran *
+                                </Label>
                                 <Input
                                     id="excused_date"
                                     type="date"
                                     value={data.excused_date}
-                                    onChange={(e) => setData('excused_date', e.target.value)}
+                                    onChange={(e) =>
+                                        setData('excused_date', e.target.value)
+                                    }
                                     max={new Date().toISOString().split('T')[0]}
                                 />
-                                {errors.excused_date && <p className="text-sm text-destructive mt-1">{errors.excused_date}</p>}
+                                {errors.excused_date && (
+                                    <p className="mt-1 text-sm text-destructive">
+                                        {errors.excused_date}
+                                    </p>
+                                )}
                             </div>
 
                             {/* Pending Absences Info */}
@@ -88,13 +128,27 @@ export default function Create({ pendingAbsences }: Props) {
                                 <Alert>
                                     <AlertDescription>
                                         <div className="text-sm">
-                                            <p className="font-medium mb-2">Riwayat Ketidakhadiran (Belum Diizinkan):</p>
-                                            <ul className="list-disc list-inside space-y-1">
-                                                {pendingAbsences.map((absence) => (
-                                                    <li key={absence.id}>
-                                                        {new Date(absence.scanned_at).toLocaleDateString('id-ID')} - {absence.session.subject}
-                                                    </li>
-                                                ))}
+                                            <p className="mb-2 font-medium">
+                                                Riwayat Ketidakhadiran (Belum
+                                                Diizinkan):
+                                            </p>
+                                            <ul className="list-inside list-disc space-y-1">
+                                                {pendingAbsences.map(
+                                                    (absence) => (
+                                                        <li key={absence.id}>
+                                                            {new Date(
+                                                                absence.scanned_at,
+                                                            ).toLocaleDateString(
+                                                                'id-ID',
+                                                            )}{' '}
+                                                            -{' '}
+                                                            {
+                                                                absence.session
+                                                                    .subject
+                                                            }
+                                                        </li>
+                                                    ),
+                                                )}
                                             </ul>
                                         </div>
                                     </AlertDescription>
@@ -103,27 +157,32 @@ export default function Create({ pendingAbsences }: Props) {
 
                             {/* Reason */}
                             <div>
-                                <Label htmlFor="reason">Alasan Ketidakhadiran *</Label>
+                                <Label htmlFor="reason">
+                                    Alasan Ketidakhadiran *
+                                </Label>
                                 <Textarea
                                     id="reason"
                                     placeholder="Jelaskan alasan Anda tidak bisa hadir..."
                                     value={data.reason}
-                                    onChange={(e) => setData('reason', e.target.value)}
+                                    onChange={(e) =>
+                                        setData('reason', e.target.value)
+                                    }
                                     rows={4}
                                     maxLength={500}
                                 />
-                                <p className="text-xs text-muted-foreground mt-1">
+                                <p className="mt-1 text-xs text-muted-foreground">
                                     {data.reason.length}/500 karakter
                                 </p>
-                                {errors.reason && <p className="text-sm text-destructive mt-1">{errors.reason}</p>}
+                                {errors.reason && (
+                                    <p className="mt-1 text-sm text-destructive">
+                                        {errors.reason}
+                                    </p>
+                                )}
                             </div>
 
                             {/* Buttons */}
                             <div className="flex gap-3">
-                                <Button
-                                    type="submit"
-                                    disabled={processing}
-                                >
+                                <Button type="submit" disabled={processing}>
                                     {processing ? 'Mengirim...' : 'Ajukan Izin'}
                                 </Button>
                                 <Button
@@ -140,7 +199,8 @@ export default function Create({ pendingAbsences }: Props) {
 
                 <Alert>
                     <AlertDescription>
-                        Ajuan Anda akan diproses oleh guru Anda. Anda akan menerima notifikasi ketika ada keputusan.
+                        Ajuan Anda akan diproses oleh guru Anda. Anda akan
+                        menerima notifikasi ketika ada keputusan.
                     </AlertDescription>
                 </Alert>
             </div>

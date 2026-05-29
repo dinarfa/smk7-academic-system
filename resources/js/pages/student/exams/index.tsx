@@ -4,7 +4,13 @@ import { useState } from 'react';
 import ExamAttemptController from '@/actions/App/Http/Controllers/Student/ExamAttemptController';
 import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { dashboard } from '@/routes';
 import student from '@/routes/student';
 
@@ -48,19 +54,23 @@ export default function StudentExamsIndex({ exams }: Props) {
             const input = window.prompt('Masukkan kode akses ujian:');
 
             if (input === null) {
-return;
-} // User cancelled
+                return;
+            } // User cancelled
 
             accessCode = input;
         }
 
         setStartingExamId(exam.id);
 
-        router.post(ExamAttemptController.store.url({ exam: exam.id }), { access_code: accessCode }, {
-            onFinish: () => {
-                setStartingExamId(null);
+        router.post(
+            ExamAttemptController.store.url({ exam: exam.id }),
+            { access_code: accessCode },
+            {
+                onFinish: () => {
+                    setStartingExamId(null);
+                },
             },
-        });
+        );
     }
 
     function formatDateTime(value: string | null): string {
@@ -77,7 +87,9 @@ return;
 
             <div className="space-y-6 p-4">
                 <div>
-                    <h1 className="text-2xl font-semibold tracking-tight text-foreground">Ujian Saya</h1>
+                    <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                        Ujian Saya
+                    </h1>
                     <p className="mt-2 text-muted-foreground">
                         Daftar ujian yang tersedia untuk kelas Anda.
                     </p>
@@ -87,14 +99,17 @@ return;
                     <CardHeader>
                         <CardTitle>Ujian Aktif</CardTitle>
                         <CardDescription>
-                            Total {exams.data.length} ujian dapat dikerjakan saat ini.
+                            Total {exams.data.length} ujian dapat dikerjakan
+                            saat ini.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         {exams.data.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-16 text-center">
                                 <ClipboardList className="h-10 w-10 text-muted-foreground/50" />
-                                <h3 className="mt-4 text-sm font-medium text-foreground">Belum Ada Ujian</h3>
+                                <h3 className="mt-4 text-sm font-medium text-foreground">
+                                    Belum Ada Ujian
+                                </h3>
                                 <p className="mt-1 text-sm text-muted-foreground">
                                     Belum ada ujian aktif untuk kelas Anda.
                                 </p>
@@ -103,38 +118,83 @@ return;
                             <div className="space-y-3">
                                 {exams.data.map((exam) => {
                                     return (
-                                        <div key={exam.id} className="rounded-lg border border-border p-4">
+                                        <div
+                                            key={exam.id}
+                                            className="rounded-lg border border-border p-4"
+                                        >
                                             <div className="flex flex-wrap items-start justify-between gap-4">
                                                 <div className="space-y-2">
                                                     <div>
-                                                        <p className="text-sm text-muted-foreground">Mata pelajaran</p>
+                                                        <p className="text-sm text-muted-foreground">
+                                                            Mata pelajaran
+                                                        </p>
                                                         <p className="font-medium text-foreground">
-                                                            {exam.subject ?? '-'}
+                                                            {exam.subject ??
+                                                                '-'}
                                                         </p>
                                                     </div>
                                                     <div>
-                                                        <p className="text-sm text-muted-foreground">Judul ujian</p>
-                                                        <p className="font-semibold text-foreground">{exam.title}</p>
+                                                        <p className="text-sm text-muted-foreground">
+                                                            Judul ujian
+                                                        </p>
+                                                        <p className="font-semibold text-foreground">
+                                                            {exam.title}
+                                                        </p>
                                                     </div>
                                                     <div className="grid gap-1 text-sm text-muted-foreground">
-                                                        <p>Durasi: {exam.duration_minutes} menit</p>
-                                                        <p>Mulai: {formatDateTime(exam.starts_at)}</p>
-                                                        <p>Selesai: {formatDateTime(exam.ends_at)}</p>
+                                                        <p>
+                                                            Durasi:{' '}
+                                                            {
+                                                                exam.duration_minutes
+                                                            }{' '}
+                                                            menit
+                                                        </p>
+                                                        <p>
+                                                            Mulai:{' '}
+                                                            {formatDateTime(
+                                                                exam.starts_at,
+                                                            )}
+                                                        </p>
+                                                        <p>
+                                                            Selesai:{' '}
+                                                            {formatDateTime(
+                                                                exam.ends_at,
+                                                            )}
+                                                        </p>
                                                     </div>
                                                 </div>
                                                 <div className="flex flex-col items-end gap-3">
-                                                    <StatusBadge status={exam.attempt?.status ?? 'not_started'} />
+                                                    <StatusBadge
+                                                        status={
+                                                            exam.attempt
+                                                                ?.status ??
+                                                            'not_started'
+                                                        }
+                                                    />
                                                     {exam.can_start ? (
                                                         <Button
                                                             type="button"
                                                             size="sm"
-                                                            onClick={() => startExam(exam)}
-                                                            disabled={startingExamId === exam.id}
+                                                            onClick={() =>
+                                                                startExam(exam)
+                                                            }
+                                                            disabled={
+                                                                startingExamId ===
+                                                                exam.id
+                                                            }
                                                         >
-                                                            {startingExamId === exam.id ? 'Memulai...' : 'Mulai Ujian'}
+                                                            {startingExamId ===
+                                                            exam.id
+                                                                ? 'Memulai...'
+                                                                : 'Mulai Ujian'}
                                                         </Button>
                                                     ) : (
-                                                        <Button type="button" size="sm" variant="secondary" disabled>
+                                                        <Button
+                                                            type="button"
+                                                            size="sm"
+                                                            variant="secondary"
+                                                            disabled
+                                                        >
                                                             Ujian sudah dimulai
                                                         </Button>
                                                     )}
@@ -148,7 +208,8 @@ return;
 
                         <div className="mt-6 flex items-center justify-between text-sm text-muted-foreground">
                             <span>
-                                Halaman {exams.current_page} dari {exams.last_page}
+                                Halaman {exams.current_page} dari{' '}
+                                {exams.last_page}
                             </span>
                             <div className="flex gap-3">
                                 {exams.prev_page_url && (

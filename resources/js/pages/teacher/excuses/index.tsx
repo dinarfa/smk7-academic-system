@@ -6,7 +6,14 @@ import { StatusBadge } from '@/components/status-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { dashboard } from '@/routes';
 import teacher from '@/routes/teacher';
 
@@ -70,10 +77,14 @@ function ExcuseTable({ data }: ExcuseTableProps) {
                             </Badge>
                         </TableCell>
                         <TableCell>
-                            {new Date(excuse.excused_date).toLocaleDateString('id-ID')}
+                            {new Date(excuse.excused_date).toLocaleDateString(
+                                'id-ID',
+                            )}
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
-                            {new Date(excuse.created_at).toLocaleDateString('id-ID')}
+                            {new Date(excuse.created_at).toLocaleDateString(
+                                'id-ID',
+                            )}
                         </TableCell>
                         <TableCell>
                             <StatusBadge status={excuse.status} />
@@ -92,7 +103,9 @@ function ExcuseTable({ data }: ExcuseTableProps) {
     ) : (
         <div className="flex flex-col items-center justify-center py-16 text-center">
             <FileText className="h-10 w-10 text-muted-foreground/50" />
-            <h3 className="mt-4 text-sm font-medium text-foreground">Tidak Ada Ajuan Izin</h3>
+            <h3 className="mt-4 text-sm font-medium text-foreground">
+                Tidak Ada Ajuan Izin
+            </h3>
             <p className="mt-1 text-sm text-muted-foreground">
                 Belum ada ajuan izin pada kategori ini.
             </p>
@@ -101,11 +114,13 @@ function ExcuseTable({ data }: ExcuseTableProps) {
 }
 
 export default function Index({ excuses }: Props) {
-    const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'rejected'>('pending');
+    const [activeTab, setActiveTab] = useState<
+        'pending' | 'approved' | 'rejected'
+    >('pending');
     const allExcuses = excuses.data;
-    const pendingExcuses = allExcuses.filter(e => e.status === 'pending');
-    const approvedExcuses = allExcuses.filter(e => e.status === 'approved');
-    const rejectedExcuses = allExcuses.filter(e => e.status === 'rejected');
+    const pendingExcuses = allExcuses.filter((e) => e.status === 'pending');
+    const approvedExcuses = allExcuses.filter((e) => e.status === 'approved');
+    const rejectedExcuses = allExcuses.filter((e) => e.status === 'rejected');
 
     return (
         <>
@@ -113,34 +128,50 @@ export default function Index({ excuses }: Props) {
 
             <div className="space-y-6 p-4">
                 <div>
-                    <h1 className="text-2xl font-semibold tracking-tight text-foreground">Manajemen Ajuan Izin</h1>
-                    <p className="mt-2 text-muted-foreground">Kelola ajuan izin dari siswa-siswa Anda</p>
+                    <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                        Manajemen Ajuan Izin
+                    </h1>
+                    <p className="mt-2 text-muted-foreground">
+                        Kelola ajuan izin dari siswa-siswa Anda
+                    </p>
                 </div>
 
                 {/* Summary Stats */}
                 <div className="grid grid-cols-3 gap-4">
                     <Card>
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-muted-foreground">Menunggu</CardTitle>
+                            <CardTitle className="text-sm font-medium text-muted-foreground">
+                                Menunggu
+                            </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{pendingExcuses.length}</div>
+                            <div className="text-2xl font-bold">
+                                {pendingExcuses.length}
+                            </div>
                         </CardContent>
                     </Card>
                     <Card>
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-muted-foreground">Disetujui</CardTitle>
+                            <CardTitle className="text-sm font-medium text-muted-foreground">
+                                Disetujui
+                            </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-green-600">{approvedExcuses.length}</div>
+                            <div className="text-2xl font-bold text-green-600">
+                                {approvedExcuses.length}
+                            </div>
                         </CardContent>
                     </Card>
                     <Card>
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-muted-foreground">Ditolak</CardTitle>
+                            <CardTitle className="text-sm font-medium text-muted-foreground">
+                                Ditolak
+                            </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-red-600">{rejectedExcuses.length}</div>
+                            <div className="text-2xl font-bold text-red-600">
+                                {rejectedExcuses.length}
+                            </div>
                         </CardContent>
                     </Card>
                 </div>
@@ -156,21 +187,33 @@ export default function Index({ excuses }: Props) {
                             {/* Tab Buttons */}
                             <div className="flex gap-2 border-b">
                                 <Button
-                                    variant={activeTab === 'pending' ? 'default' : 'ghost'}
+                                    variant={
+                                        activeTab === 'pending'
+                                            ? 'default'
+                                            : 'ghost'
+                                    }
                                     onClick={() => setActiveTab('pending')}
                                     className="rounded-b-none"
                                 >
                                     Menunggu ({pendingExcuses.length})
                                 </Button>
                                 <Button
-                                    variant={activeTab === 'approved' ? 'default' : 'ghost'}
+                                    variant={
+                                        activeTab === 'approved'
+                                            ? 'default'
+                                            : 'ghost'
+                                    }
                                     onClick={() => setActiveTab('approved')}
                                     className="rounded-b-none"
                                 >
                                     Disetujui ({approvedExcuses.length})
                                 </Button>
                                 <Button
-                                    variant={activeTab === 'rejected' ? 'default' : 'ghost'}
+                                    variant={
+                                        activeTab === 'rejected'
+                                            ? 'default'
+                                            : 'ghost'
+                                    }
                                     onClick={() => setActiveTab('rejected')}
                                     className="rounded-b-none"
                                 >
@@ -180,9 +223,15 @@ export default function Index({ excuses }: Props) {
 
                             {/* Tab Content */}
                             <div className="mt-4">
-                                {activeTab === 'pending' && <ExcuseTable data={pendingExcuses} />}
-                                {activeTab === 'approved' && <ExcuseTable data={approvedExcuses} />}
-                                {activeTab === 'rejected' && <ExcuseTable data={rejectedExcuses} />}
+                                {activeTab === 'pending' && (
+                                    <ExcuseTable data={pendingExcuses} />
+                                )}
+                                {activeTab === 'approved' && (
+                                    <ExcuseTable data={approvedExcuses} />
+                                )}
+                                {activeTab === 'rejected' && (
+                                    <ExcuseTable data={rejectedExcuses} />
+                                )}
                             </div>
                         </div>
                     </CardContent>

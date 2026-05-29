@@ -1,10 +1,5 @@
 import { Head } from '@inertiajs/react';
-import {
-    CheckCircle2,
-    ClipboardList,
-    Clock,
-    TrendingUp,
-} from 'lucide-react';
+import { CheckCircle2, ClipboardList, Clock, TrendingUp } from 'lucide-react';
 
 import { StatCard } from '@/components/stat-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,23 +26,32 @@ const sessionTypeLabels: Record<string, string> = {
     dismissal: 'Absen Pulang',
 };
 
-export default function StudentDashboard({
-    summary,
-    recentRecords,
-}: Props) {
+export default function StudentDashboard({ summary, recentRecords }: Props) {
     return (
         <>
             <Head title="Dashboard Siswa" />
 
             <div className="space-y-6 p-4 sm:p-6 lg:p-8">
                 <div>
-                    <h1 className="text-2xl font-semibold tracking-tight text-foreground">Dashboard</h1>
-                    <p className="text-sm text-muted-foreground">Pantau riwayat kehadiran Anda</p>
+                    <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                        Dashboard
+                    </h1>
+                    <p className="text-sm text-muted-foreground">
+                        Pantau riwayat kehadiran Anda
+                    </p>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                    <StatCard icon={TrendingUp} label="Total Kehadiran" value={summary.total_attendance} />
-                    <StatCard icon={CheckCircle2} label="Hari Ini" value={summary.today_attendance} />
+                    <StatCard
+                        icon={TrendingUp}
+                        label="Total Kehadiran"
+                        value={summary.total_attendance}
+                    />
+                    <StatCard
+                        icon={CheckCircle2}
+                        label="Hari Ini"
+                        value={summary.today_attendance}
+                    />
                 </div>
 
                 <Card>
@@ -60,7 +64,7 @@ export default function StudentDashboard({
                                 {recentRecords.map((record) => (
                                     <div
                                         key={record.id}
-                                        className="flex items-center justify-between py-3 border-b border-border last:border-0"
+                                        className="flex items-center justify-between border-b border-border py-3 last:border-0"
                                     >
                                         <div className="flex min-w-0 items-center gap-3">
                                             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
@@ -68,18 +72,24 @@ export default function StudentDashboard({
                                             </div>
                                             <div className="min-w-0">
                                                 <p className="truncate text-sm font-medium text-foreground">
-                                                    {sessionTypeLabels[record.session_type ?? ''] ??
+                                                    {sessionTypeLabels[
+                                                        record.session_type ??
+                                                            ''
+                                                    ] ??
                                                         record.session_type ??
                                                         'Sesi'}
                                                 </p>
                                                 <p className="truncate text-xs text-muted-foreground">
-                                                    {record.subject ?? 'Tanpa mata pelajaran'}
+                                                    {record.subject ??
+                                                        'Tanpa mata pelajaran'}
                                                 </p>
                                             </div>
                                         </div>
-                                        <p className="ml-4 shrink-0 text-xs tabular-nums text-muted-foreground">
+                                        <p className="ml-4 shrink-0 text-xs text-muted-foreground tabular-nums">
                                             {record.scanned_at
-                                                ? new Date(record.scanned_at).toLocaleString('id-ID')
+                                                ? new Date(
+                                                      record.scanned_at,
+                                                  ).toLocaleString('id-ID')
                                                 : '-'}
                                         </p>
                                     </div>
@@ -90,9 +100,12 @@ export default function StudentDashboard({
                                 <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-muted">
                                     <ClipboardList className="h-8 w-8 text-muted-foreground" />
                                 </div>
-                                <h3 className="text-base font-semibold text-foreground">Belum Ada Riwayat</h3>
+                                <h3 className="text-base font-semibold text-foreground">
+                                    Belum Ada Riwayat
+                                </h3>
                                 <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-                                    Riwayat absensi akan muncul di sini setelah Anda melakukan kehadiran.
+                                    Riwayat absensi akan muncul di sini setelah
+                                    Anda melakukan kehadiran.
                                 </p>
                             </div>
                         )}

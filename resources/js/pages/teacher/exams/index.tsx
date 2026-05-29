@@ -66,7 +66,9 @@ export default function TeacherExamsIndex({ exams }: Props) {
                         {exams.data.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-16 text-center">
                                 <ClipboardList className="h-10 w-10 text-muted-foreground/50" />
-                                <h3 className="mt-4 text-sm font-medium text-foreground">Belum Ada Ujian</h3>
+                                <h3 className="mt-4 text-sm font-medium text-foreground">
+                                    Belum Ada Ujian
+                                </h3>
                                 <p className="mt-1 text-sm text-muted-foreground">
                                     Buat ujian baru untuk memulai.
                                 </p>
@@ -89,7 +91,8 @@ export default function TeacherExamsIndex({ exams }: Props) {
                                                         {exam.subject ?? '-'}
                                                     </p>
                                                     <p>
-                                                        Kelas: {exam.class ?? '-'}
+                                                        Kelas:{' '}
+                                                        {exam.class ?? '-'}
                                                     </p>
                                                     <p>
                                                         Durasi:{' '}
@@ -100,24 +103,57 @@ export default function TeacherExamsIndex({ exams }: Props) {
                                             </div>
                                             <div className="text-right">
                                                 <div className="flex justify-end gap-2">
-                                                    <StatusBadge status={exam.status === 'draft' ? 'draft' : 'published'} />
+                                                    <StatusBadge
+                                                        status={
+                                                            exam.status ===
+                                                            'draft'
+                                                                ? 'draft'
+                                                                : 'published'
+                                                        }
+                                                    />
                                                 </div>
                                                 <p className="mt-2 text-xs text-muted-foreground">
                                                     {exam.created_at}
                                                 </p>
                                                 <div className="mt-3 flex flex-col gap-2">
-                                                    <Button asChild size="sm" variant="outline">
-                                                        <Link href={QuestionController.index.url({ exam: exam.id })}>
+                                                    <Button
+                                                        asChild
+                                                        size="sm"
+                                                        variant="outline"
+                                                    >
+                                                        <Link
+                                                            href={QuestionController.index.url(
+                                                                {
+                                                                    exam: exam.id,
+                                                                },
+                                                            )}
+                                                        >
                                                             Kelola Soal
                                                         </Link>
                                                     </Button>
-                                                    <Button asChild size="sm" variant="outline">
-                                                        <Link href={ExamController.results.url({ exam: exam.id })}>
+                                                    <Button
+                                                        asChild
+                                                        size="sm"
+                                                        variant="outline"
+                                                    >
+                                                        <Link
+                                                            href={ExamController.results.url(
+                                                                {
+                                                                    exam: exam.id,
+                                                                },
+                                                            )}
+                                                        >
                                                             Lihat Hasil
                                                         </Link>
                                                     </Button>
                                                     <Button asChild size="sm">
-                                                        <Link href={QuestionController.create.url({ exam: exam.id })}>
+                                                        <Link
+                                                            href={QuestionController.create.url(
+                                                                {
+                                                                    exam: exam.id,
+                                                                },
+                                                            )}
+                                                        >
                                                             Tambah Soal
                                                         </Link>
                                                     </Button>
@@ -126,7 +162,15 @@ export default function TeacherExamsIndex({ exams }: Props) {
                                                             type="button"
                                                             size="sm"
                                                             variant="destructive"
-                                                            onClick={() => router.patch(ExamController.unpublish.url({ exam: exam.id }))}
+                                                            onClick={() =>
+                                                                router.patch(
+                                                                    ExamController.unpublish.url(
+                                                                        {
+                                                                            exam: exam.id,
+                                                                        },
+                                                                    ),
+                                                                )
+                                                            }
                                                         >
                                                             Tutup Ujian
                                                         </Button>
@@ -134,7 +178,15 @@ export default function TeacherExamsIndex({ exams }: Props) {
                                                         <Button
                                                             type="button"
                                                             size="sm"
-                                                            onClick={() => router.patch(ExamController.publish.url({ exam: exam.id }))}
+                                                            onClick={() =>
+                                                                router.patch(
+                                                                    ExamController.publish.url(
+                                                                        {
+                                                                            exam: exam.id,
+                                                                        },
+                                                                    ),
+                                                                )
+                                                            }
                                                         >
                                                             Buka Ujian
                                                         </Button>

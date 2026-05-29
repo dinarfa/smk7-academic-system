@@ -80,7 +80,9 @@ function TwoFactorSetupStep({
                                     <div
                                         className="aspect-square w-full rounded-lg bg-white p-2 [&_svg]:size-full"
                                         dangerouslySetInnerHTML={{
-                                            __html: DOMPurify.sanitize(qrCodeSvg),
+                                            __html: DOMPurify.sanitize(
+                                                qrCodeSvg,
+                                            ),
                                         }}
                                         style={{
                                             filter:
