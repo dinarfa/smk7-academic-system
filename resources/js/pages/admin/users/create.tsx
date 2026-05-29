@@ -13,19 +13,30 @@ import {
 } from '@/components/ui/select';
 import admin from '@/routes/admin';
 
+type SchoolClass = {
+    id: number;
+    name: string;
+};
+
 type FormData = {
     name: string;
     email: string;
     role: 'admin' | 'teacher' | 'student' | '';
+    school_class_id: string;
     password: string;
     password_confirmation: string;
 };
 
-export default function AdminUsersCreate() {
+type Props = {
+    classes: SchoolClass[];
+};
+
+export default function AdminUsersCreate({ classes }: Props) {
     const { data, setData, post, processing, errors } = useForm<FormData>({
         name: '',
         email: '',
         role: '',
+        school_class_id: '',
         password: '',
         password_confirmation: '',
     });
@@ -106,12 +117,18 @@ export default function AdminUsersCreate() {
                                     <Label htmlFor="role">Role</Label>
                                     <Select
                                         value={data.role}
-                                        onValueChange={(value) =>
+                                        onValueChange={(value) => {
                                             setData(
                                                 'role',
                                                 value as FormData['role'],
-                                            )
-                                        }
+                                            );
+                                            if (value !== 'student') {
+                                                setData(
+                                                    'school_class_id',
+                                                    '',
+                                                );
+                                            }
+                                        }}
                                     >
                                         <SelectTrigger id="role">
                                             <SelectValue placeholder="Pilih role" />
@@ -134,6 +151,42 @@ export default function AdminUsersCreate() {
                                         </p>
                                     )}
                                 </div>
+
+                                {data.role === 'student' && (
+                                    <div className="space-y-2">
+                                        <Label htmlFor="school_class_id">
+                                            Kelas
+                                        </Label>
+                                        <Select
+                                            value={data.school_class_id}
+                                            onValueChange={(value) =>
+                                                setData(
+                                                    'school_class_id',
+                                                    value,
+                                                )
+                                            }
+                                        >
+                                            <SelectTrigger id="school_class_id">
+                                                <SelectValue placeholder="Pilih kelas" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {classes.map((c) => (
+                                                    <SelectItem
+                                                        key={c.id}
+                                                        value={String(c.id)}
+                                                    >
+                                                        {c.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        {errors.school_class_id && (
+                                            <p className="text-sm text-destructive">
+                                                {errors.school_class_id}
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
 
                                 <div className="space-y-2">
                                     <Label htmlFor="password">Password</Label>
