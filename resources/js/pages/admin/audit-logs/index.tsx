@@ -260,12 +260,6 @@ export default function AdminAuditLogsIndex({
                                                 >
                                                     Tanggal
                                                 </th>
-                                                <th
-                                                    scope="col"
-                                                    className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground"
-                                                >
-                                                    Detail
-                                                </th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-border">
@@ -289,11 +283,13 @@ export default function AdminAuditLogsIndex({
                                                     <td className="px-6 py-4 text-sm whitespace-nowrap">
                                                         <Badge variant="outline">
                                                             {log.action
-                                                                .replace(
-                                                                    /_/g,
-                                                                    ' ',
-                                                                )
-                                                                .toUpperCase()}
+                                                                ? log.action
+                                                                    .replace(
+                                                                        /_/g,
+                                                                        ' ',
+                                                                    )
+                                                                    .toUpperCase()
+                                                                : '-'}
                                                         </Badge>
                                                     </td>
                                                     <td className="px-6 py-4 text-sm whitespace-nowrap">
@@ -325,24 +321,6 @@ export default function AdminAuditLogsIndex({
                                                         ).toLocaleDateString(
                                                             'id-ID',
                                                         )}
-                                                    </td>
-                                                    <td className="px-6 py-4 text-sm whitespace-nowrap">
-                                                        <Button
-                                                            asChild
-                                                            variant="link"
-                                                            className="h-auto p-0"
-                                                        >
-                                                            <Link
-                                                                href={admin.auditLogs.show.url(
-                                                                    {
-                                                                        auditLog:
-                                                                            log.id,
-                                                                    },
-                                                                )}
-                                                            >
-                                                                Detail
-                                                            </Link>
-                                                        </Button>
                                                     </td>
                                                 </tr>
                                             ))}

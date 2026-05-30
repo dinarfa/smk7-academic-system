@@ -215,11 +215,22 @@ export default function ManualAttendance({
     };
 
     const handleSubmit = async () => {
+        if (!selectedClass) {
+            alert('Pilih kelas terlebih dahulu');
+            return;
+        }
+
+        if (statuses.size === 0) {
+            alert('Pilih minimal 1 siswa');
+            return;
+        }
+
         setProcessing(true);
 
         try {
             const payload = {
                 phase,
+                class_id: selectedClass,
                 students: Array.from(statuses.entries()).map(
                     ([studentId, status]) => ({
                         student_id: studentId,

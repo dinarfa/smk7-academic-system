@@ -415,4 +415,66 @@ class AttendanceReportService
 
         return $rows;
     }
+
+    /**
+     * Build formatted export data for a teacher with headers and rows separated.
+     *
+     * @return array{headers: array<int, string>, rows: array<int, array<int, string>>}
+     */
+    public function exportFormattedForTeacher(int $teacherId, string $startDate, string $endDate, ?int $classId = null, ?int $subjectId = null): array
+    {
+        $headers = ['No', 'Nama Siswa', 'Email', 'Kelas', 'Mapel', 'Tipe Sesi', 'Status', 'Waktu Absen'];
+
+        $rows = [];
+
+        AttendanceRecord::query()
+            ->with(['student:id,name,email,school_class_id', 'student.schoolClass:id,name', 'session', 'session.subjectModel:id,name'])
+            ->whereHas('session', function ($query) use ($teacherId, $classId, $subjectId): void {
+                $query->where('opened_by', $teacherId);
+                if ($classId !== null) {
+                    $query->where(function ($q) use ($classId): void {
+                        $q->where('class_id', $classId)
+                            ->orWhereHas('subjectModel.schoolClasses', fn ($sq) => $sq->where('school_classes.id', $classId));
+                    });
+                }
+                if ($subjectId !== null) {
+                    $query->where('subject_id', $subjectId);
+                }
+            })
+            ->whereBetween('scanned_at', [
+                Carbon::parse($startDate)->startOfDay(),
+                Carbon::parse($endDate)->endOfDay(),
+            ])
+            ->orderBy('scanned_at')
+            ->chunk(500, function ($records) use (&$rows): void {
+                $no = count($rows) + 1;
+                foreach ($records as $record) {
+                    $rows[] = [
+                        $no++,
+                        $record->student?->name ?? '-',
+                        $record->student?->email ?? '-',
+                        $record->student?->schoolClass?->name ?? '-',
+                        $record->session?->subject_name ?? '-',
+                        match ($record->session?->type?->value) {
+                            'morning' => 'Pagi',
+                            'subject' => 'Mata Pelajaran',
+                            'dismissal' => 'Pulang',
+                            default => $record->session?->type?->value ?? '-',
+                        },
+                        match ($record->status?->value) {
+                            'present' => 'Hadir',
+                            'late' => 'Terlambat',
+                            'absent' => 'Alpha',
+                            default => $record->status?->value ?? '-',
+                        },
+                        $record->scanned_at ? Carbon::parse($record->scanned_at)->format('d/m/Y H:i') : '-',
+                    ];
+                }
+            });
+
+        return [
+            'headers' => $headers,
+            'rows' => $rows,
+        ];
+    }
 }

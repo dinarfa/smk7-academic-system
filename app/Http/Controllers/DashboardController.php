@@ -84,8 +84,8 @@ class DashboardController extends Controller
             $homeroomClassIds = $user->homeroomClasses()->pluck('school_classes.id');
 
             $subjects = $user->teachingSubjects()
-                ->select('id', 'name')
-                ->orderBy('name')
+                ->select('subjects.id', 'subjects.name')
+                ->orderBy('subjects.name')
                 ->get();
 
             // Weekly attendance data for chart (last 7 days)

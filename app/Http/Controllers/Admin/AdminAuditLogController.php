@@ -58,14 +58,14 @@ class AdminAuditLogController extends Controller
         return Inertia::render('admin/audit-logs/index', [
             'logs' => $logs->through(fn (AuditLog $log): array => [
                 'id' => $log->id,
-                'admin_name' => $log->admin->name,
-                'admin_email' => $log->admin->email,
+                'admin_name' => $log->admin?->name ?? 'Unknown',
+                'admin_email' => $log->admin?->email ?? '-',
                 'target_user_name' => $log->targetUser?->name,
                 'target_user_email' => $log->targetUser?->email,
                 'action' => $log->action,
                 'description' => $log->description,
                 'created_at' => $log->created_at?->toIso8601String(),
-            ])->values(),
+            ]),
             'admins' => $admins,
             'actions' => $actions,
             'filters' => [
@@ -88,8 +88,8 @@ class AdminAuditLogController extends Controller
         return Inertia::render('admin/audit-logs/show', [
             'log' => [
                 'id' => $log->id,
-                'admin_name' => $log->admin->name,
-                'admin_email' => $log->admin->email,
+                'admin_name' => $log->admin?->name ?? 'Unknown',
+                'admin_email' => $log->admin?->email ?? '-',
                 'target_user_name' => $log->targetUser?->name,
                 'target_user_email' => $log->targetUser?->email,
                 'action' => $log->action,

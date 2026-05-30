@@ -61,8 +61,10 @@ export default function AdminAuditLogShow({ log }: Props) {
                                         </p>
                                         <Badge variant="outline">
                                             {log.action
-                                                .replace(/_/g, ' ')
-                                                .toUpperCase()}
+                                                ? log.action
+                                                      .replace(/_/g, ' ')
+                                                      .toUpperCase()
+                                                : '-'}
                                         </Badge>
                                     </div>
                                     <div className="flex items-center justify-between border-b border-border pb-3">
