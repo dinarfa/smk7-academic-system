@@ -323,7 +323,7 @@ export default function AdminSubjectsIndex({
                                                 <TableHead>
                                                     Mata Pelajaran
                                                 </TableHead>
-                                                <TableHead>Kelas & Guru</TableHead>
+                                                <TableHead>Guru & Kelas</TableHead>
                                                 <TableHead className="pr-6 text-right">
                                                     Aksi
                                                 </TableHead>
@@ -349,40 +349,90 @@ export default function AdminSubjectsIndex({
                                                             {subject
                                                                 .school_classes
                                                                 .length > 0 ? (
-                                                                <div className="flex flex-col gap-1">
-                                                                    {subject.school_classes.map(
-                                                                        (c) => {
-                                                                            const teacher =
-                                                                                teachers.find(
-                                                                                    (
-                                                                                        t,
-                                                                                    ) =>
-                                                                                        t.id ===
-                                                                                        c.teacher_id,
-                                                                                );
-                                                                            return (
-                                                                                <div
-                                                                                    key={
-                                                                                        c.id
-                                                                                    }
-                                                                                    className="flex items-center gap-2"
+                                                                <div className="flex flex-col gap-1.5">
+                                                                    {(() => {
+                                                                        const grouped =
+                                                                            subject.school_classes.reduce<
+                                                                                Record<
+                                                                                    string,
+                                                                                    (typeof subject.school_classes)[number][]
                                                                                 >
-                                                                                    <Badge
-                                                                                        variant="outline"
-                                                                                    >
-                                                                                        {
-                                                                                            c.name
-                                                                                        }
-                                                                                    </Badge>
-                                                                                    <span className="text-xs text-muted-foreground">
-                                                                                        {teacher
-                                                                                            ? teacher.name
-                                                                                            : 'Belum ada guru'}
-                                                                                    </span>
-                                                                                </div>
+                                                                            >(
+                                                                                (
+                                                                                    acc,
+                                                                                    c,
+                                                                                ) => {
+                                                                                    const key =
+                                                                                        String(
+                                                                                            c.teacher_id ??
+                                                                                                'unassigned',
+                                                                                        );
+                                                                                    (
+                                                                                        acc[
+                                                                                            key
+                                                                                        ] ??=
+                                                                                            []
+                                                                                    ).push(
+                                                                                        c,
+                                                                                    );
+                                                                                    return acc;
+                                                                                },
+                                                                                {},
                                                                             );
-                                                                        },
-                                                                    )}
+                                                                        return Object.entries(
+                                                                            grouped,
+                                                                        ).map(
+                                                                            ([
+                                                                                teacherId,
+                                                                                classes,
+                                                                            ]) => {
+                                                                                const teacher =
+                                                                                    teachers.find(
+                                                                                        (
+                                                                                            t,
+                                                                                        ) =>
+                                                                                            String(
+                                                                                                t.id,
+                                                                                            ) ===
+                                                                                            teacherId,
+                                                                                    );
+                                                                                return (
+                                                                                    <div
+                                                                                        key={
+                                                                                            teacherId
+                                                                                        }
+                                                                                        className="flex items-start gap-2"
+                                                                                    >
+                                                                                        <span className="shrink-0 text-xs font-medium text-foreground">
+                                                                                            {teacher
+                                                                                                ? teacher.name
+                                                                                                : 'Belum ada guru'}
+                                                                                            :
+                                                                                        </span>
+                                                                                        <div className="flex flex-wrap gap-1">
+                                                                                            {classes.map(
+                                                                                                (
+                                                                                                    c,
+                                                                                                ) => (
+                                                                                                    <Badge
+                                                                                                        key={
+                                                                                                            c.id
+                                                                                                        }
+                                                                                                        variant="outline"
+                                                                                                        className="text-xs"
+                                                                                                    >
+                                                                                                        {
+                                                                                                            c.name
+                                                                                                        }
+                                                                                                    </Badge>
+                                                                                                ),
+                                                                                            )}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                );
+                                                                            },
+                                                                        );
+                                                                    })()}
                                                                 </div>
                                                             ) : (
                                                                 <span className="text-xs text-muted-foreground">
