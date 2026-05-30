@@ -43,8 +43,7 @@ class ExportAttendanceRequest extends FormRequest
             function ($validator) {
                 $teacher = auth()->user();
 
-                $subjectClassIds = $teacher->subjects()
-                    ->join('class_subjects', 'subjects.id', '=', 'class_subjects.subject_id')
+                $subjectClassIds = $teacher->teachingSubjects()
                     ->pluck('class_subjects.school_class_id')
                     ->filter()
                     ->unique();
@@ -66,7 +65,7 @@ class ExportAttendanceRequest extends FormRequest
                     $validator->errors()->add('classId', 'Anda tidak memiliki akses ke kelas yang dipilih.');
                 }
 
-                $allowedSubjectIds = $teacher->subjects()->pluck('id')->toArray();
+                $allowedSubjectIds = $teacher->teachingSubjects()->pluck('subjects.id')->toArray();
 
                 $subjectId = $this->input('subjectId');
                 if ($subjectId !== null && ! in_array((int) $subjectId, $allowedSubjectIds)) {

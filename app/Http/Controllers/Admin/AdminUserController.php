@@ -65,7 +65,14 @@ class AdminUserController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('admin/users/create');
+        $classes = SchoolClass::query()
+            ->select(['id', 'name'])
+            ->orderBy('name')
+            ->get();
+
+        return Inertia::render('admin/users/create', [
+            'classes' => $classes,
+        ]);
     }
 
     /**
@@ -77,8 +84,14 @@ class AdminUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'role' => ['required', Rule::enum(UserRole::class)],
+            'school_class_id' => ['nullable', 'integer', 'exists:school_classes,id'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
+
+        // Only assign class for students
+        $validated['school_class_id'] = $validated['role'] === UserRole::Student
+            ? ($validated['school_class_id'] ?? null)
+            : null;
 
         User::create($validated);
 

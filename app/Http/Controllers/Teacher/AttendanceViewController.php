@@ -55,14 +55,13 @@ class AttendanceViewController extends Controller
 
         $subjectGroups = $activeSchedules
             ->filter(fn (SubjectSchedule $schedule) => $schedule->subject_id !== null)
-            ->groupBy(fn (SubjectSchedule $schedule) => $schedule->subject?->code.'::'.$schedule->subject?->name)
+            ->groupBy(fn (SubjectSchedule $schedule) => $schedule->subject?->id.'::'.$schedule->subject?->name)
             ->map(function ($schedulesInGroup, $subjectKey) {
                 $firstSchedule = $schedulesInGroup->first();
 
                 return [
                     'key' => $subjectKey,
                     'name' => $firstSchedule?->subject?->name,
-                    'code' => $firstSchedule?->subject?->code,
                     'classes' => $schedulesInGroup
                         ->map(fn (SubjectSchedule $schedule) => [
                             'id' => $schedule->school_class_id,
@@ -114,8 +113,7 @@ class AttendanceViewController extends Controller
         $homeroomClasses = $teacher->homeroomClasses()->with('students')->get();
 
         // Subject-taught classes (non-homeroom): access to students in those classes
-        $subjectClassIds = $teacher->subjects()
-            ->join('class_subjects', 'subjects.id', '=', 'class_subjects.subject_id')
+        $subjectClassIds = $teacher->teachingSubjects()
             ->pluck('class_subjects.school_class_id')
             ->filter()
             ->unique()
@@ -172,8 +170,7 @@ class AttendanceViewController extends Controller
         $homeroomClasses = $teacher->homeroomClasses()->with('students')->get();
 
         // Subject-taught classes (non-homeroom): access to students in those classes
-        $subjectClassIds = $teacher->subjects()
-            ->join('class_subjects', 'subjects.id', '=', 'class_subjects.subject_id')
+        $subjectClassIds = $teacher->teachingSubjects()
             ->pluck('class_subjects.school_class_id')
             ->filter()
             ->unique()
@@ -328,8 +325,7 @@ class AttendanceViewController extends Controller
         $homeroomClasses = $teacher->homeroomClasses()->get();
 
         // Subject-taught classes via default teacher_id
-        $subjectClassIds = $teacher->subjects()
-            ->join('class_subjects', 'subjects.id', '=', 'class_subjects.subject_id')
+        $subjectClassIds = $teacher->teachingSubjects()
             ->pluck('class_subjects.school_class_id')
             ->filter()
             ->unique()
@@ -349,7 +345,7 @@ class AttendanceViewController extends Controller
 
         $allClasses = $homeroomClasses->merge($subjectClasses);
 
-        $subjects = $teacher->subjects()
+        $subjects = $teacher->teachingSubjects()
             ->select('id', 'name')
             ->get();
 

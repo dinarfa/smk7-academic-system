@@ -95,14 +95,6 @@ class User extends Authenticatable
     }
 
     /**
-     * Subjects owned by this teacher (default teacher on subjects table).
-     */
-    public function subjects(): HasMany
-    {
-        return $this->hasMany(Subject::class, 'teacher_id');
-    }
-
-    /**
      * Subjects this teacher is assigned to teach via the class_subjects pivot.
      */
     public function teachingSubjects(): BelongsToMany

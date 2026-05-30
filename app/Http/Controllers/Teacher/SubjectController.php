@@ -19,9 +19,9 @@ class SubjectController extends Controller
         $teacherId = $request->user()?->id;
 
         $subjects = Subject::query()
-            ->select(['id', 'code', 'name'])
+            ->select(['id', 'name'])
             ->with(['schoolClasses:id,name'])
-            ->where('teacher_id', $teacherId)
+            ->whereHas('schoolClasses', fn ($q) => $q->where('class_subjects.teacher_id', $teacherId))
             ->orderBy('name')
             ->get();
 
@@ -69,7 +69,6 @@ class SubjectController extends Controller
 
             return [
                 'id' => $subject->id,
-                'code' => $subject->code,
                 'name' => $subject->name,
                 'class' => $subject->schoolClasses->pluck('name')->join(', '),
                 'schedule_days' => $scheduleDays,

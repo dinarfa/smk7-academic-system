@@ -10,11 +10,10 @@ use Illuminate\Database\Seeder;
 class SubjectSeeder extends Seeder
 {
     /**
-     * Seed subjects and attach them to classes.
+     * Seed subjects and attach them to classes with teachers on pivot.
      *
-     * 10 subjects (1 per teacher), each → 3 classes via round-robin.
-     * Result: each class gets exactly 3 subjects, no teacher overlap within a class.
-     * Schedule conflicts across classes handled by SubjectScheduleSeeder.
+     * 10 subjects, each → 3 classes via round-robin.
+     * Teacher assigned per class via pivot table.
      */
     public function run(): void
     {
@@ -40,8 +39,6 @@ class SubjectSeeder extends Seeder
             return;
         }
 
-        // Round-robin: each subject → 3 classes, cycling through class list.
-        // With 10 subjects × 3 classes = 30 pairs and 10 classes, each class gets exactly 3.
         $classIds = $classes->pluck('id')->toArray();
         $classesPerSubject = 3;
         $pairIndex = 0;
@@ -49,10 +46,6 @@ class SubjectSeeder extends Seeder
         foreach ($subjectNames as $index => $subjectName) {
             $subject = Subject::firstOrCreate(
                 ['name' => $subjectName],
-                [
-                    'teacher_id' => $teachers[$index % $teachers->count()]->id,
-                    'code' => 'MAP'.($index + 1),
-                ],
             );
 
             $assignedClasses = [];
@@ -65,9 +58,10 @@ class SubjectSeeder extends Seeder
             $existingIds = $subject->schoolClasses()->pluck('school_classes.id')->toArray();
             $newIds = array_diff($assignedClasses, $existingIds);
             if (! empty($newIds)) {
+                $teacherId = $teachers[$index % $teachers->count()]->id;
                 $attachData = [];
                 foreach ($newIds as $classId) {
-                    $attachData[$classId] = ['teacher_id' => $subject->teacher_id];
+                    $attachData[$classId] = ['teacher_id' => $teacherId];
                 }
                 $subject->schoolClasses()->attach($attachData);
             }

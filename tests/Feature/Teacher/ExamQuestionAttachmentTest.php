@@ -12,10 +12,8 @@ use function Pest\Laravel\actingAs;
 it('teacher can attach questions to an exam in order', function (): void {
     $teacher = User::factory()->create(['role' => UserRole::Teacher]);
     $class = SchoolClass::factory()->create();
-    $subject = Subject::factory()->create([
-        'teacher_id' => $teacher->id,
-    ]);
-    $subject->schoolClasses()->attach($class->id);
+    $subject = Subject::factory()->create();
+    $subject->schoolClasses()->attach($class->id, ['teacher_id' => $teacher->id]);
 
     $exam = Exam::factory()->create([
         'created_by' => $teacher->id,
@@ -69,10 +67,8 @@ it('teacher cannot attach another teachers questions', function (): void {
     $teacher = User::factory()->create(['role' => UserRole::Teacher]);
     $otherTeacher = User::factory()->create(['role' => UserRole::Teacher]);
     $class = SchoolClass::factory()->create();
-    $subject = Subject::factory()->create([
-        'teacher_id' => $teacher->id,
-    ]);
-    $subject->schoolClasses()->attach($class->id);
+    $subject = Subject::factory()->create();
+    $subject->schoolClasses()->attach($class->id, ['teacher_id' => $teacher->id]);
 
     $exam = Exam::factory()->create([
         'created_by' => $teacher->id,
@@ -102,10 +98,8 @@ it('only teachers can attach questions to exams', function (): void {
     $student = User::factory()->create(['role' => UserRole::Student]);
     $teacher = User::factory()->create(['role' => UserRole::Teacher]);
     $class = SchoolClass::factory()->create();
-    $subject = Subject::factory()->create([
-        'teacher_id' => $teacher->id,
-    ]);
-    $subject->schoolClasses()->attach($class->id);
+    $subject = Subject::factory()->create();
+    $subject->schoolClasses()->attach($class->id, ['teacher_id' => $teacher->id]);
 
     $exam = Exam::factory()->create([
         'created_by' => $teacher->id,

@@ -71,12 +71,6 @@ export default function TeacherSubjectsIndex({ subjects }: Props) {
                                                 <h3 className="text-base font-semibold text-foreground">
                                                     {subject.name}
                                                 </h3>
-
-                                                {subject.code && (
-                                                    <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-                                                        {subject.code}
-                                                    </span>
-                                                )}
                                             </div>
 
                                             {subject.class && (

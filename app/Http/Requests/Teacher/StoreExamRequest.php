@@ -30,7 +30,7 @@ class StoreExamRequest extends FormRequest
             'subject_id' => [
                 'required',
                 'integer',
-                Rule::exists('subjects', 'id')->where(fn ($query) => $query->where('teacher_id', $teacherId)),
+                Rule::exists('subjects', 'id'),
             ],
             'class_id' => [
                 'required',
@@ -39,8 +39,9 @@ class StoreExamRequest extends FormRequest
                     $subjectId = $this->input('subject_id');
                     $exists = \App\Models\Subject::query()
                         ->where('id', $subjectId)
-                        ->where('teacher_id', $teacherId)
-                        ->whereHas('schoolClasses', fn ($q) => $q->where('school_classes.id', (int) $value))
+                        ->whereHas('schoolClasses', fn ($q) => $q
+                            ->where('school_classes.id', (int) $value)
+                            ->where('class_subjects.teacher_id', $teacherId))
                         ->exists();
 
                     if (! $exists) {

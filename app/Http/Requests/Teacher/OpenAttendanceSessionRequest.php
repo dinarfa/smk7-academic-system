@@ -40,38 +40,34 @@ class OpenAttendanceSessionRequest extends FormRequest
                 function (string $attribute, mixed $value, \Closure $fail) use ($teacherId): void {
                     $subjectKey = $this->input('subject_key');
 
-                    // If teacher selected a specific subject, ensure it belongs to them and the class
+                    // If teacher selected a specific subject, ensure it belongs to them via pivot
                     if (is_string($subjectKey) && str_contains($subjectKey, '::')) {
-                        [$subjectCode, $subjectName] = explode('::', $subjectKey, 2);
+                        [$subjectId, $subjectName] = explode('::', $subjectKey, 2);
 
-                        $subjectQuery = Subject::query()
-                            ->where('teacher_id', $teacherId)
+                        $subject = Subject::query()
+                            ->where('id', (int) $subjectId)
                             ->where('name', $subjectName)
-                            ->whereHas('schoolClasses', fn ($q) => $q->where('school_classes.id', (int) $value));
+                            ->first();
 
-                        if ($subjectCode === '') {
-                            $subjectQuery->whereNull('code');
-                        } else {
-                            $subjectQuery->where('code', $subjectCode);
+                        if (! $subject) {
+                            $fail('Mata pelajaran tidak ditemukan.');
+                            return;
                         }
 
-                        $isAllowed = $subjectQuery->exists();
+                        $pivotTeacherId = $subject->schoolClasses()
+                            ->where('school_classes.id', (int) $value)
+                            ->first()?->pivot?->teacher_id;
 
-                        if (! $isAllowed) {
-                            $fail('Kelas yang dipilih tidak termasuk relasi mata pelajaran Anda.');
+                        if ($pivotTeacherId !== $teacherId) {
+                            $fail('Anda tidak memiliki akses ke mata pelajaran ini.');
                         }
 
                         return;
                     }
 
-                    // No specific subject chosen. Allow if teacher is homeroom or teaches in that class.
-                    // Check both pivot teacher_id and subject.teacher_id (default)
+                    // No specific subject chosen. Allow if teacher is homeroom or teaches in that class via pivot.
                     $teachesInClass = Subject::query()
-                        ->where(function ($q) use ($teacherId, $value): void {
-                            $q->where('teacher_id', $teacherId)
-                                ->whereHas('schoolClasses', fn ($q2) => $q2->where('school_classes.id', (int) $value));
-                        })
-                        ->orWhereHas('schoolClasses', function ($q) use ($teacherId, $value): void {
+                        ->whereHas('schoolClasses', function ($q) use ($teacherId, $value): void {
                             $q->where('school_classes.id', (int) $value)
                                 ->where('class_subjects.teacher_id', $teacherId);
                         })
@@ -108,20 +104,11 @@ class OpenAttendanceSessionRequest extends FormRequest
             return [];
         }
 
-        // Subjects where teacher is the default teacher
-        $defaultSubjects = Subject::query()
-            ->where('teacher_id', $teacherId)
-            ->get(['id', 'code', 'name']);
-
         // Subjects assigned to this teacher via the class_subjects pivot
-        $pivotSubjects = Subject::query()
+        return Subject::query()
             ->whereHas('schoolClasses', fn ($q) => $q->where('class_subjects.teacher_id', $teacherId))
-            ->get(['id', 'code', 'name']);
-
-        return $defaultSubjects
-            ->merge($pivotSubjects)
-            ->unique('id')
-            ->map(fn (Subject $subject): string => $subject->code.'::'.$subject->name)
+            ->get(['id', 'name'])
+            ->map(fn (Subject $subject): string => $subject->id.'::'.$subject->name)
             ->unique()
             ->values()
             ->all();
