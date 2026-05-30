@@ -2,19 +2,32 @@
 
 use App\Enums\AttendanceQrType;
 use App\Models\AttendanceSession;
+use App\Models\SchoolClass;
+use App\Models\Subject;
+use App\Models\SubjectSchedule;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(RefreshDatabase::class);
 
 test('teacher can create manual attendance', function () {
     $teacher = User::factory()->create(['role' => 'teacher']);
-    $class = \App\Models\SchoolClass::factory()->create(['homeroom_teacher_id' => $teacher->id]);
+    $class = SchoolClass::factory()->create(['homeroom_teacher_id' => $teacher->id]);
     $student = User::factory()->create(['role' => 'student', 'school_class_id' => $class->id]);
-    $session = AttendanceSession::factory()->create(['opened_by' => $teacher->id]);
+
+    // Create an active schedule for this class
+    SubjectSchedule::factory()->create([
+        'school_class_id' => $class->id,
+        'schedule_type' => 'morning',
+        'day_of_week' => now()->dayOfWeek,
+        'starts_at' => now()->subHour()->format('H:i'),
+        'ends_at' => now()->addHour()->format('H:i'),
+    ]);
 
     $this->actingAs($teacher);
 
     $response = $this->post(route('teacher.attendance.manual'), [
-        'session_id' => $session->id,
-        'phase' => AttendanceQrType::Subject->value,
+        'class_id' => $class->id,
         'students' => [
             ['student_id' => $student->id, 'status' => 'present'],
         ],
@@ -22,24 +35,20 @@ test('teacher can create manual attendance', function () {
 
     $response->assertRedirect();
     $this->assertDatabaseHas('attendance_records', [
-        'attendance_session_id' => $session->id,
         'student_id' => $student->id,
         'status' => 'present',
-        'phase' => AttendanceQrType::ClassPhase->value,
         'source' => 'manual',
     ]);
 });
 
 test('student cannot create manual attendance', function () {
     $student = User::factory()->create(['role' => 'student']);
-    $teacher = User::factory()->create(['role' => 'teacher']);
-    $session = AttendanceSession::factory()->create(['opened_by' => $teacher->id]);
+    $class = SchoolClass::factory()->create();
 
     $this->actingAs($student);
 
     $response = $this->post(route('teacher.attendance.manual'), [
-        'session_id' => $session->id,
-        'phase' => AttendanceQrType::Morning->value,
+        'class_id' => $class->id,
         'students' => [
             ['student_id' => $student->id, 'status' => 'present'],
         ],
@@ -48,33 +57,39 @@ test('student cannot create manual attendance', function () {
     $response->assertForbidden();
 });
 
-test('manual attendance requires valid session', function () {
+test('manual attendance requires class_id', function () {
     $teacher = User::factory()->create(['role' => 'teacher']);
     $student = User::factory()->create(['role' => 'student']);
 
     $this->actingAs($teacher);
 
     $response = $this->post(route('teacher.attendance.manual'), [
-        'session_id' => 999, // Non-existent session
-        'phase' => AttendanceQrType::Morning->value,
         'students' => [
             ['student_id' => $student->id, 'status' => 'present'],
         ],
     ]);
 
-    $response->assertSessionHasErrors('session_id');
+    $response->assertSessionHasErrors('class_id');
 });
 
 test('manual attendance validates student status', function () {
     $teacher = User::factory()->create(['role' => 'teacher']);
-    $student = User::factory()->create(['role' => 'student']);
-    $session = AttendanceSession::factory()->create(['opened_by' => $teacher->id]);
+    $class = SchoolClass::factory()->create(['homeroom_teacher_id' => $teacher->id]);
+    $student = User::factory()->create(['role' => 'student', 'school_class_id' => $class->id]);
+
+    // Create an active schedule
+    SubjectSchedule::factory()->create([
+        'school_class_id' => $class->id,
+        'schedule_type' => 'morning',
+        'day_of_week' => now()->dayOfWeek,
+        'starts_at' => now()->subHour()->format('H:i'),
+        'ends_at' => now()->addHour()->format('H:i'),
+    ]);
 
     $this->actingAs($teacher);
 
     $response = $this->post(route('teacher.attendance.manual'), [
-        'session_id' => $session->id,
-        'phase' => AttendanceQrType::Morning->value,
+        'class_id' => $class->id,
         'students' => [
             ['student_id' => $student->id, 'status' => 'invalid_status'],
         ],

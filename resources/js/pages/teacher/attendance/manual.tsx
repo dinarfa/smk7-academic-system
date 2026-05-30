@@ -24,7 +24,15 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { dashboard } from '@/routes';
+import teacher from '@/routes/teacher';
 
 type Student = {
     id: number;
@@ -33,9 +41,18 @@ type Student = {
     class_name: string;
 };
 
-type ClassInfo = {
-    id: number;
+type SubjectGroup = {
+    key: string;
     name: string;
+    classes: { id: number; name: string }[];
+};
+
+type CurrentSchedule = {
+    type: string;
+    subject_name: string | null;
+    class_name: string | null;
+    starts_at: string;
+    ends_at: string;
 };
 
 type ExistingRecord = {
@@ -53,33 +70,15 @@ type ActiveSession = {
 
 type Props = {
     students: Student[];
-    classes: ClassInfo[];
+    subject_groups: SubjectGroup[];
+    accessible_classes: { id: number; name: string }[];
+    current_schedule: CurrentSchedule | null;
     existingRecords: Record<number, ExistingRecord>;
     activeSession: ActiveSession | null;
     date: string;
 };
 
 type StudentStatus = 'present' | 'late' | 'absent';
-
-const createInitialStatuses = (
-    existingRecords: Record<number, ExistingRecord>,
-    phase: string,
-): Map<number, StudentStatus> => {
-    const initial = new Map<number, StudentStatus>();
-
-    for (const [studentId, record] of Object.entries(existingRecords)) {
-        if (
-            record.phase === phase &&
-            (record.status === 'present' ||
-                record.status === 'late' ||
-                record.status === 'absent')
-        ) {
-            initial.set(Number(studentId), record.status as StudentStatus);
-        }
-    }
-
-    return initial;
-};
 
 const statusConfig: Record<
     StudentStatus,
@@ -114,86 +113,69 @@ const statusConfig: Record<
     },
 };
 
-const phaseLabels: Record<string, string> = {
-    morning: 'Pagi',
-    class: 'Kelas',
+const typeLabels: Record<string, string> = {
+    morning: 'Pagi (Masuk)',
+    subject: 'Mata Pelajaran',
     dismissal: 'Pulang',
 };
 
 export default function ManualAttendance({
     students,
-    classes,
+    subject_groups,
+    accessible_classes,
+    current_schedule,
     existingRecords,
     date,
 }: Props) {
     const [search, setSearch] = useState('');
-    const [selectedClass, setSelectedClass] = useState<number | null>(null);
-    const [phase, setPhase] = useState('morning');
-    const [statuses, setStatuses] = useState<Map<number, StudentStatus>>(() =>
-        createInitialStatuses(existingRecords, 'morning'),
+    const [selectedSubject, setSelectedSubject] = useState('');
+    const [selectedClass, setSelectedClass] = useState('');
+    const [statuses, setStatuses] = useState<Map<number, StudentStatus>>(
+        () => new Map(),
     );
-
-    // When phase changes, load existing records for that phase
-    const handlePhaseChange = (newPhase: string) => {
-        setPhase(newPhase);
-        setStatuses(createInitialStatuses(existingRecords, newPhase));
-    };
     const [processing, setProcessing] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
 
+    // Classes for selected subject
+    const subjectClasses = useMemo(() => {
+        if (!selectedSubject) return accessible_classes;
+        const group = subject_groups.find((g) => g.key === selectedSubject);
+        return group?.classes ?? [];
+    }, [selectedSubject, subject_groups, accessible_classes]);
+
+    // Filter students by selected class
     const filteredStudents = useMemo(() => {
         return students.filter((s) => {
             const matchesSearch = s.name
                 .toLowerCase()
                 .includes(search.toLowerCase());
             const matchesClass =
-                selectedClass === null || s.class_id === selectedClass;
-
+                !selectedClass || s.class_id === Number(selectedClass);
             return matchesSearch && matchesClass;
         });
     }, [students, search, selectedClass]);
 
     const summary = useMemo(() => {
-        const counts = {
-            present: 0,
-            late: 0,
-            absent: 0,
-            unset: 0,
-            overwrites: 0,
-        };
-
+        const counts = { present: 0, late: 0, absent: 0, unset: 0 };
         for (const s of filteredStudents) {
             const status = statuses.get(s.id);
-            const existing = existingRecords[s.id];
-
             if (status) {
                 counts[status]++;
-
-                if (
-                    existing &&
-                    existing.phase === phase &&
-                    existing.status !== status
-                ) {
-                    counts.overwrites++;
-                }
             } else {
                 counts.unset++;
             }
         }
-
         return counts;
     }, [filteredStudents, statuses]);
 
     const setStatus = (studentId: number, status: StudentStatus) => {
         setStatuses((prev) => {
             const next = new Map(prev);
-
             if (next.get(studentId) === status) {
                 next.delete(studentId);
             } else {
                 next.set(studentId, status);
             }
-
             return next;
         });
     };
@@ -201,11 +183,9 @@ export default function ManualAttendance({
     const markAll = (status: StudentStatus) => {
         setStatuses((prev) => {
             const next = new Map(prev);
-
             for (const s of filteredStudents) {
                 next.set(s.id, status);
             }
-
             return next;
         });
     };
@@ -214,7 +194,7 @@ export default function ManualAttendance({
         setStatuses(new Map());
     };
 
-    const handleSubmit = async () => {
+    const handleSubmit = () => {
         if (!selectedClass) {
             alert('Pilih kelas terlebih dahulu');
             return;
@@ -227,75 +207,26 @@ export default function ManualAttendance({
 
         setProcessing(true);
 
-        try {
-            const payload = {
-                phase,
-                class_id: selectedClass,
-                students: Array.from(statuses.entries()).map(
-                    ([studentId, status]) => ({
-                        student_id: studentId,
-                        status,
-                    }),
-                ),
-            };
+        const students = Array.from(statuses.entries()).map(
+            ([studentId, status]) => ({
+                student_id: studentId,
+                status,
+            }),
+        );
 
-            const csrfToken =
-                document
-                    .querySelector('meta[name="csrf-token"]')
-                    ?.getAttribute('content') ?? '';
-
-            const res = await fetch('/teacher/attendance/manual', {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    Accept: 'application/json',
-                    ...(csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}),
+        router.post(
+            teacher.attendance.manual.url(),
+            {
+                class_id: Number(selectedClass),
+                students,
+            },
+            {
+                onFinish: () => setProcessing(false),
+                onError: (errors) => {
+                    const msg = Object.values(errors).flat().join('\n');
+                    alert(msg || 'Gagal menyimpan absensi');
                 },
-                body: JSON.stringify(payload),
-            });
-
-            if (!res.ok) {
-                const data = await res.json();
-                alert(data.message || 'Gagal menyimpan absensi manual');
-
-                return;
-            }
-
-            setShowConfirm(false);
-            router.visit('/teacher/attendance');
-        } catch {
-            alert('Kesalahan jaringan');
-        } finally {
-            setProcessing(false);
-        }
-    };
-
-    const getExistingBadge = (studentId: number) => {
-        const record = existingRecords[studentId];
-
-        if (!record || record.phase !== phase) {
-            return null;
-        }
-
-        const cfg =
-            record.status === 'present'
-                ? statusConfig.present
-                : record.status === 'late'
-                  ? statusConfig.late
-                  : record.status === 'absent'
-                    ? statusConfig.absent
-                    : null;
-
-        if (!cfg) {
-            return null;
-        }
-
-        return (
-            <Badge variant="outline" className={`text-xs ${cfg.color}`}>
-                Sudah: {cfg.label} ({record.source})
-            </Badge>
+            },
         );
     };
 
@@ -303,16 +234,39 @@ export default function ManualAttendance({
         <>
             <Head title="Absensi Manual" />
 
-            <div className="space-y-6 p-4">
+            <div className="space-y-6 p-4 sm:p-6 lg:p-8">
                 {/* Header */}
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <h1 className="text-2xl font-semibold tracking-tight text-foreground">
                             Absensi Manual
                         </h1>
-                        <p className="mt-1 text-muted-foreground">
-                            Tanggal: {date} &middot; {students.length} siswa di
-                            kelas perwalian
+                        <p className="text-sm text-muted-foreground">
+                            Tanggal: {date}
+                            {current_schedule && (
+                                <>
+                                    {' · '}
+                                    <span className="font-medium text-foreground">
+                                        {typeLabels[current_schedule.type] ??
+                                            current_schedule.type}
+                                    </span>
+                                    {current_schedule.subject_name && (
+                                        <>
+                                            {' · '}
+                                            {current_schedule.subject_name}
+                                        </>
+                                    )}
+                                    {current_schedule.class_name && (
+                                        <>
+                                            {' · '}
+                                            {current_schedule.class_name}
+                                        </>
+                                    )}
+                                    {' · '}
+                                    {current_schedule.starts_at.slice(0, 5)} -{' '}
+                                    {current_schedule.ends_at.slice(0, 5)}
+                                </>
+                            )}
                         </p>
                     </div>
                     <Button
@@ -329,65 +283,60 @@ export default function ManualAttendance({
                 <Card>
                     <CardContent className="pt-6">
                         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                            {/* Phase */}
+                            {/* Subject */}
                             <div className="space-y-2">
-                                <Label>Fase Absensi</Label>
-                                <div className="flex gap-1 rounded-lg border p-1">
-                                    {Object.entries(phaseLabels).map(
-                                        ([value, label]) => (
-                                            <button
-                                                key={value}
-                                                onClick={() =>
-                                                    handlePhaseChange(value)
-                                                }
-                                                className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                                                    phase === value
-                                                        ? 'bg-primary text-primary-foreground'
-                                                        : 'text-muted-foreground hover:bg-muted'
-                                                }`}
-                                            >
-                                                {label}
-                                            </button>
-                                        ),
-                                    )}
-                                </div>
+                                <Label>Mata Pelajaran</Label>
+                                <Select
+                                    value={selectedSubject}
+                                    onValueChange={(v) => {
+                                        setSelectedSubject(v);
+                                        setSelectedClass('');
+                                    }}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Pilih mapel" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {subject_groups.length === 0 ? (
+                                            <SelectItem value="none" disabled>
+                                                Tidak ada jadwal aktif
+                                            </SelectItem>
+                                        ) : (
+                                            subject_groups.map((g) => (
+                                                <SelectItem
+                                                    key={g.key}
+                                                    value={g.key}
+                                                >
+                                                    {g.name}
+                                                </SelectItem>
+                                            ))
+                                        )}
+                                    </SelectContent>
+                                </Select>
                             </div>
 
-                            {/* Class filter */}
-                            {classes.length > 1 && (
-                                <div className="space-y-2">
-                                    <Label>Filter Kelas</Label>
-                                    <div className="flex flex-wrap gap-1">
-                                        <button
-                                            onClick={() =>
-                                                setSelectedClass(null)
-                                            }
-                                            className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                                                selectedClass === null
-                                                    ? 'bg-primary text-primary-foreground'
-                                                    : 'border text-muted-foreground hover:bg-muted'
-                                            }`}
-                                        >
-                                            Semua
-                                        </button>
-                                        {classes.map((c) => (
-                                            <button
+                            {/* Class */}
+                            <div className="space-y-2">
+                                <Label>Kelas</Label>
+                                <Select
+                                    value={selectedClass}
+                                    onValueChange={setSelectedClass}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Pilih kelas" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {subjectClasses.map((c) => (
+                                            <SelectItem
                                                 key={c.id}
-                                                onClick={() =>
-                                                    setSelectedClass(c.id)
-                                                }
-                                                className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                                                    selectedClass === c.id
-                                                        ? 'bg-primary text-primary-foreground'
-                                                        : 'border text-muted-foreground hover:bg-muted'
-                                                }`}
+                                                value={String(c.id)}
                                             >
                                                 {c.name}
-                                            </button>
+                                            </SelectItem>
                                         ))}
-                                    </div>
-                                </div>
-                            )}
+                                    </SelectContent>
+                                </Select>
+                            </div>
 
                             {/* Search */}
                             <div className="space-y-2">
@@ -493,13 +442,21 @@ export default function ManualAttendance({
                 {/* Student list */}
                 <Card>
                     <CardContent className="p-0">
-                        {filteredStudents.length === 0 ? (
+                        {!selectedClass ? (
+                            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                                <Users className="mb-3 h-10 w-10 opacity-40" />
+                                <p className="text-sm">
+                                    Pilih mata pelajaran dan kelas terlebih
+                                    dahulu
+                                </p>
+                            </div>
+                        ) : filteredStudents.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
                                 <Users className="mb-3 h-10 w-10 opacity-40" />
                                 <p className="text-sm">
                                     {search
                                         ? 'Tidak ada siswa yang cocok dengan pencarian'
-                                        : 'Tidak ada siswa di kelas perwalian'}
+                                        : 'Tidak ada siswa di kelas ini'}
                                 </p>
                             </div>
                         ) : (
@@ -508,6 +465,7 @@ export default function ManualAttendance({
                                     const currentStatus = statuses.get(
                                         student.id,
                                     );
+                                    const existing = existingRecords[student.id];
 
                                     return (
                                         <div
@@ -531,11 +489,22 @@ export default function ManualAttendance({
                                                 </p>
                                             </div>
 
-                                            {getExistingBadge(student.id) && (
+                                            {existing && (
                                                 <div className="hidden sm:block">
-                                                    {getExistingBadge(
-                                                        student.id,
-                                                    )}
+                                                    <Badge
+                                                        variant="outline"
+                                                        className="text-xs"
+                                                    >
+                                                        Sudah:{' '}
+                                                        {existing.status ===
+                                                        'present'
+                                                            ? 'Hadir'
+                                                            : existing.status ===
+                                                                'late'
+                                                              ? 'Terlambat'
+                                                              : 'Alpha'}{' '}
+                                                        ({existing.source})
+                                                    </Badge>
                                                 </div>
                                             )}
 
@@ -606,7 +575,8 @@ export default function ManualAttendance({
                                     variant="outline"
                                     className="gap-1 text-amber-600"
                                 >
-                                    <Clock className="h-3 w-3" /> {summary.late}
+                                    <Clock className="h-3 w-3" />{' '}
+                                    {summary.late}
                                 </Badge>
                                 <Badge
                                     variant="outline"
@@ -642,18 +612,22 @@ export default function ManualAttendance({
                     </DialogHeader>
 
                     <div className="space-y-3">
-                        {summary.overwrites > 0 && (
-                            <div className="rounded-lg border border-amber-400/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
-                                Peringatan: {summary.overwrites} data akan
-                                ditimpa dengan status baru.
+                        {selectedClass && (
+                            <div className="rounded-lg border p-4">
+                                <p className="text-sm text-muted-foreground">
+                                    Kelas
+                                </p>
+                                <p className="font-medium">
+                                    {
+                                        subjectClasses.find(
+                                            (c) =>
+                                                c.id ===
+                                                Number(selectedClass),
+                                        )?.name
+                                    }
+                                </p>
                             </div>
                         )}
-                        <div className="rounded-lg border p-4">
-                            <p className="text-sm text-muted-foreground">
-                                Fase
-                            </p>
-                            <p className="font-medium">{phaseLabels[phase]}</p>
-                        </div>
                         <div className="grid grid-cols-3 gap-3">
                             <div className="rounded-lg border p-3 text-center">
                                 <p className="text-2xl font-bold text-emerald-600">

@@ -131,35 +131,71 @@ class AttendanceSessionController extends Controller
         ManualAttendanceRequest $request,
         AttendanceSessionLifecycleService $lifecycleService,
     ): RedirectResponse {
+        $teacher = $request->user();
         $validated = $request->validated();
+        $classId = (int) $validated['class_id'];
 
-        $sessionId = $validated['session_id'] ?? null;
+        // Resolve schedule (same logic as QR store)
+        $schedule = SubjectSchedule::resolveForClassNow($classId);
 
-        if ($sessionId) {
-            $session = AttendanceSession::findOrFail($sessionId);
-            if ($session->opened_by !== $request->user()->id) {
-                abort(403, 'Anda tidak memiliki akses untuk sesi ini.');
-            }
-        } else {
-            $classId = $validated['class_id'] ?? null;
-            $session = $lifecycleService->open($request->user()->id, [
-                'type' => $validated['phase'],
-                'class_id' => $classId,
-                'duration_minutes' => 480,
+        if (! $schedule) {
+            throw ValidationException::withMessages([
+                'class_id' => __('Sesi absensi hanya bisa dibuka saat jadwal kelas sedang aktif.'),
             ]);
-            $sessionId = $session->id;
         }
 
+        // Security: verify teacher owns the subject via pivot
+        if ($schedule->schedule_type === 'subject' && $schedule->subject_id !== null) {
+            $pivotTeacherId = $schedule->subject->schoolClasses()
+                ->where('school_classes.id', $classId)
+                ->first()?->pivot?->teacher_id;
+
+            $teacherOwnsSubject = $pivotTeacherId === $teacher->id;
+
+            if (! $teacherOwnsSubject) {
+                $teacherSubjectIds = $teacher->teachingSubjects()
+                    ->wherePivot('school_class_id', $classId)
+                    ->pluck('subjects.id');
+
+                $teacherSchedule = SubjectSchedule::query()
+                    ->where('school_class_id', $classId)
+                    ->whereIn('subject_id', $teacherSubjectIds)
+                    ->activeNow()
+                    ->first();
+
+                if ($teacherSchedule) {
+                    $schedule = $teacherSchedule;
+                } else {
+                    throw ValidationException::withMessages([
+                        'class_id' => __('Anda tidak memiliki mata pelajaran yang aktif saat ini di kelas ini.'),
+                    ]);
+                }
+            }
+        }
+
+        // Create session with schedule data (same as QR)
+        $endsAt = now()->setTimeFromTimeString($schedule->ends_at);
+        $minutesUntilEnd = now()->diffInMinutes($endsAt, false);
+
+        $session = $lifecycleService->open($teacher->id, [
+            'class_id' => $schedule->school_class_id,
+            'type' => $schedule->resolveQrType()->value,
+            'subject_id' => $schedule->subject_id,
+            'subject' => $schedule->subject?->name,
+            'duration_minutes' => $minutesUntilEnd > 0 ? max(5, $minutesUntilEnd) : 30,
+        ]);
+
+        // Save attendance records
         $count = 0;
         foreach ($validated['students'] as $student) {
             AttendanceRecord::updateOrCreate(
                 [
-                    'attendance_session_id' => $sessionId,
+                    'attendance_session_id' => $session->id,
                     'student_id' => $student['student_id'],
                 ],
                 [
                     'status' => $student['status'],
-                    'phase' => AttendanceQrType::from($validated['phase'])->toRecordPhase()->value,
+                    'phase' => $schedule->resolveQrType()->toRecordPhase()->value,
                     'source' => 'manual',
                     'scanned_at' => now(),
                 ],

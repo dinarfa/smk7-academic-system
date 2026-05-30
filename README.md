@@ -1,71 +1,57 @@
-# smk7-academic-system
-# 📘 Sistem Monitoring Absensi QR & Ujian Online (SMK Negeri 7)
+# Sistem Akademik SMK Negeri 7
 
-## 📌 Deskripsi Proyek
-Proyek ini dikembangkan sebagai solusi digitalisasi administrasi akademik di SMK Negeri 7. Sistem ini mengintegrasikan absensi berbasis pemindaian QR Code fisik siswa, manajemen bank soal, ujian online, hingga rekapitulasi nilai otomatis ke dalam format Excel resmi sekolah.
+Sistem manajemen akademik berbasis web untuk SMK Negeri 7. Meliputi absensi QR Code, ujian online, dan rekapitulasi kehadiran otomatis.
 
-**Masalah Utama:**
-- Absensi manual yang rawan kecurangan (titip absen).
-- Proses rekapitulasi nilai yang memakan waktu lama dan rawan kesalahan manusia.
-- Sistem ujian yang belum terintegrasi dengan data kehadiran siswa.
+## Fitur
 
-## 🚀 Fitur Utama
-- **QR Attendance (Teacher Scan):** Guru melakukan pemindaian pada kartu QR fisik yang dimiliki siswa menggunakan perangkat (HP/Laptop).
-- **Online Examination:** Pelaksanaan ujian digital secara real-time dengan fitur timer dan auto-submit.
-- **Automated Grading:** Koreksi otomatis untuk soal pilihan ganda dan penghitungan nilai akhir berdasarkan bobot.
-- **Export to Excel:** Fitur unggulan untuk mengekspor nilai langsung ke template .xlsx resmi SMK Negeri 7.
+### Absensi
+- **QR Code** — Guru membuka sesi, siswa scan kartu QR untuk absen
+- **Manual** — Guru input kehadiran siswa langsung (dengan jadwal otomatis)
+- **Export** — Unduh laporan kehadiran dalam format Excel (.xlsx) atau CSV
 
-## 👥 Tim Pengembang (Kelompok 23)
-| Nama Anggota | NIM | Peran |
-| :--- | :--- | :--- |
-| **Rafika Nur Indriani** | F52123097 | Project Manager |
-| **Dinar Fauziahl** | F52123078 | QA |
-| **Arya Yudhistira Syafrul** | F55123079 | Back-End Developer |
-| **Dwi Candra Andika** | F55123028 | Front-End Developer |
-| **Moh. Faathir Ash Shaff** | F55123040 | Front-End Developer |
-| **Muh. Zulhajir AR** | F55123052 | UI/UX Designer |
+### Ujian Online
+- Bank soal dengan tipe pilihan ganda, esai, dan true/false
+- Ujian real-time dengan timer dan auto-submit
+- Koreksi otomatis untuk pilihan ganda
 
-## 🛠️ Arsitektur Teknologi
-- **Frontend:** React / Next.js (Tailwind CSS)
-- **Backend:** Laravel (REST API)
-- **Database:** MySQL / PostgreSQL
-- **Tools:** GitHub, Trello, Figma
+### Manajemen
+- **Pengguna** — Admin, guru, siswa dengan role-based access
+- **Kelas** — Kelas dengan wali kelas dan siswa
+- **Mata Pelajaran** — Multi-guru per mapel per kelas (pivot table)
+- **Jadwal** — Jadwal pelajaran harian per kelas
+- **Audit Log** — Lacak aksi admin
 
-## 📅 Tahapan Pelaksanaan
-1. **Perumusan Masalah & Proposal:** Minggu 1-2.
-2. **Spesifikasi Sistem:** Minggu 3.
-3. **Perancangan Sistem:** Minggu 4-6.
-4. **Implementasi & Coding:** Minggu 7-14.
-5. **Pengujian & Evaluasi:** Minggu 15-16.
+## Stack
 
-## ▶️ Cara Menjalankan Project (Laravel)
+| Layer | Technology |
+|-------|-----------|
+| Backend | Laravel 13, PHP 8.3+ |
+| Frontend | React 19, Inertia.js v3, TypeScript |
+| CSS | Tailwind CSS v4, shadcn/ui |
+| Database | MySQL |
+| Testing | Pest v4 |
+| Auth | Laravel Sanctum (API) |
 
-### 1) Prasyarat
+## Instalasi
+
+### Prasyarat
 - PHP 8.3+
 - Composer
-- Node.js + npm
-- Database MySQL/PostgreSQL
+- Node.js 18+
+- MySQL
 
-### 2) Setup cepat (disarankan)
-Jalankan dari root project:
+### Setup Cepat
 
 ```bash
+git clone <repo-url>
+cd smk7-academic-system
 composer setup
 composer run dev
 ```
 
-Perintah `composer setup` di project ini akan otomatis:
-- install dependency PHP (`composer install`)
-- membuat file `.env` jika belum ada
-- generate `APP_KEY`
-- menjalankan migrasi database
-- install dependency frontend (`npm install`)
-- build aset awal (`npm run build`)
+Buka `http://localhost:8000` di browser.
 
-Lalu `composer run dev` akan menjalankan server Laravel + queue worker + log tail + Vite sekaligus.
-
-### 3) Setup manual (opsional)
-Jika ingin per langkah:
+### Setup Manual
 
 ```bash
 composer install
@@ -73,24 +59,134 @@ cp .env.example .env
 php artisan key:generate
 ```
 
-Edit konfigurasi database di `.env` (`DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`), lalu lanjutkan:
+Edit `.env` — sesuaikan `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`.
 
 ```bash
 php artisan migrate
 php artisan db:seed
 npm install
+npm run build
 composer run dev
 ```
 
-Akun email / password  
-Siswa : murid@example.com / password  
-Guru : guru@example.com / password  
+### Akun Default
 
-### 4) Akses aplikasi
-- Buka `http://localhost:8000` di browser.
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | admin@example.com | password |
+| Guru | guru0@example.com s/d guru9@example.com | password |
+| Siswa | murid@example.com | password |
 
-### 5) Menjalankan test
+## Perintah
+
+```bash
+# Development
+composer run dev              # Laravel + queue + logs + Vite
+
+# Build
+npm run build                 # Production build
+
+# Lint & Format
+composer lint                 # PHP Pint
+npm run lint                  # ESLint fix
+npm run format                # Prettier
+
+# Test
+php artisan test --compact    # Semua test
+php artisan test --filter=X   # Test spesifik
+
+# Database
+php artisan migrate           # Jalankan migrasi
+php artisan db:seed           # Seed data
+php artisan db:wipe --force && php artisan migrate --force  # Reset DB
+
+# Routes
+php artisan wayfinder:generate  # Regenerate TS route types
+```
+
+## Struktur Proyek
+
+```
+app/
+├── Http/
+│   ├── Controllers/
+│   │   ├── Admin/          # Dashboard, users, classes, subjects, schedules, reports
+│   │   ├── Teacher/        # Attendance, exams, questions, students
+│   │   └── Student/        # Scan QR, exams, excuses
+│   ├── Requests/           # Form validation
+│   └── Middleware/          # Role-based access control
+├── Models/                  # Eloquent models
+├── Services/                # Business logic
+└── Enums/                   # PHP enums
+
+resources/js/
+├── pages/
+│   ├── admin/              # Admin pages
+│   ├── teacher/            # Teacher pages
+│   └── student/            # Student pages
+├── components/
+│   └── ui/                 # shadcn/ui components
+├── routes/                 # Wayfinder generated routes
+└── layouts/                # App layouts
+
+database/
+├── migrations/             # Database schema
+├── seeders/                # Sample data
+└── factories/              # Test factories
+```
+
+## Konsep Kunci
+
+### Multi-Teacher per Mata Pelajaran
+
+Satu mata pelajaran bisa diajar oleh guru berbeda di kelas berbeda melalui pivot table `class_subjects`:
+
+```
+subjects: "Matematika"
+class_subjects:
+  ├── Kelas X IPA 1 → Guru A
+  ├── Kelas X IPA 2 → Guru B
+  └── Kelas X IPS 1 → Guru A
+```
+
+Teacher assignment ada di pivot `class_subjects.teacher_id`, bukan di `subjects` table.
+
+### Jadwal & Absensi
+
+Sistem absensi terintegrasi dengan jadwal:
+- `SubjectSchedule` menentukan slot waktu (pagi/mapel/pulang)
+- Guru hanya bisa buka absensi saat jadwal aktif
+- Tipe sesi otomatis dari jadwal (morning/subject/dismissal)
+
+### Wayfinder Routes
+
+Route types di-generate otomatis dari Laravel routes:
+
+```tsx
+import admin from '@/routes/admin'
+import teacher from '@/routes/teacher'
+
+// URL generation
+admin.subjects.edit.url({ subject: 1 })
+teacher.attendance.manual.url()
+
+// Form submission
+router.post(teacher.attendance.manual.url(), { data })
+```
+
+Setelah ubah routes/controllers: `php artisan wayfinder:generate`
+
+## Testing
+
 ```bash
 php artisan test --compact
 ```
 
+Test menggunakan Pest v4 dengan SQLite in-memory database. Factories di `database/factories/`, seeders di `database/seeders/`.
+
+## Kontribusi
+
+1. Buat branch dari `main`
+2. Commit dengan pesan yang jelas
+3. Push dan buat Pull Request
+4. Pastikan semua test pass sebelum merge

@@ -168,33 +168,47 @@ class AttendanceViewController extends Controller
         $teacher = auth()->user();
         $date = today()->format('Y-m-d');
 
-        // Homeroom classes: full access
-        $homeroomClasses = $teacher->homeroomClasses()->with('students')->get();
+        // Get active schedules for subject/class selection (same as QR page)
+        $activeSchedules = SubjectSchedule::activeForTeacherNow($teacher);
 
-        // Subject-taught classes (non-homeroom): access to students in those classes
-        $subjectClassIds = $teacher->teachingSubjects()
-            ->pluck('class_subjects.school_class_id')
-            ->filter()
-            ->unique()
-            ->diff($homeroomClasses->pluck('id'));
+        $subjectGroups = $activeSchedules
+            ->filter(fn (SubjectSchedule $schedule) => $schedule->subject_id !== null)
+            ->groupBy(fn (SubjectSchedule $schedule) => $schedule->subject?->id.'::'.$schedule->subject?->name)
+            ->map(function ($schedulesInGroup, $subjectKey) {
+                $firstSchedule = $schedulesInGroup->first();
 
-        // Also include classes where teacher is assigned via pivot
-        $pivotClassIds = DB::table('class_subjects')
-            ->where('teacher_id', $teacher->id)
-            ->pluck('school_class_id')
-            ->diff($homeroomClasses->pluck('id'));
+                return [
+                    'key' => $subjectKey,
+                    'name' => $firstSchedule?->subject?->name,
+                    'classes' => $schedulesInGroup
+                        ->map(fn (SubjectSchedule $schedule) => [
+                            'id' => $schedule->school_class_id,
+                            'name' => $schedule->schoolClass?->name,
+                        ])
+                        ->filter(fn ($class) => filled($class['name']))
+                        ->unique('id')
+                        ->values(),
+                ];
+            })
+            ->values();
 
-        $nonHomeroomClassIds = $subjectClassIds->merge($pivotClassIds)->unique();
+        $accessibleClasses = $activeSchedules
+            ->map(fn (SubjectSchedule $schedule) => [
+                'id' => $schedule->school_class_id,
+                'name' => $schedule->schoolClass?->name,
+            ])
+            ->filter(fn ($class) => filled($class['name']))
+            ->unique('id')
+            ->values();
 
-        $subjectClasses = collect();
-        if ($nonHomeroomClassIds->isNotEmpty()) {
-            $subjectClasses = SchoolClass::query()
-                ->whereIn('id', $nonHomeroomClassIds->all())
-                ->with('students')
-                ->get();
-        }
+        $currentSchedule = $activeSchedules->firstWhere('subject_id', '!==', null)
+            ?? $activeSchedules->first();
 
-        $allClasses = $homeroomClasses->merge($subjectClasses);
+        // All students from accessible classes (for manual marking)
+        $allClasses = SchoolClass::query()
+            ->whereIn('id', $accessibleClasses->pluck('id')->all())
+            ->with('students')
+            ->get();
 
         $students = $allClasses
             ->flatMap(fn ($class) => $class->students->map(fn ($student) => [
@@ -221,10 +235,15 @@ class AttendanceViewController extends Controller
 
         return Inertia::render('teacher/attendance/manual', [
             'students' => $students,
-            'classes' => $allClasses->map(fn ($class) => [
-                'id' => $class->id,
-                'name' => $class->name,
-            ])->values(),
+            'subject_groups' => $subjectGroups,
+            'accessible_classes' => $accessibleClasses,
+            'current_schedule' => $currentSchedule ? [
+                'type' => $currentSchedule->schedule_type,
+                'subject_name' => $currentSchedule->subject?->name,
+                'class_name' => $currentSchedule->schoolClass?->name,
+                'starts_at' => $currentSchedule->starts_at,
+                'ends_at' => $currentSchedule->ends_at,
+            ] : null,
             'existingRecords' => $existingRecords,
             'activeSession' => $this->mapSession($activeSession),
             'date' => $date,

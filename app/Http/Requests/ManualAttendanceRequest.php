@@ -2,12 +2,10 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\AttendanceQrType;
-use App\Models\User;
+use App\Models\SchoolClass;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 
 class ManualAttendanceRequest extends FormRequest
 {
@@ -27,9 +25,7 @@ class ManualAttendanceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'session_id' => ['sometimes', 'nullable', 'integer', 'exists:attendance_sessions,id'],
-            'class_id' => ['required_without:session_id', 'nullable', 'integer', 'exists:school_classes,id'],
-            'phase' => ['required', Rule::enum(AttendanceQrType::class)],
+            'class_id' => ['required', 'integer', 'exists:school_classes,id'],
             'students' => ['required', 'array', 'min:1'],
             'students.*.student_id' => ['required', 'integer', 'exists:users,id'],
             'students.*.status' => ['required', 'string', 'in:present,late,absent'],
@@ -42,9 +38,10 @@ class ManualAttendanceRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'students.required' => 'At least one student must be selected.',
-            'students.*.student_id.exists' => 'Selected student does not exist.',
-            'students.*.status.in' => 'Status must be present, late, or absent.',
+            'class_id.required' => 'Pilih kelas terlebih dahulu.',
+            'students.required' => 'Pilih minimal 1 siswa.',
+            'students.*.student_id.exists' => 'Siswa tidak ditemukan.',
+            'students.*.status.in' => 'Status harus present, late, atau absent.',
         ];
     }
 
@@ -58,28 +55,33 @@ class ManualAttendanceRequest extends FormRequest
         return [
             function ($validator) {
                 $teacher = auth()->user();
+                $classId = $this->input('class_id');
 
-                $classIds = $teacher->homeroomClasses()->pluck('id')->toArray();
-                $subjectClassIds = $teacher->teachingSubjects()
-                    ->pluck('class_subjects.school_class_id')
-                    ->filter()
-                    ->unique()
-                    ->toArray();
+                if (! $classId) {
+                    return;
+                }
 
-                // Also include classes where teacher is assigned via pivot
-                $pivotClassIds = DB::table('class_subjects')
-                    ->where('teacher_id', $teacher->id)
-                    ->pluck('school_class_id')
-                    ->toArray();
+                // Check teacher has access to this class
+                $hasAccess = SchoolClass::query()
+                    ->where('id', $classId)
+                    ->where(function ($q) use ($teacher): void {
+                        $q->where('homeroom_teacher_id', $teacher->id)
+                            ->orWhereExists(function ($sub) use ($teacher): void {
+                                $sub->select(\Illuminate\Support\Facades\DB::raw(1))
+                                    ->from('class_subjects')
+                                    ->whereColumn('class_subjects.school_class_id', 'school_classes.id')
+                                    ->where('class_subjects.teacher_id', $teacher->id);
+                            });
+                    })
+                    ->exists();
 
-                $allowedClassIds = array_unique(array_merge($classIds, $subjectClassIds, $pivotClassIds));
-
-                if (empty($allowedClassIds)) {
-                    $validator->errors()->add('class_id', 'Anda tidak memiliki kelas yang ditugaskan.');
+                if (! $hasAccess) {
+                    $validator->errors()->add('class_id', 'Anda tidak memiliki akses ke kelas yang dipilih.');
 
                     return;
                 }
 
+                // Check all students belong to the selected class
                 $studentIds = collect($this->input('students', []))
                     ->pluck('student_id')
                     ->filter()
@@ -91,21 +93,18 @@ class ManualAttendanceRequest extends FormRequest
                     return;
                 }
 
-                $studentsWithClasses = User::query()
+                $studentsInClass = \App\Models\User::query()
                     ->whereIn('id', $studentIds)
-                    ->pluck('school_class_id', 'id');
+                    ->where('school_class_id', $classId)
+                    ->pluck('id')
+                    ->toArray();
 
-                foreach ($this->input('students', []) as $index => $student) {
-                    $studentId = $student['student_id'] ?? null;
-                    if ($studentId) {
-                        $studentClass = $studentsWithClasses->get($studentId);
-                        if (! $studentClass || ! in_array($studentClass, $allowedClassIds)) {
-                            $validator->errors()->add(
-                                "students.{$index}.student_id",
-                                "Student ID {$studentId} is not in your assigned class."
-                            );
-                        }
-                    }
+                $invalidStudents = array_diff($studentIds, $studentsInClass);
+                if (! empty($invalidStudents)) {
+                    $validator->errors()->add(
+                        'students',
+                        'Beberapa siswa tidak termasuk dalam kelas yang dipilih.',
+                    );
                 }
             },
         ];
