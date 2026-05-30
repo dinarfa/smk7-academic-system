@@ -604,18 +604,17 @@ test('teacher can save manual attendance for students in their class', function 
     $student1 = User::factory()->student()->create(['school_class_id' => $class->id]);
     $student2 = User::factory()->student()->create(['school_class_id' => $class->id]);
 
-    $session = AttendanceSession::query()->create([
-        'opened_by' => $teacher->id,
-        'type' => 'morning',
-        'qr_token' => 'MANUAL-SESSION-001',
-        'starts_at' => now(),
-        'ends_at' => now()->addMinutes(30),
-        'is_active' => true,
+    // Create an active schedule for this class
+    SubjectSchedule::factory()->create([
+        'school_class_id' => $class->id,
+        'schedule_type' => 'morning',
+        'day_of_week' => now()->dayOfWeek,
+        'starts_at' => now()->subHour()->format('H:i'),
+        'ends_at' => now()->addHour()->format('H:i'),
     ]);
 
     $response = $this->actingAs($teacher)->post(route('teacher.attendance.manual'), [
-        'session_id' => $session->id,
-        'phase' => 'morning',
+        'class_id' => $class->id,
         'students' => [
             ['student_id' => $student1->id, 'status' => 'present'],
             ['student_id' => $student2->id, 'status' => 'late'],
@@ -624,13 +623,11 @@ test('teacher can save manual attendance for students in their class', function 
 
     $response->assertRedirect();
     $this->assertDatabaseHas('attendance_records', [
-        'attendance_session_id' => $session->id,
         'student_id' => $student1->id,
         'status' => 'present',
         'source' => 'manual',
     ]);
     $this->assertDatabaseHas('attendance_records', [
-        'attendance_session_id' => $session->id,
         'student_id' => $student2->id,
         'status' => 'late',
         'source' => 'manual',
