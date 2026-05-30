@@ -25,15 +25,11 @@ class StoreSubjectRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'code' => ['required', 'string', 'max:50', Rule::unique('subjects', 'code')],
-            'name' => ['required', 'string', 'max:255'],
-            'school_class_ids' => ['required', 'array', 'min:1'],
+            'name' => ['required', 'string', 'max:255', Rule::unique('subjects', 'name')],
+            'school_class_ids' => ['sometimes', 'array', 'min:1'],
             'school_class_ids.*' => ['integer', Rule::exists('school_classes', 'id')],
-            'teacher_id' => [
-                'required',
-                'integer',
-                Rule::exists('users', 'id')->where('role', UserRole::Teacher->value),
-            ],
+            'class_teachers' => ['sometimes', 'array'],
+            'class_teachers.*' => ['nullable', 'integer', Rule::exists('users', 'id')->where('role', UserRole::Teacher->value)],
         ];
     }
 }

@@ -31,7 +31,7 @@ class SubjectScheduleController extends Controller
             ->get();
 
         $schedules = SubjectSchedule::query()
-            ->with(['schoolClass:id,name', 'subject:id,name,teacher_id', 'subject.teacher:id,name'])
+            ->with(['schoolClass:id,name', 'subject:id,name'])
             ->orderBy('school_class_id')
             ->orderBy('day_of_week')
             ->orderBy('starts_at')
@@ -42,7 +42,7 @@ class SubjectScheduleController extends Controller
                 'school_class_name' => $schedule->schoolClass?->name,
                 'subject_id' => $schedule->subject_id,
                 'subject_name' => $schedule->subject?->name,
-                'teacher_name' => $schedule->subject?->teacher?->name,
+                'teacher_name' => $schedule->teacher()?->name,
                 'schedule_type' => $schedule->schedule_type,
                 'day_of_week' => $schedule->day_of_week,
                 'starts_at' => $schedule->starts_at,

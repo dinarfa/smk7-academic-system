@@ -6,6 +6,7 @@ use App\Enums\AttendanceQrType;
 use App\Models\User;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class ManualAttendanceRequest extends FormRequest
@@ -59,14 +60,19 @@ class ManualAttendanceRequest extends FormRequest
                 $teacher = auth()->user();
 
                 $classIds = $teacher->homeroomClasses()->pluck('id')->toArray();
-                $subjectClassIds = $teacher->subjects()
-                    ->join('class_subjects', 'subjects.id', '=', 'class_subjects.subject_id')
+                $subjectClassIds = $teacher->teachingSubjects()
                     ->pluck('class_subjects.school_class_id')
                     ->filter()
                     ->unique()
                     ->toArray();
 
-                $allowedClassIds = array_unique(array_merge($classIds, $subjectClassIds));
+                // Also include classes where teacher is assigned via pivot
+                $pivotClassIds = DB::table('class_subjects')
+                    ->where('teacher_id', $teacher->id)
+                    ->pluck('school_class_id')
+                    ->toArray();
+
+                $allowedClassIds = array_unique(array_merge($classIds, $subjectClassIds, $pivotClassIds));
 
                 if (empty($allowedClassIds)) {
                     $validator->errors()->add('class_id', 'Anda tidak memiliki kelas yang ditugaskan.');

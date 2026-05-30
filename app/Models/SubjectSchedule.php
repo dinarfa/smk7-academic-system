@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class SubjectSchedule extends Model
 {
@@ -56,11 +57,20 @@ class SubjectSchedule extends Model
     }
 
     /**
-     * The teacher who teaches this subject slot (resolved via subject).
+     * The teacher who teaches this subject slot (resolved from pivot).
      */
     public function teacher(): ?User
     {
-        return $this->subject?->teacher;
+        $subject = $this->subject;
+        if (! $subject) {
+            return null;
+        }
+
+        $pivotTeacherId = $subject->schoolClasses()
+            ->where('school_classes.id', $this->school_class_id)
+            ->first()?->pivot?->teacher_id;
+
+        return $pivotTeacherId ? User::find($pivotTeacherId) : null;
     }
 
     /**
@@ -162,7 +172,7 @@ class SubjectSchedule extends Model
         return static::query()
             ->where('school_class_id', $schoolClassId)
             ->activeNow($at)
-            ->with('subject:id,code,name')
+            ->with('subject:id,name')
             ->first();
     }
 
@@ -172,6 +182,9 @@ class SubjectSchedule extends Model
      * Homeroom teachers see ALL active slots for their classes.
      * Subject teachers see only their own subject slots + morning/dismissal
      * for non-homeroom classes they teach in.
+     *
+     * Teacher assignment is resolved via:
+     * - class_subjects.pivot.teacher_id (per class)
      *
      * @return Collection<int, self>
      */
@@ -183,39 +196,42 @@ class SubjectSchedule extends Model
 
         // Cache only the IDs to avoid __PHP_Incomplete_Class on deserialization
         $ids = cache()->remember($cacheKey, 300, function () use ($teacher, $at): array {
-            // 1. Homeroom classes: teacher sees ALL active slots
+            // Get all subjects this teacher teaches via pivot
+            $teacherPivotSubjectIds = collect(
+                DB::table('class_subjects')
+                    ->where('teacher_id', $teacher->id)
+                    ->pluck('subject_id')
+                    ->all(),
+            );
+
+            // Get all classes where teacher teaches via pivot
+            $teacherClassIds = collect(
+                DB::table('class_subjects')
+                    ->where('teacher_id', $teacher->id)
+                    ->pluck('school_class_id')
+                    ->all(),
+            );
+
+            // Homeroom classes: teacher sees own subjects + morning/dismissal
             $homeroomClassIds = $teacher->homeroomClasses()->pluck('school_classes.id');
 
-            $homeroomSlotIds = collect();
-            if ($homeroomClassIds->isNotEmpty()) {
-                $homeroomSlotIds = static::query()
-                    ->whereIn('school_class_id', $homeroomClassIds->all())
-                    ->activeNow($at)
-                    ->pluck('id');
+            $allClassIds = $teacherClassIds->merge($homeroomClassIds)->unique();
+
+            if ($allClassIds->isEmpty()) {
+                return [];
             }
 
-            // 2. Subject-taught classes (non-homeroom): only teacher's own subjects + morning/dismissal
-            $subjectClassIds = $teacher->subjects()
-                ->join('class_subjects', 'subjects.id', '=', 'class_subjects.subject_id')
-                ->pluck('class_subjects.school_class_id')
-                ->filter()
-                ->unique();
-            $teacherSubjectIds = $teacher->subjects()->pluck('subjects.id');
-            $nonHomeroomSubjectClassIds = $subjectClassIds->diff($homeroomClassIds);
-
-            $subjectSlotIds = collect();
-            if ($nonHomeroomSubjectClassIds->isNotEmpty()) {
-                $subjectSlotIds = static::query()
-                    ->whereIn('school_class_id', $nonHomeroomSubjectClassIds->all())
-                    ->activeNow($at)
-                    ->where(function ($q) use ($teacherSubjectIds) {
-                        $q->whereNull('subject_id')
-                            ->orWhereIn('subject_id', $teacherSubjectIds->all());
-                    })
-                    ->pluck('id');
-            }
-
-            return $homeroomSlotIds->merge($subjectSlotIds)->unique()->values()->all();
+            return static::query()
+                ->whereIn('school_class_id', $allClassIds->all())
+                ->activeNow($at)
+                ->where(function ($q) use ($teacherPivotSubjectIds): void {
+                    // Teacher's own subjects
+                    $q->whereIn('subject_id', $teacherPivotSubjectIds->all())
+                        // Morning/dismissal slots (no subject)
+                        ->orWhereNull('subject_id');
+                })
+                ->pluck('id')
+                ->all();
         });
 
         if (empty($ids)) {
@@ -224,7 +240,7 @@ class SubjectSchedule extends Model
 
         return static::query()
             ->whereIn('id', $ids)
-            ->with(['subject:id,code,name', 'schoolClass:id,name'])
+            ->with(['subject:id,name', 'schoolClass:id,name'])
             ->orderBy('starts_at')
             ->get();
     }

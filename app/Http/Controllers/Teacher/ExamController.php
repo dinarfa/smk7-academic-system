@@ -50,23 +50,21 @@ class ExamController extends Controller
         $teacher = auth()->user();
 
         $subjectGroups = Subject::query()
-            ->with('schoolClasses:id,name,code')
-            ->where('teacher_id', $teacher->id)
+            ->with('schoolClasses:id,name')
+            ->whereHas('schoolClasses', fn ($q) => $q->where('class_subjects.teacher_id', $teacher->id))
             ->orderBy('name')
-            ->get(['id', 'code', 'name'])
-            ->groupBy(fn (Subject $subject) => $subject->code.'::'.$subject->name)
+            ->get(['id', 'name'])
+            ->groupBy(fn (Subject $subject) => $subject->id.'::'.$subject->name)
             ->map(function ($subjectsInGroup, $subjectKey) {
                 $firstSubject = $subjectsInGroup->first();
 
                 return [
                     'key' => $subjectKey,
                     'name' => $firstSubject?->name,
-                    'code' => $firstSubject?->code,
                     'classes' => $firstSubject->schoolClasses
                         ->map(fn ($class) => [
                             'id' => $class->id,
                             'name' => $class->name,
-                            'code' => $class->code,
                             'subject_id' => $firstSubject->id,
                         ])
                         ->values(),

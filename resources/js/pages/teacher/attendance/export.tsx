@@ -37,11 +37,17 @@ export default function ExportAttendance({ schoolClasses, subjects }: Props) {
     const [processing, setProcessing] = useState(false);
 
     const filteredSubjects = useMemo(() => {
-        if (!classId) {
-            return subjects;
-        }
+        const list = classId
+            ? subjects.filter((s) => s.school_class_id === Number(classId))
+            : subjects;
 
-        return subjects.filter((s) => s.school_class_id === Number(classId));
+        // Deduplicate by subject id
+        const seen = new Set<number>();
+        return list.filter((s) => {
+            if (seen.has(s.id)) return false;
+            seen.add(s.id);
+            return true;
+        });
     }, [subjects, classId]);
 
     const getCsrfToken = () =>

@@ -9,25 +9,31 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['code', 'name', 'teacher_id'])]
+#[Fillable(['name'])]
 class Subject extends Model
 {
     use HasFactory;
 
     /**
-     * The teacher who teaches this subject.
-     */
-    public function teacher(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    /**
-     * The classes this subject belongs to.
+     * The classes this subject belongs to (with teacher on pivot).
      */
     public function schoolClasses(): BelongsToMany
     {
-        return $this->belongsToMany(SchoolClass::class, 'class_subjects')->withTimestamps();
+        return $this->belongsToMany(SchoolClass::class, 'class_subjects')
+            ->withPivot('teacher_id')
+            ->withTimestamps();
+    }
+
+    /**
+     * Resolve the teacher for this subject in a specific class.
+     */
+    public function teacherForClass(int $classId): ?User
+    {
+        $pivotTeacherId = $this->schoolClasses()
+            ->where('school_classes.id', $classId)
+            ->first()?->pivot?->teacher_id;
+
+        return $pivotTeacherId ? User::find($pivotTeacherId) : null;
     }
 
     /**

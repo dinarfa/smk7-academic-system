@@ -37,15 +37,17 @@ class AttendanceSessionController extends Controller
             ]);
         }
 
-        // Security: for subject-type slots, verify the teacher owns this subject
+        // Security: for subject-type slots, verify the teacher is assigned via pivot
         if ($schedule->schedule_type === 'subject' && $schedule->subject_id !== null) {
-            $teacherOwnsSubject = $teacher->subjects()
-                ->where('id', $schedule->subject_id)
-                ->exists();
+            $pivotTeacherId = $schedule->subject->schoolClasses()
+                ->where('school_classes.id', $classId)
+                ->first()?->pivot?->teacher_id;
+
+            $teacherOwnsSubject = $pivotTeacherId === $teacher->id;
 
             if (! $teacherOwnsSubject) {
-                $teacherSubjectIds = $teacher->subjects()
-                    ->whereHas('schoolClasses', fn ($q) => $q->where('school_classes.id', $classId))
+                $teacherSubjectIds = $teacher->teachingSubjects()
+                    ->wherePivot('school_class_id', $classId)
                     ->pluck('subjects.id');
 
                 $teacherSchedule = SubjectSchedule::query()

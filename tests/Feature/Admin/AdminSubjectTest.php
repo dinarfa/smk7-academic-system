@@ -14,31 +14,27 @@ test('admin can create update and delete subjects', function () {
 
     $this->actingAs($admin)
         ->post(route('admin.subjects.store'), [
-            'code' => 'MTK',
             'name' => 'Mathematics',
             'school_class_ids' => [$class->id],
-            'teacher_id' => $teacher->id,
+            'class_teachers' => [$class->id => $teacher->id],
         ])
         ->assertRedirect(route('admin.subjects.index'));
 
-    $subject = Subject::query()->where('code', 'MTK')->firstOrFail();
+    $subject = Subject::query()->where('name', 'Mathematics')->firstOrFail();
     $newClass = SchoolClass::factory()->create();
     $newTeacher = User::factory()->teacher()->create();
 
     $this->actingAs($admin)
         ->put(route('admin.subjects.update', $subject), [
-            'code' => 'MTK-1',
             'name' => 'Advanced Mathematics',
             'school_class_ids' => [$newClass->id],
-            'teacher_id' => $newTeacher->id,
+            'class_teachers' => [$newClass->id => $newTeacher->id],
         ])
         ->assertRedirect(route('admin.subjects.index'));
 
     $this->assertDatabaseHas('subjects', [
         'id' => $subject->id,
-        'code' => 'MTK-1',
         'name' => 'Advanced Mathematics',
-        'teacher_id' => $newTeacher->id,
     ]);
 
     $this->actingAs($admin)
@@ -50,24 +46,21 @@ test('admin can create update and delete subjects', function () {
     ]);
 });
 
-test('subject validation rejects duplicate codes', function () {
+test('subject validation rejects duplicate names', function () {
     $admin = User::factory()->admin()->create();
     $teacher = User::factory()->teacher()->create();
     $class = SchoolClass::factory()->create();
 
     $existing = Subject::query()->create([
-        'code' => 'IPA',
         'name' => 'Science',
-        'teacher_id' => $teacher->id,
     ]);
-    $existing->schoolClasses()->attach($class->id);
+    $existing->schoolClasses()->attach($class->id, ['teacher_id' => $teacher->id]);
 
     $this->actingAs($admin)
         ->post(route('admin.subjects.store'), [
-            'code' => 'IPA',
-            'name' => 'Natural Science',
+            'name' => 'Science',
             'school_class_ids' => [$class->id],
-            'teacher_id' => $teacher->id,
+            'class_teachers' => [$class->id => $teacher->id],
         ])
-        ->assertSessionHasErrors(['code']);
+        ->assertSessionHasErrors(['name']);
 });

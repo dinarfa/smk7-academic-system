@@ -6,6 +6,7 @@ use App\Models\SchoolClass;
 use App\Models\Subject;
 use App\Models\SubjectSchedule;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class SubjectScheduleSeeder extends Seeder
 {
@@ -96,16 +97,27 @@ class SubjectScheduleSeeder extends Seeder
 
                     $daySubjects = $subjects->shuffle();
                     foreach ($daySubjects as $subject) {
-                        if (! $subject->teacher_id) {
+                        // Get teacher from pivot for this class
+                        $teacherId = $subject->schoolClasses()
+                            ->where('school_classes.id', $class->id)
+                            ->first()?->pivot?->teacher_id;
+
+                        if (! $teacherId) {
                             continue;
                         }
 
+                        // Check if teacher is busy at this time via pivot
                         $teacherBusy = SubjectSchedule::query()
                             ->where('day_of_week', $dayOfWeek)
                             ->where('starts_at', $slot['starts_at'])
                             ->where('ends_at', $slot['ends_at'])
                             ->whereNotNull('subject_id')
-                            ->whereHas('subject', fn ($q) => $q->where('teacher_id', $subject->teacher_id))
+                            ->whereExists(function ($q) use ($teacherId) {
+                                $q->select(DB::raw(1))
+                                    ->from('class_subjects')
+                                    ->whereColumn('class_subjects.subject_id', 'subject_schedules.subject_id')
+                                    ->where('class_subjects.teacher_id', $teacherId);
+                            })
                             ->exists();
 
                         if (! $teacherBusy) {
@@ -133,12 +145,27 @@ class SubjectScheduleSeeder extends Seeder
                 ->get();
 
             foreach ($emptySlots as $slot) {
+                // Get teacher from pivot for this slot's class
+                $teacherId = $subject->schoolClasses()
+                    ->where('school_classes.id', $slot->school_class_id)
+                    ->first()?->pivot?->teacher_id;
+
+                if (! $teacherId) {
+                    continue;
+                }
+
+                // Check if teacher is busy at this time via pivot
                 $teacherBusy = SubjectSchedule::query()
                     ->where('day_of_week', $slot->day_of_week)
                     ->where('starts_at', $slot->starts_at)
                     ->where('ends_at', $slot->ends_at)
                     ->whereNotNull('subject_id')
-                    ->whereHas('subject', fn ($q) => $q->where('teacher_id', $subject->teacher_id))
+                    ->whereExists(function ($q) use ($teacherId) {
+                        $q->select(DB::raw(1))
+                            ->from('class_subjects')
+                            ->whereColumn('class_subjects.subject_id', 'subject_schedules.subject_id')
+                            ->where('class_subjects.teacher_id', $teacherId);
+                    })
                     ->exists();
 
                 if (! $teacherBusy) {

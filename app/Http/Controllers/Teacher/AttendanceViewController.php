@@ -8,6 +8,7 @@ use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
 use App\Models\SchoolClass;
 use App\Models\SubjectSchedule;
+use Illuminate\Support\Facades\DB;
 use App\Services\Attendance\AbsenceDetectionService;
 use App\Services\Attendance\AttendanceReportService;
 use App\Services\Attendance\DailyAttendanceViewService;
@@ -54,14 +55,13 @@ class AttendanceViewController extends Controller
 
         $subjectGroups = $activeSchedules
             ->filter(fn (SubjectSchedule $schedule) => $schedule->subject_id !== null)
-            ->groupBy(fn (SubjectSchedule $schedule) => $schedule->subject?->code.'::'.$schedule->subject?->name)
+            ->groupBy(fn (SubjectSchedule $schedule) => $schedule->subject?->id.'::'.$schedule->subject?->name)
             ->map(function ($schedulesInGroup, $subjectKey) {
                 $firstSchedule = $schedulesInGroup->first();
 
                 return [
                     'key' => $subjectKey,
                     'name' => $firstSchedule?->subject?->name,
-                    'code' => $firstSchedule?->subject?->code,
                     'classes' => $schedulesInGroup
                         ->map(fn (SubjectSchedule $schedule) => [
                             'id' => $schedule->school_class_id,
@@ -83,7 +83,9 @@ class AttendanceViewController extends Controller
             ->unique('id')
             ->values();
 
-        $currentSchedule = $activeSchedules->first();
+        // Prioritize schedule with a subject assigned (teacher's own subject)
+        $currentSchedule = $activeSchedules->firstWhere('subject_id', '!==', null)
+            ?? $activeSchedules->first();
 
         return Inertia::render('teacher/attendance/qr', [
             'active_session' => $this->mapSession($session),
@@ -113,17 +115,24 @@ class AttendanceViewController extends Controller
         $homeroomClasses = $teacher->homeroomClasses()->with('students')->get();
 
         // Subject-taught classes (non-homeroom): access to students in those classes
-        $subjectClassIds = $teacher->subjects()
-            ->join('class_subjects', 'subjects.id', '=', 'class_subjects.subject_id')
+        $subjectClassIds = $teacher->teachingSubjects()
             ->pluck('class_subjects.school_class_id')
             ->filter()
             ->unique()
             ->diff($homeroomClasses->pluck('id'));
 
+        // Also include classes where teacher is assigned via pivot
+        $pivotClassIds = DB::table('class_subjects')
+            ->where('teacher_id', $teacher->id)
+            ->pluck('school_class_id')
+            ->diff($homeroomClasses->pluck('id'));
+
+        $nonHomeroomClassIds = $subjectClassIds->merge($pivotClassIds)->unique();
+
         $subjectClasses = collect();
-        if ($subjectClassIds->isNotEmpty()) {
+        if ($nonHomeroomClassIds->isNotEmpty()) {
             $subjectClasses = SchoolClass::query()
-                ->whereIn('id', $subjectClassIds->all())
+                ->whereIn('id', $nonHomeroomClassIds->all())
                 ->with('students')
                 ->get();
         }
@@ -163,17 +172,24 @@ class AttendanceViewController extends Controller
         $homeroomClasses = $teacher->homeroomClasses()->with('students')->get();
 
         // Subject-taught classes (non-homeroom): access to students in those classes
-        $subjectClassIds = $teacher->subjects()
-            ->join('class_subjects', 'subjects.id', '=', 'class_subjects.subject_id')
+        $subjectClassIds = $teacher->teachingSubjects()
             ->pluck('class_subjects.school_class_id')
             ->filter()
             ->unique()
             ->diff($homeroomClasses->pluck('id'));
 
+        // Also include classes where teacher is assigned via pivot
+        $pivotClassIds = DB::table('class_subjects')
+            ->where('teacher_id', $teacher->id)
+            ->pluck('school_class_id')
+            ->diff($homeroomClasses->pluck('id'));
+
+        $nonHomeroomClassIds = $subjectClassIds->merge($pivotClassIds)->unique();
+
         $subjectClasses = collect();
-        if ($subjectClassIds->isNotEmpty()) {
+        if ($nonHomeroomClassIds->isNotEmpty()) {
             $subjectClasses = SchoolClass::query()
-                ->whereIn('id', $subjectClassIds->all())
+                ->whereIn('id', $nonHomeroomClassIds->all())
                 ->with('students')
                 ->get();
         }
@@ -310,20 +326,29 @@ class AttendanceViewController extends Controller
 
         $homeroomClasses = $teacher->homeroomClasses()->get();
 
-        $subjectClassIds = $teacher->subjects()
-            ->pluck('school_class_id')
+        // Subject-taught classes via default teacher_id
+        $subjectClassIds = $teacher->teachingSubjects()
+            ->pluck('class_subjects.school_class_id')
             ->filter()
             ->unique()
             ->diff($homeroomClasses->pluck('id'));
 
-        $subjectClasses = $subjectClassIds->isNotEmpty()
-            ? SchoolClass::query()->whereIn('id', $subjectClassIds->all())->get()
+        // Also include classes where teacher is assigned via pivot
+        $pivotClassIds = DB::table('class_subjects')
+            ->where('teacher_id', $teacher->id)
+            ->pluck('school_class_id')
+            ->diff($homeroomClasses->pluck('id'));
+
+        $nonHomeroomClassIds = $subjectClassIds->merge($pivotClassIds)->unique();
+
+        $subjectClasses = $nonHomeroomClassIds->isNotEmpty()
+            ? SchoolClass::query()->whereIn('id', $nonHomeroomClassIds->all())->get()
             : collect();
 
         $allClasses = $homeroomClasses->merge($subjectClasses);
 
-        $subjects = $teacher->subjects()
-            ->select('id', 'name', 'school_class_id')
+        $subjects = $teacher->teachingSubjects()
+            ->select('subjects.id', 'subjects.name', 'class_subjects.school_class_id')
             ->get();
 
         return Inertia::render('teacher/attendance/export', [
@@ -334,7 +359,7 @@ class AttendanceViewController extends Controller
             'subjects' => $subjects->map(fn ($subject) => [
                 'id' => $subject->id,
                 'name' => $subject->name,
-                'school_class_id' => $subject->school_class_id,
+                'school_class_id' => $subject->pivot->school_class_id,
             ])->values(),
         ]);
     }
@@ -354,7 +379,7 @@ class AttendanceViewController extends Controller
         $subjectId = $validated['subjectId'] ?? null;
 
         if ($format === 'xlsx') {
-            $rows = $service->exportArrayForTeacher(
+            $data = $service->exportFormattedForTeacher(
                 $request->user()->id,
                 $validated['startDate'],
                 $validated['endDate'],
@@ -365,16 +390,106 @@ class AttendanceViewController extends Controller
             $tempPath = tempnam(sys_get_temp_dir(), 'attendance_export_');
             abort_if($tempPath === false, 500, 'Unable to create temporary export file.');
 
+            // Styles
+            $headerStyle = new \OpenSpout\Common\Entity\Style\Style(
+                fontBold: true,
+                fontSize: 11,
+                fontColor: \OpenSpout\Common\Entity\Style\Color::WHITE,
+                backgroundColor: '#3B82F6',
+            );
+
+            $presentStyle = new \OpenSpout\Common\Entity\Style\Style(
+                backgroundColor: '#DCFCE7',
+                fontColor: '#166534',
+            );
+
+            $absentStyle = new \OpenSpout\Common\Entity\Style\Style(
+                backgroundColor: '#FEE2E2',
+                fontColor: '#991B1B',
+            );
+
+            $lateStyle = new \OpenSpout\Common\Entity\Style\Style(
+                backgroundColor: '#FEF9C3',
+                fontColor: '#854D0E',
+            );
+
+            $titleStyle = new \OpenSpout\Common\Entity\Style\Style(
+                fontBold: true,
+                fontSize: 14,
+            );
+
+            $infoStyle = new \OpenSpout\Common\Entity\Style\Style(
+                fontItalic: true,
+                fontColor: '#6B7280',
+            );
+
+            $summaryStyle = new \OpenSpout\Common\Entity\Style\Style(
+                fontBold: true,
+            );
+
+            // Helper: create Row from values with optional style for all cells
+            $makeRow = function (array $values, ?\OpenSpout\Common\Entity\Style\Style $style = null): Row {
+                $cells = [];
+                foreach ($values as $i => $val) {
+                    $cells[$i] = new \OpenSpout\Common\Entity\Cell\StringCell((string) $val, $style);
+                }
+
+                return new Row($cells);
+            };
+
+            // Helper: create Row with per-cell style override
+            $makeRowWithHighlight = function (array $values, int $highlightIndex, \OpenSpout\Common\Entity\Style\Style $highlightStyle): Row {
+                $cells = [];
+                foreach ($values as $i => $val) {
+                    $style = $i === $highlightIndex ? $highlightStyle : null;
+                    $cells[$i] = new \OpenSpout\Common\Entity\Cell\StringCell((string) $val, $style);
+                }
+
+                return new Row($cells);
+            };
+
             $writer = new Writer;
             $writer->openToFile($tempPath);
 
-            foreach ($rows as $row) {
-                $writer->addRow(Row::fromValues($row));
+            // Title row
+            $writer->addRow($makeRow(['Laporan Absensi'], $titleStyle));
+
+            // Info rows
+            $writer->addRow($makeRow(['Periode: ' . $validated['startDate'] . ' s/d ' . $validated['endDate']], $infoStyle));
+            $writer->addRow($makeRow(['Dicetak: ' . now()->format('d/m/Y H:i')], $infoStyle));
+            $writer->addRow($makeRow([]));
+
+            // Header row
+            $writer->addRow($makeRow($data['headers'], $headerStyle));
+
+            // Data rows with conditional styling
+            $statusColIndex = array_search('Status', $data['headers']);
+            foreach ($data['rows'] as $rowData) {
+                if ($statusColIndex !== false && isset($rowData[$statusColIndex])) {
+                    $status = strtolower($rowData[$statusColIndex]);
+                    $cellStyle = match ($status) {
+                        'hadir' => $presentStyle,
+                        'terlambat' => $lateStyle,
+                        'alpha' => $absentStyle,
+                        default => null,
+                    };
+                    if ($cellStyle) {
+                        $writer->addRow($makeRowWithHighlight($rowData, $statusColIndex, $cellStyle));
+                    } else {
+                        $writer->addRow($makeRow($rowData));
+                    }
+                } else {
+                    $writer->addRow($makeRow($rowData));
+                }
             }
+
+            // Summary row
+            $writer->addRow($makeRow([]));
+            $writer->addRow($makeRow(['Total', '', '', '', '', '', count($data['rows']) . ' data'], $summaryStyle));
 
             $writer->close();
 
-            $filename = 'teacher-attendance-export-'.now()->format('Y-m-d-His').'.xlsx';
+            $filename = 'absensi-' . now()->format('Y-m-d-His') . '.xlsx';
 
             return response()->download(
                 $tempPath,

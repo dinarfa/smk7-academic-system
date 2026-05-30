@@ -20,7 +20,6 @@ class SubjectFactory extends Factory
     public function definition(): array
     {
         return [
-            'teacher_id' => User::factory()->state(['role' => UserRole::Teacher]),
             'name' => fake()->word().' '.fake()->word(),
             'is_active' => true,
         ];

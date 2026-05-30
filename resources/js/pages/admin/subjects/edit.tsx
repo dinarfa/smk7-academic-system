@@ -21,10 +21,9 @@ import admin from '@/routes/admin';
 
 type Subject = {
     id: number;
-    code: string;
     name: string;
     school_class_ids: number[];
-    teacher_id: number | null;
+    class_teachers: Record<number, number | null>;
 };
 
 type SchoolClass = {
@@ -50,24 +49,40 @@ export default function AdminSubjectEdit({
     teachers,
 }: Props) {
     const { data, setData, put, processing, errors } = useForm({
-        code: subject.code,
         name: subject.name,
         school_class_ids: subject.school_class_ids.map(String),
-        teacher_id: subject.teacher_id ? String(subject.teacher_id) : '',
+        class_teachers: Object.fromEntries(
+            Object.entries(subject.class_teachers).map(([classId, teacherId]) => [
+                classId,
+                teacherId ? String(teacherId) : '',
+            ]),
+        ),
     });
 
     function toggleClass(classId: string) {
-        setData(
-            'school_class_ids',
-            data.school_class_ids.includes(classId)
-                ? data.school_class_ids.filter((id) => id !== classId)
-                : [...data.school_class_ids, classId],
-        );
+        const newIds = data.school_class_ids.includes(classId)
+            ? data.school_class_ids.filter((id) => id !== classId)
+            : [...data.school_class_ids, classId];
+
+        setData('school_class_ids', newIds);
+
+        // If unchecking, remove the class teacher entry
+        if (!newIds.includes(classId)) {
+            const newClassTeachers = { ...data.class_teachers };
+            delete newClassTeachers[classId];
+            setData('class_teachers', newClassTeachers);
+        }
+    }
+
+    function setClassTeacher(classId: string, teacherId: string) {
+        setData('class_teachers', {
+            ...data.class_teachers,
+            [classId]: teacherId,
+        });
     }
 
     function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
-
         put(admin.subjects.update.url({ subject: subject.id }));
     }
 
@@ -82,7 +97,7 @@ export default function AdminSubjectEdit({
                             Edit Mata Pelajaran
                         </h1>
                         <p className="text-sm text-muted-foreground">
-                            Perbarui kode dan nama mata pelajaran.
+                            Perbarui kode, nama, dan pengaturan guru per kelas.
                         </p>
                     </div>
                     <Button asChild variant="secondary">
@@ -100,85 +115,6 @@ export default function AdminSubjectEdit({
                     <CardContent>
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="space-y-2">
-                                <Label htmlFor="code">Kode Mapel</Label>
-                                <Input
-                                    id="code"
-                                    name="code"
-                                    value={data.code}
-                                    onChange={(event) =>
-                                        setData('code', event.target.value)
-                                    }
-                                    aria-invalid={Boolean(errors.code)}
-                                />
-                                {errors.code && (
-                                    <p className="text-sm text-destructive">
-                                        {errors.code}
-                                    </p>
-                                )}
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label>Kelas</Label>
-                                <div className="grid grid-cols-2 gap-2 rounded-lg border border-border p-3">
-                                    {classes.map((schoolClass) => (
-                                        <label
-                                            key={schoolClass.id}
-                                            className="flex cursor-pointer items-center gap-2 text-sm"
-                                        >
-                                            <Checkbox
-                                                checked={data.school_class_ids.includes(
-                                                    String(schoolClass.id),
-                                                )}
-                                                onCheckedChange={() =>
-                                                    toggleClass(
-                                                        String(schoolClass.id),
-                                                    )
-                                                }
-                                            />
-                                            {schoolClass.name}
-                                        </label>
-                                    ))}
-                                </div>
-                                {errors.school_class_ids && (
-                                    <p className="text-sm text-destructive">
-                                        {errors.school_class_ids}
-                                    </p>
-                                )}
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="teacher_id">Guru</Label>
-                                <Select
-                                    value={data.teacher_id}
-                                    onValueChange={(value) =>
-                                        setData('teacher_id', value)
-                                    }
-                                >
-                                    <SelectTrigger
-                                        className="w-full"
-                                        id="teacher_id"
-                                    >
-                                        <SelectValue placeholder="Pilih Guru" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {teachers.map((teacher) => (
-                                            <SelectItem
-                                                key={teacher.id}
-                                                value={String(teacher.id)}
-                                            >
-                                                {teacher.name} ({teacher.email})
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                {errors.teacher_id && (
-                                    <p className="text-sm text-destructive">
-                                        {errors.teacher_id}
-                                    </p>
-                                )}
-                            </div>
-
-                            <div className="space-y-2">
                                 <Label htmlFor="name">
                                     Nama Mata Pelajaran
                                 </Label>
@@ -194,6 +130,89 @@ export default function AdminSubjectEdit({
                                 {errors.name && (
                                     <p className="text-sm text-destructive">
                                         {errors.name}
+                                    </p>
+                                )}
+                            </div>
+
+                            <div className="space-y-3">
+                                <Label>Kelas & Guru per Kelas</Label>
+                                <p className="text-xs text-muted-foreground">
+                                    Centang kelas, lalu pilih guru untuk setiap
+                                    kelas. Jika tidak dipilih, guru default yang
+                                    berlaku.
+                                </p>
+                                <div className="space-y-2 rounded-lg border border-border p-3">
+                                    {classes.map((schoolClass) => {
+                                        const classIdStr = String(
+                                            schoolClass.id,
+                                        );
+                                        const isChecked =
+                                            data.school_class_ids.includes(
+                                                classIdStr,
+                                            );
+
+                                        return (
+                                            <div
+                                                key={schoolClass.id}
+                                                className="flex items-center gap-3"
+                                            >
+                                                <Checkbox
+                                                    checked={isChecked}
+                                                    onCheckedChange={() =>
+                                                        toggleClass(classIdStr)
+                                                    }
+                                                />
+                                                <span className="w-28 shrink-0 text-sm font-medium">
+                                                    {schoolClass.name}
+                                                </span>
+                                                {isChecked && (
+                                                    <Select
+                                                        value={
+                                                            data.class_teachers[
+                                                                classIdStr
+                                                            ] ?? ''
+                                                        }
+                                                        onValueChange={(
+                                                            value,
+                                                        ) =>
+                                                            setClassTeacher(
+                                                                classIdStr,
+                                                                value,
+                                                            )
+                                                        }
+                                                    >
+                                                        <SelectTrigger className="h-8 flex-1 text-xs">
+                                                            <SelectValue placeholder="Guru default" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {teachers.map(
+                                                                (
+                                                                    teacher,
+                                                                ) => (
+                                                                    <SelectItem
+                                                                        key={
+                                                                            teacher.id
+                                                                        }
+                                                                        value={String(
+                                                                            teacher.id,
+                                                                        )}
+                                                                    >
+                                                                        {
+                                                                            teacher.name
+                                                                        }
+                                                                    </SelectItem>
+                                                                ),
+                                                            )}
+                                                        </SelectContent>
+                                                    </Select>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                {errors.school_class_ids && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.school_class_ids}
                                     </p>
                                 )}
                             </div>

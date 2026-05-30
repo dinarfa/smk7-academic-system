@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
+use App\Models\SchoolClass;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,10 +23,15 @@ class AdminUserController extends Controller
     public function index(Request $request): Response
     {
         $query = User::query()
-            ->select(['id', 'name', 'email', 'role', 'created_at', 'updated_at']);
+            ->select(['id', 'name', 'email', 'role', 'school_class_id', 'created_at', 'updated_at'])
+            ->with('schoolClass:id,name');
 
         if ($request->filled('role')) {
             $query->where('role', $request->input('role'));
+        }
+
+        if ($request->filled('class_id')) {
+            $query->where('school_class_id', $request->input('class_id'));
         }
 
         if ($request->filled('search')) {
@@ -38,10 +44,17 @@ class AdminUserController extends Controller
 
         $users = $query->latest()->paginate(15)->withQueryString();
 
+        $classes = SchoolClass::query()
+            ->select(['id', 'name'])
+            ->orderBy('name')
+            ->get();
+
         return Inertia::render('admin/users/index', [
             'users' => $users,
+            'classes' => $classes,
             'filters' => [
                 'role' => $request->input('role'),
+                'class_id' => $request->input('class_id'),
                 'search' => $request->input('search'),
             ],
         ]);
@@ -52,7 +65,14 @@ class AdminUserController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('admin/users/create');
+        $classes = SchoolClass::query()
+            ->select(['id', 'name'])
+            ->orderBy('name')
+            ->get();
+
+        return Inertia::render('admin/users/create', [
+            'classes' => $classes,
+        ]);
     }
 
     /**
@@ -64,8 +84,14 @@ class AdminUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'role' => ['required', Rule::enum(UserRole::class)],
+            'school_class_id' => ['nullable', 'integer', 'exists:school_classes,id'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
+
+        // Only assign class for students
+        $validated['school_class_id'] = $validated['role'] === UserRole::Student
+            ? ($validated['school_class_id'] ?? null)
+            : null;
 
         User::create($validated);
 

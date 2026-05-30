@@ -42,10 +42,12 @@ import admin from '@/routes/admin';
 
 type Subject = {
     id: number;
-    code: string;
     name: string;
-    school_classes: { id: number; name: string }[];
-    teacher: { id: number; name: string } | null;
+    school_classes: {
+        id: number;
+        name: string;
+        teacher_id: number | null;
+    }[];
     created_at: string | null;
     updated_at: string | null;
 };
@@ -109,10 +111,8 @@ export default function AdminSubjectsIndex({
     }
 
     const { data, setData, post, processing, errors, reset } = useForm({
-        code: '',
         name: '',
         school_class_ids: [] as string[],
-        teacher_id: '',
     });
 
     const hasPrev = subjects.current_page > 1;
@@ -224,25 +224,6 @@ export default function AdminSubjectsIndex({
                         <CardContent>
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="code">Kode Mapel</Label>
-                                    <Input
-                                        id="code"
-                                        name="code"
-                                        value={data.code}
-                                        onChange={(event) =>
-                                            setData('code', event.target.value)
-                                        }
-                                        placeholder="MTK"
-                                        aria-invalid={Boolean(errors.code)}
-                                    />
-                                    {errors.code && (
-                                        <p className="text-xs text-destructive">
-                                            {errors.code}
-                                        </p>
-                                    )}
-                                </div>
-
-                                <div className="space-y-2">
                                     <Label>Kelas</Label>
                                     <div className="grid grid-cols-2 gap-2 rounded-lg border border-border p-3">
                                         {classes.map((schoolClass) => (
@@ -269,39 +250,6 @@ export default function AdminSubjectsIndex({
                                     {errors.school_class_ids && (
                                         <p className="text-xs text-destructive">
                                             {errors.school_class_ids}
-                                        </p>
-                                    )}
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="teacher_id">Guru</Label>
-                                    <Select
-                                        value={data.teacher_id}
-                                        onValueChange={(value) =>
-                                            setData('teacher_id', value)
-                                        }
-                                    >
-                                        <SelectTrigger
-                                            className="w-full"
-                                            id="teacher_id"
-                                        >
-                                            <SelectValue placeholder="Pilih Guru" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {teachers.map((teacher) => (
-                                                <SelectItem
-                                                    key={teacher.id}
-                                                    value={String(teacher.id)}
-                                                >
-                                                    {teacher.name} (
-                                                    {teacher.email})
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    {errors.teacher_id && (
-                                        <p className="text-xs text-destructive">
-                                            {errors.teacher_id}
                                         </p>
                                     )}
                                 </div>
@@ -375,9 +323,7 @@ export default function AdminSubjectsIndex({
                                                 <TableHead>
                                                     Mata Pelajaran
                                                 </TableHead>
-                                                <TableHead>Kode</TableHead>
-                                                <TableHead>Kelas</TableHead>
-                                                <TableHead>Guru</TableHead>
+                                                <TableHead>Guru & Kelas</TableHead>
                                                 <TableHead className="pr-6 text-right">
                                                     Aksi
                                                 </TableHead>
@@ -400,45 +346,94 @@ export default function AdminSubjectsIndex({
                                                             </span>
                                                         </TableCell>
                                                         <TableCell>
-                                                            <Badge variant="outline">
-                                                                {subject.code}
-                                                            </Badge>
-                                                        </TableCell>
-                                                        <TableCell>
                                                             {subject
                                                                 .school_classes
                                                                 .length > 0 ? (
-                                                                <div className="flex flex-wrap gap-1">
-                                                                    {subject.school_classes.map(
-                                                                        (c) => (
-                                                                            <Badge
-                                                                                key={
-                                                                                    c.id
-                                                                                }
-                                                                                variant="outline"
-                                                                            >
-                                                                                {
-                                                                                    c.name
-                                                                                }
-                                                                            </Badge>
-                                                                        ),
-                                                                    )}
+                                                                <div className="flex flex-col gap-1.5">
+                                                                    {(() => {
+                                                                        const grouped =
+                                                                            subject.school_classes.reduce<
+                                                                                Record<
+                                                                                    string,
+                                                                                    (typeof subject.school_classes)[number][]
+                                                                                >
+                                                                            >(
+                                                                                (
+                                                                                    acc,
+                                                                                    c,
+                                                                                ) => {
+                                                                                    const key =
+                                                                                        String(
+                                                                                            c.teacher_id ??
+                                                                                                'unassigned',
+                                                                                        );
+                                                                                    (
+                                                                                        acc[
+                                                                                            key
+                                                                                        ] ??=
+                                                                                            []
+                                                                                    ).push(
+                                                                                        c,
+                                                                                    );
+                                                                                    return acc;
+                                                                                },
+                                                                                {},
+                                                                            );
+                                                                        return Object.entries(
+                                                                            grouped,
+                                                                        ).map(
+                                                                            ([
+                                                                                teacherId,
+                                                                                classes,
+                                                                            ]) => {
+                                                                                const teacher =
+                                                                                    teachers.find(
+                                                                                        (
+                                                                                            t,
+                                                                                        ) =>
+                                                                                            String(
+                                                                                                t.id,
+                                                                                            ) ===
+                                                                                            teacherId,
+                                                                                    );
+                                                                                return (
+                                                                                    <div
+                                                                                        key={
+                                                                                            teacherId
+                                                                                        }
+                                                                                        className="flex items-start gap-2"
+                                                                                    >
+                                                                                        <span className="shrink-0 text-xs font-medium text-foreground">
+                                                                                            {teacher
+                                                                                                ? teacher.name
+                                                                                                : 'Belum ada guru'}
+                                                                                            :
+                                                                                        </span>
+                                                                                        <div className="flex flex-wrap gap-1">
+                                                                                            {classes.map(
+                                                                                                (
+                                                                                                    c,
+                                                                                                ) => (
+                                                                                                    <Badge
+                                                                                                        key={
+                                                                                                            c.id
+                                                                                                        }
+                                                                                                        variant="outline"
+                                                                                                        className="text-xs"
+                                                                                                    >
+                                                                                                        {
+                                                                                                            c.name
+                                                                                                        }
+                                                                                                    </Badge>
+                                                                                                ),
+                                                                                            )}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                );
+                                                                            },
+                                                                        );
+                                                                    })()}
                                                                 </div>
-                                                            ) : (
-                                                                <span className="text-xs text-muted-foreground">
-                                                                    -
-                                                                </span>
-                                                            )}
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            {subject.teacher ? (
-                                                                <span className="text-sm text-foreground">
-                                                                    {
-                                                                        subject
-                                                                            .teacher
-                                                                            .name
-                                                                    }
-                                                                </span>
                                                             ) : (
                                                                 <span className="text-xs text-muted-foreground">
                                                                     -
