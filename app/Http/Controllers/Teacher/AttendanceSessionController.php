@@ -37,28 +37,18 @@ class AttendanceSessionController extends Controller
             ]);
         }
 
-        // Security: for subject-type slots, verify the teacher owns this subject
-        // Pivot teacher_id (per class) takes precedence over subject.teacher_id (default)
+        // Security: for subject-type slots, verify the teacher is assigned via pivot
         if ($schedule->schedule_type === 'subject' && $schedule->subject_id !== null) {
             $pivotTeacherId = $schedule->subject->schoolClasses()
                 ->where('school_classes.id', $classId)
                 ->first()?->pivot?->teacher_id;
 
-            $teacherOwnsSubject = $pivotTeacherId
-                ? $pivotTeacherId === $teacher->id
-                : $teacher->subjects()->where('id', $schedule->subject_id)->exists();
+            $teacherOwnsSubject = $pivotTeacherId === $teacher->id;
 
             if (! $teacherOwnsSubject) {
-                $teacherSubjectIds = $teacher->subjects()
-                    ->whereHas('schoolClasses', fn ($q) => $q->where('school_classes.id', $classId))
-                    ->pluck('subjects.id')
-                    ->merge(
-                        $teacher->teachingSubjects()
-                            ->wherePivot('school_class_id', $classId)
-                            ->pluck('subjects.id'),
-                    )
-                    ->unique()
-                    ->values();
+                $teacherSubjectIds = $teacher->teachingSubjects()
+                    ->wherePivot('school_class_id', $classId)
+                    ->pluck('subjects.id');
 
                 $teacherSchedule = SubjectSchedule::query()
                     ->where('school_class_id', $classId)

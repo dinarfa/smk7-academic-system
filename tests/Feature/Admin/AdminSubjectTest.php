@@ -16,7 +16,7 @@ test('admin can create update and delete subjects', function () {
         ->post(route('admin.subjects.store'), [
             'name' => 'Mathematics',
             'school_class_ids' => [$class->id],
-            'teacher_id' => $teacher->id,
+            'class_teachers' => [$class->id => $teacher->id],
         ])
         ->assertRedirect(route('admin.subjects.index'));
 
@@ -28,14 +28,13 @@ test('admin can create update and delete subjects', function () {
         ->put(route('admin.subjects.update', $subject), [
             'name' => 'Advanced Mathematics',
             'school_class_ids' => [$newClass->id],
-            'teacher_id' => $newTeacher->id,
+            'class_teachers' => [$newClass->id => $newTeacher->id],
         ])
         ->assertRedirect(route('admin.subjects.index'));
 
     $this->assertDatabaseHas('subjects', [
         'id' => $subject->id,
         'name' => 'Advanced Mathematics',
-        'teacher_id' => $newTeacher->id,
     ]);
 
     $this->actingAs($admin)
@@ -54,7 +53,6 @@ test('subject validation rejects duplicate names', function () {
 
     $existing = Subject::query()->create([
         'name' => 'Science',
-        'teacher_id' => $teacher->id,
     ]);
     $existing->schoolClasses()->attach($class->id, ['teacher_id' => $teacher->id]);
 
@@ -62,7 +60,7 @@ test('subject validation rejects duplicate names', function () {
         ->post(route('admin.subjects.store'), [
             'name' => 'Science',
             'school_class_ids' => [$class->id],
-            'teacher_id' => $teacher->id,
+            'class_teachers' => [$class->id => $teacher->id],
         ])
         ->assertSessionHasErrors(['name']);
 });

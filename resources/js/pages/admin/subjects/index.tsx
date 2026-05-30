@@ -43,8 +43,11 @@ import admin from '@/routes/admin';
 type Subject = {
     id: number;
     name: string;
-    school_classes: { id: number; name: string }[];
-    teacher: { id: number; name: string } | null;
+    school_classes: {
+        id: number;
+        name: string;
+        teacher_id: number | null;
+    }[];
     created_at: string | null;
     updated_at: string | null;
 };
@@ -110,7 +113,6 @@ export default function AdminSubjectsIndex({
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         school_class_ids: [] as string[],
-        teacher_id: '',
     });
 
     const hasPrev = subjects.current_page > 1;
@@ -253,39 +255,6 @@ export default function AdminSubjectsIndex({
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="teacher_id">Guru</Label>
-                                    <Select
-                                        value={data.teacher_id}
-                                        onValueChange={(value) =>
-                                            setData('teacher_id', value)
-                                        }
-                                    >
-                                        <SelectTrigger
-                                            className="w-full"
-                                            id="teacher_id"
-                                        >
-                                            <SelectValue placeholder="Pilih Guru" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {teachers.map((teacher) => (
-                                                <SelectItem
-                                                    key={teacher.id}
-                                                    value={String(teacher.id)}
-                                                >
-                                                    {teacher.name} (
-                                                    {teacher.email})
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    {errors.teacher_id && (
-                                        <p className="text-xs text-destructive">
-                                            {errors.teacher_id}
-                                        </p>
-                                    )}
-                                </div>
-
-                                <div className="space-y-2">
                                     <Label htmlFor="name">
                                         Nama Mata Pelajaran
                                     </Label>
@@ -354,8 +323,7 @@ export default function AdminSubjectsIndex({
                                                 <TableHead>
                                                     Mata Pelajaran
                                                 </TableHead>
-                                                <TableHead>Kelas</TableHead>
-                                                <TableHead>Guru</TableHead>
+                                                <TableHead>Kelas & Guru</TableHead>
                                                 <TableHead className="pr-6 text-right">
                                                     Aksi
                                                 </TableHead>
@@ -381,37 +349,41 @@ export default function AdminSubjectsIndex({
                                                             {subject
                                                                 .school_classes
                                                                 .length > 0 ? (
-                                                                <div className="flex flex-wrap gap-1">
+                                                                <div className="flex flex-col gap-1">
                                                                     {subject.school_classes.map(
-                                                                        (c) => (
-                                                                            <Badge
-                                                                                key={
-                                                                                    c.id
-                                                                                }
-                                                                                variant="outline"
-                                                                            >
-                                                                                {
-                                                                                    c.name
-                                                                                }
-                                                                            </Badge>
-                                                                        ),
+                                                                        (c) => {
+                                                                            const teacher =
+                                                                                teachers.find(
+                                                                                    (
+                                                                                        t,
+                                                                                    ) =>
+                                                                                        t.id ===
+                                                                                        c.teacher_id,
+                                                                                );
+                                                                            return (
+                                                                                <div
+                                                                                    key={
+                                                                                        c.id
+                                                                                    }
+                                                                                    className="flex items-center gap-2"
+                                                                                >
+                                                                                    <Badge
+                                                                                        variant="outline"
+                                                                                    >
+                                                                                        {
+                                                                                            c.name
+                                                                                        }
+                                                                                    </Badge>
+                                                                                    <span className="text-xs text-muted-foreground">
+                                                                                        {teacher
+                                                                                            ? teacher.name
+                                                                                            : 'Belum ada guru'}
+                                                                                    </span>
+                                                                                </div>
+                                                                            );
+                                                                        },
                                                                     )}
                                                                 </div>
-                                                            ) : (
-                                                                <span className="text-xs text-muted-foreground">
-                                                                    -
-                                                                </span>
-                                                            )}
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            {subject.teacher ? (
-                                                                <span className="text-sm text-foreground">
-                                                                    {
-                                                                        subject
-                                                                            .teacher
-                                                                            .name
-                                                                    }
-                                                                </span>
                                                             ) : (
                                                                 <span className="text-xs text-muted-foreground">
                                                                     -

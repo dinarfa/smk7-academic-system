@@ -21,10 +21,8 @@ test('student can start an exam and see the question runner', function () {
     ]);
     $teacher = User::factory()->create(['role' => UserRole::Teacher]);
 
-    $subject = Subject::factory()->create([
-        'teacher_id' => $teacher->id,
-    ]);
-    $subject->schoolClasses()->attach($class->id);
+    $subject = Subject::factory()->create();
+    $subject->schoolClasses()->attach($class->id, ['teacher_id' => $teacher->id]);
 
     $exam = Exam::query()->create([
         'title' => 'Ujian Runner',

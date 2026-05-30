@@ -113,8 +113,7 @@ class AttendanceViewController extends Controller
         $homeroomClasses = $teacher->homeroomClasses()->with('students')->get();
 
         // Subject-taught classes (non-homeroom): access to students in those classes
-        $subjectClassIds = $teacher->subjects()
-            ->join('class_subjects', 'subjects.id', '=', 'class_subjects.subject_id')
+        $subjectClassIds = $teacher->teachingSubjects()
             ->pluck('class_subjects.school_class_id')
             ->filter()
             ->unique()
@@ -171,8 +170,7 @@ class AttendanceViewController extends Controller
         $homeroomClasses = $teacher->homeroomClasses()->with('students')->get();
 
         // Subject-taught classes (non-homeroom): access to students in those classes
-        $subjectClassIds = $teacher->subjects()
-            ->join('class_subjects', 'subjects.id', '=', 'class_subjects.subject_id')
+        $subjectClassIds = $teacher->teachingSubjects()
             ->pluck('class_subjects.school_class_id')
             ->filter()
             ->unique()
@@ -327,8 +325,7 @@ class AttendanceViewController extends Controller
         $homeroomClasses = $teacher->homeroomClasses()->get();
 
         // Subject-taught classes via default teacher_id
-        $subjectClassIds = $teacher->subjects()
-            ->join('class_subjects', 'subjects.id', '=', 'class_subjects.subject_id')
+        $subjectClassIds = $teacher->teachingSubjects()
             ->pluck('class_subjects.school_class_id')
             ->filter()
             ->unique()
@@ -348,7 +345,7 @@ class AttendanceViewController extends Controller
 
         $allClasses = $homeroomClasses->merge($subjectClasses);
 
-        $subjects = $teacher->subjects()
+        $subjects = $teacher->teachingSubjects()
             ->select('id', 'name')
             ->get();
 

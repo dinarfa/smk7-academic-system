@@ -60,8 +60,7 @@ class ManualAttendanceRequest extends FormRequest
                 $teacher = auth()->user();
 
                 $classIds = $teacher->homeroomClasses()->pluck('id')->toArray();
-                $subjectClassIds = $teacher->subjects()
-                    ->join('class_subjects', 'subjects.id', '=', 'class_subjects.subject_id')
+                $subjectClassIds = $teacher->teachingSubjects()
                     ->pluck('class_subjects.school_class_id')
                     ->filter()
                     ->unique()

@@ -33,11 +33,12 @@ class SubjectController extends Controller
             ->get();
 
         $query = Subject::query()
-            ->with(['teacher:id,name', 'schoolClasses:id,name'])
-            ->select(['id', 'name', 'teacher_id', 'created_at', 'updated_at']);
+            ->with(['schoolClasses:id,name'])
+            ->select(['id', 'name', 'created_at', 'updated_at']);
 
         if ($request->filled('teacher_id')) {
-            $query->where('teacher_id', $request->input('teacher_id'));
+            $teacherId = $request->input('teacher_id');
+            $query->whereHas('schoolClasses', fn ($q) => $q->where('class_subjects.teacher_id', $teacherId));
         }
 
         if ($request->filled('class_id')) {
@@ -60,12 +61,8 @@ class SubjectController extends Controller
                 'school_classes' => $subject->schoolClasses->map(fn (SchoolClass $class): array => [
                     'id' => $class->id,
                     'name' => $class->name,
-                    'teacher_id' => $class->pivot->teacher_id ?? $subject->teacher_id,
+                    'teacher_id' => $class->pivot->teacher_id,
                 ])->values(),
-                'teacher' => $subject->teacher ? [
-                    'id' => $subject->teacher->id,
-                    'name' => $subject->teacher->name,
-                ] : null,
                 'created_at' => $subject->created_at?->toIso8601String(),
                 'updated_at' => $subject->updated_at?->toIso8601String(),
             ]);
@@ -105,9 +102,8 @@ class SubjectController extends Controller
                 'id' => $subject->id,
                 'name' => $subject->name,
                 'school_class_ids' => $subject->schoolClasses->pluck('id')->toArray(),
-                'teacher_id' => $subject->teacher_id,
                 'class_teachers' => $subject->schoolClasses->mapWithKeys(fn (SchoolClass $class): array => [
-                    $class->id => $class->pivot->teacher_id ?? $subject->teacher_id,
+                    $class->id => $class->pivot->teacher_id,
                 ])->toArray(),
             ],
         ]);
@@ -119,21 +115,23 @@ class SubjectController extends Controller
     public function store(StoreSubjectRequest $request): RedirectResponse
     {
         $validated = $request->validated();
-        $classIds = $validated['school_class_ids'];
+        $classIds = $validated['school_class_ids'] ?? [];
         $classTeachers = $validated['class_teachers'] ?? [];
-        unset($validated['school_class_ids'], $validated['class_teachers']);
+        unset($validated['school_class_ids'], $validated['class_teachers'], $validated['teacher_id']);
 
         $subject = Subject::query()->create($validated);
 
         // Attach classes with per-class teacher_id on pivot
-        $attachData = [];
-        foreach ($classIds as $classId) {
-            $pivotTeacherId = $classTeachers[$classId] ?? null;
-            $attachData[$classId] = [
-                'teacher_id' => $pivotTeacherId ?: $subject->teacher_id,
-            ];
+        if (! empty($classIds)) {
+            $attachData = [];
+            foreach ($classIds as $classId) {
+                $pivotTeacherId = $classTeachers[$classId] ?? null;
+                if ($pivotTeacherId) {
+                    $attachData[$classId] = ['teacher_id' => $pivotTeacherId];
+                }
+            }
+            $subject->schoolClasses()->attach($attachData);
         }
-        $subject->schoolClasses()->attach($attachData);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Subject created successfully.')]);
 
@@ -148,19 +146,20 @@ class SubjectController extends Controller
         $validated = $request->validated();
         $classIds = $validated['school_class_ids'] ?? null;
         $classTeachers = $validated['class_teachers'] ?? [];
-        unset($validated['school_class_ids'], $validated['class_teachers']);
+        unset($validated['school_class_ids'], $validated['class_teachers'], $validated['teacher_id']);
 
         $subject->update($validated);
 
         if ($classIds !== null) {
             // Sync with per-class teacher_id on pivot
-            // Fallback to subject's default teacher_id if not specified
             $syncData = [];
             foreach ($classIds as $classId) {
                 $pivotTeacherId = $classTeachers[$classId] ?? null;
-                $syncData[$classId] = [
-                    'teacher_id' => $pivotTeacherId ?: $subject->teacher_id,
-                ];
+                if ($pivotTeacherId) {
+                    $syncData[$classId] = ['teacher_id' => $pivotTeacherId];
+                } else {
+                    $syncData[$classId] = ['teacher_id' => null];
+                }
             }
             $subject->schoolClasses()->sync($syncData);
         }

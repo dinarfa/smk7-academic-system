@@ -23,7 +23,6 @@ type Subject = {
     id: number;
     name: string;
     school_class_ids: number[];
-    teacher_id: number | null;
     class_teachers: Record<number, number | null>;
 };
 
@@ -52,7 +51,6 @@ export default function AdminSubjectEdit({
     const { data, setData, put, processing, errors } = useForm({
         name: subject.name,
         school_class_ids: subject.school_class_ids.map(String),
-        teacher_id: subject.teacher_id ? String(subject.teacher_id) : '',
         class_teachers: Object.fromEntries(
             Object.entries(subject.class_teachers).map(([classId, teacherId]) => [
                 classId,
@@ -132,40 +130,6 @@ export default function AdminSubjectEdit({
                                 {errors.name && (
                                     <p className="text-sm text-destructive">
                                         {errors.name}
-                                    </p>
-                                )}
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="teacher_id">
-                                    Guru Default
-                                </Label>
-                                <Select
-                                    value={data.teacher_id}
-                                    onValueChange={(value) =>
-                                        setData('teacher_id', value)
-                                    }
-                                >
-                                    <SelectTrigger
-                                        className="w-full"
-                                        id="teacher_id"
-                                    >
-                                        <SelectValue placeholder="Pilih Guru Default" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {teachers.map((teacher) => (
-                                            <SelectItem
-                                                key={teacher.id}
-                                                value={String(teacher.id)}
-                                            >
-                                                {teacher.name} ({teacher.email})
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                {errors.teacher_id && (
-                                    <p className="text-sm text-destructive">
-                                        {errors.teacher_id}
                                     </p>
                                 )}
                             </div>

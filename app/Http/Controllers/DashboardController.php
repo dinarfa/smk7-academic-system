@@ -83,8 +83,8 @@ class DashboardController extends Controller
 
             $homeroomClassIds = $user->homeroomClasses()->pluck('school_classes.id');
 
-            $subjects = $user->subjects()
-                ->select('id', 'name', 'code')
+            $subjects = $user->teachingSubjects()
+                ->select('id', 'name')
                 ->orderBy('name')
                 ->get();
 

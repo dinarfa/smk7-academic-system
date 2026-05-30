@@ -21,7 +21,7 @@ class SubjectController extends Controller
         $subjects = Subject::query()
             ->select(['id', 'name'])
             ->with(['schoolClasses:id,name'])
-            ->where('teacher_id', $teacherId)
+            ->whereHas('schoolClasses', fn ($q) => $q->where('class_subjects.teacher_id', $teacherId))
             ->orderBy('name')
             ->get();
 
