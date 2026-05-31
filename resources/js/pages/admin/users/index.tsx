@@ -158,10 +158,7 @@ export default function AdminUsersIndex({ users, classes, filters }: Props) {
                             <SelectContent>
                                 <SelectItem value="all">Semua Kelas</SelectItem>
                                 {classes.map((c) => (
-                                    <SelectItem
-                                        key={c.id}
-                                        value={String(c.id)}
-                                    >
+                                    <SelectItem key={c.id} value={String(c.id)}>
                                         {c.name}
                                     </SelectItem>
                                 ))}
@@ -279,8 +276,11 @@ export default function AdminUsersIndex({ users, classes, filters }: Props) {
                                                     {user.role === 'student' &&
                                                     user.school_class ? (
                                                         <span className="font-medium text-foreground">
-                                                            {user.school_class
-                                                                .name}
+                                                            {
+                                                                user
+                                                                    .school_class
+                                                                    .name
+                                                            }
                                                         </span>
                                                     ) : (
                                                         <span className="text-muted-foreground">

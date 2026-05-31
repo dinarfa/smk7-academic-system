@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Student;
 
+use App\Models\AttendanceRecord;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -28,7 +29,7 @@ class StoreExcuseRequest extends FormRequest
             'reason' => ['required', 'string', 'max:500'],
             'excused_date' => ['required', 'date', 'before_or_equal:today'],
             'attendance_record_id' => ['nullable', 'integer', function (string $attribute, mixed $value, \Closure $fail): void {
-                $record = \App\Models\AttendanceRecord::find($value);
+                $record = AttendanceRecord::find($value);
                 if (! $record || $record->student_id !== auth()->id()) {
                     $fail('Data absensi tidak ditemukan atau bukan milik Anda.');
                 }

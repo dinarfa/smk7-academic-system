@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreSubjectRequest;
 use App\Http\Requests\Admin\UpdateSubjectRequest;
+use App\Models\Department;
 use App\Models\SchoolClass;
 use App\Models\Subject;
 use App\Models\User;
@@ -32,9 +33,14 @@ class SubjectController extends Controller
             ->orderBy('name')
             ->get();
 
+        $departments = Department::query()
+            ->select(['id', 'name', 'code'])
+            ->orderBy('name')
+            ->get();
+
         $query = Subject::query()
-            ->with(['schoolClasses:id,name'])
-            ->select(['id', 'name', 'created_at', 'updated_at']);
+            ->with(['schoolClasses:id,name', 'department:id,name,code'])
+            ->select(['id', 'name', 'department_id', 'created_at', 'updated_at']);
 
         if ($request->filled('teacher_id')) {
             $teacherId = $request->input('teacher_id');
@@ -58,6 +64,11 @@ class SubjectController extends Controller
             ->through(fn (Subject $subject): array => [
                 'id' => $subject->id,
                 'name' => $subject->name,
+                'department' => $subject->department ? [
+                    'id' => $subject->department->id,
+                    'name' => $subject->department->name,
+                    'code' => $subject->department->code,
+                ] : null,
                 'school_classes' => $subject->schoolClasses->map(fn (SchoolClass $class): array => [
                     'id' => $class->id,
                     'name' => $class->name,
@@ -70,6 +81,11 @@ class SubjectController extends Controller
         return Inertia::render('admin/subjects/index', [
             'classes' => $classes,
             'teachers' => $teachers,
+            'departments' => $departments->map(fn (Department $dept): array => [
+                'id' => $dept->id,
+                'name' => $dept->name,
+                'code' => $dept->code,
+            ])->values(),
             'subjects' => $subjects,
             'filters' => [
                 'teacher_id' => $request->input('teacher_id'),
@@ -95,12 +111,23 @@ class SubjectController extends Controller
             ->orderBy('name')
             ->get();
 
+        $departments = Department::query()
+            ->select(['id', 'name', 'code'])
+            ->orderBy('name')
+            ->get();
+
         return Inertia::render('admin/subjects/edit', [
             'classes' => $classes,
             'teachers' => $teachers,
+            'departments' => $departments->map(fn (Department $dept): array => [
+                'id' => $dept->id,
+                'name' => $dept->name,
+                'code' => $dept->code,
+            ])->values(),
             'subject' => [
                 'id' => $subject->id,
                 'name' => $subject->name,
+                'department_id' => $subject->department_id,
                 'school_class_ids' => $subject->schoolClasses->pluck('id')->toArray(),
                 'class_teachers' => $subject->schoolClasses->mapWithKeys(fn (SchoolClass $class): array => [
                     $class->id => $class->pivot->teacher_id,

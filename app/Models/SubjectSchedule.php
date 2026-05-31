@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Enums\AttendanceQrType;
-use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

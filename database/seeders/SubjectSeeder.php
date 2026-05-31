@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Department;
 use App\Models\SchoolClass;
 use App\Models\Subject;
 use App\Models\User;
@@ -12,22 +13,27 @@ class SubjectSeeder extends Seeder
     /**
      * Seed subjects and attach them to classes with teachers on pivot.
      *
-     * 10 subjects, each → 3 classes via round-robin.
-     * Teacher assigned per class via pivot table.
+     * - General subjects (department_id = null): diajarkan di semua kelas
+     * - Department-specific subjects: hanya untuk jurusan tertentu
      */
     public function run(): void
     {
-        $subjectNames = [
+        // Mapel umum (berlaku untuk semua jurusan)
+        $generalSubjects = [
             'Matematika',
             'Bahasa Indonesia',
             'Bahasa Inggris',
-            'Fisika',
-            'Kimia',
-            'Biologi',
-            'Ekonomi',
-            'Sejarah',
             'Pendidikan Agama',
             'PJOK',
+            'Sejarah',
+        ];
+
+        // Mapel jurusan
+        $departmentSubjects = [
+            'TKJ' => ['Jaringan Dasar', 'Administrasi Server', 'Teknik Digital'],
+            'RPL' => ['Pemrograman Web', 'Basis Data', 'Pemrograman Berorientasi Objek'],
+            'AKL' => ['Akuntansi Dasar', 'Komputer Akuntansi', 'Ekonomi Bisnis'],
+            'MM' => ['Desain Grafis', 'Animasi 2D', 'Produksi Multimedia'],
         ];
 
         $classes = SchoolClass::query()->orderBy('id')->get();
@@ -40,23 +46,19 @@ class SubjectSeeder extends Seeder
         }
 
         $classIds = $classes->pluck('id')->toArray();
-        $classesPerSubject = 3;
         $pairIndex = 0;
+        $subjectCount = 0;
 
-        foreach ($subjectNames as $index => $subjectName) {
+        // Seed mapel umum → semua kelas
+        foreach ($generalSubjects as $index => $subjectName) {
             $subject = Subject::firstOrCreate(
                 ['name' => $subjectName],
+                ['department_id' => null],
             );
 
-            $assignedClasses = [];
-            for ($j = 0; $j < $classesPerSubject; $j++) {
-                $assignedClasses[] = $classIds[$pairIndex % count($classIds)];
-                $pairIndex++;
-            }
-
-            // Sync only if not already attached (with teacher_id on pivot)
+            // Attach ke semua kelas
             $existingIds = $subject->schoolClasses()->pluck('school_classes.id')->toArray();
-            $newIds = array_diff($assignedClasses, $existingIds);
+            $newIds = array_diff($classIds, $existingIds);
             if (! empty($newIds)) {
                 $teacherId = $teachers[$index % $teachers->count()]->id;
                 $attachData = [];
@@ -65,8 +67,41 @@ class SubjectSeeder extends Seeder
                 }
                 $subject->schoolClasses()->attach($attachData);
             }
+
+            $subjectCount++;
         }
 
-        $this->command?->info('Seeded '.count($subjectNames).' subjects across '.$classes->count().' classes.');
+        // Seed mapel jurusan → hanya kelas jurusan terkait
+        foreach ($departmentSubjects as $deptCode => $subjects) {
+            $department = Department::where('code', $deptCode)->first();
+            if (! $department) {
+                continue;
+            }
+
+            $deptClassIds = $classes->where('department_id', $department->id)->pluck('id')->toArray();
+
+            foreach ($subjects as $subjectName) {
+                $subject = Subject::firstOrCreate(
+                    ['name' => $subjectName],
+                    ['department_id' => $department->id],
+                );
+
+                $existingIds = $subject->schoolClasses()->pluck('school_classes.id')->toArray();
+                $newIds = array_diff($deptClassIds, $existingIds);
+                if (! empty($newIds)) {
+                    $teacherId = $teachers[$pairIndex % $teachers->count()]->id;
+                    $attachData = [];
+                    foreach ($newIds as $classId) {
+                        $attachData[$classId] = ['teacher_id' => $teacherId];
+                    }
+                    $subject->schoolClasses()->attach($attachData);
+                }
+
+                $pairIndex++;
+                $subjectCount++;
+            }
+        }
+
+        $this->command?->info("Seeded {$subjectCount} subjects (".count($generalSubjects).' umum + '.array_sum(array_map('count', $departmentSubjects))." jurusan) across {$classes->count()} classes.");
     }
 }

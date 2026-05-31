@@ -445,7 +445,7 @@ test('teacher cannot open attendance session using foreign subject class mapping
 
     $this->actingAs($teacher)
         ->post(route('teacher.attendance-sessions.store'), [
-            'subject_key' => $foreignSubject->id . '::Biologi',
+            'subject_key' => $foreignSubject->id.'::Biologi',
             'class_id' => $class->id,
         ])
         ->assertSessionHasErrors(['subject_key', 'class_id']);

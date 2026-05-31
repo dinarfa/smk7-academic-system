@@ -51,6 +51,7 @@ class OpenAttendanceSessionRequest extends FormRequest
 
                         if (! $subject) {
                             $fail('Mata pelajaran tidak ditemukan.');
+
                             return;
                         }
 

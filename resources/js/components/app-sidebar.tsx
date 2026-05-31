@@ -2,6 +2,7 @@ import { Link, usePage } from '@inertiajs/react';
 import {
     BookOpenCheck,
     CalendarDays,
+    Layers,
     LayoutGrid,
     QrCode,
     School,
@@ -121,6 +122,11 @@ export function AppSidebar() {
                         title: 'Kelola Kelas',
                         href: admin.classes.index.url(),
                         icon: School,
+                    },
+                    {
+                        title: 'Kelola Jurusan',
+                        href: admin.departments.index.url(),
+                        icon: Layers,
                     },
                     {
                         title: 'Kelola Mapel',

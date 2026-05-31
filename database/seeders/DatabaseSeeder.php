@@ -20,8 +20,9 @@ class DatabaseSeeder extends Seeder
             'role' => UserRole::Admin,
         ]);
 
-        // Seed classes, teachers, subjects, and 120+ students
+        // Seed departments, classes, teachers, subjects, and 120+ students
         $this->call([
+            DepartmentSeeder::class,
             StudentClassSeeder::class,
         ]);
     }

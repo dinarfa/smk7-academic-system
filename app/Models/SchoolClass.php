@@ -9,10 +9,18 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['homeroom_teacher_id', 'name', 'code', 'academic_year'])]
+#[Fillable(['homeroom_teacher_id', 'department_id', 'name', 'grade_level', 'section', 'code', 'academic_year'])]
 class SchoolClass extends Model
 {
     use HasFactory;
+
+    /**
+     * Department/program this class belongs to.
+     */
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
+    }
 
     /**
      * Teacher assigned as the homeroom teacher.

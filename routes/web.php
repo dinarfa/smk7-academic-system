@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminAuditLogController;
 use App\Http\Controllers\Admin\AdminReportController;
 use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Admin\DepartmentController as AdminDepartmentController;
 use App\Http\Controllers\Admin\SchoolClassController as AdminSchoolClassController;
 use App\Http\Controllers\Admin\SubjectController as AdminSubjectController;
 use App\Http\Controllers\Admin\SubjectScheduleController as AdminSubjectScheduleController;
@@ -30,6 +31,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
+
+        // Departments (jurusan)
+        Route::get('departments', [AdminDepartmentController::class, 'index'])->name('departments.index');
+        Route::post('departments', [AdminDepartmentController::class, 'store'])->name('departments.store');
+        Route::put('departments/{department}', [AdminDepartmentController::class, 'update'])->name('departments.update');
+        Route::delete('departments/{department}', [AdminDepartmentController::class, 'destroy'])->name('departments.destroy');
 
         // Class generation
         Route::get('classes', [AdminSchoolClassController::class, 'index'])->name('classes.index');
@@ -59,15 +66,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('users', [AdminUserController::class, 'index'])->name('users.index');
         Route::get('users/create', [AdminUserController::class, 'create'])->name('users.create');
         Route::post('users', [AdminUserController::class, 'store'])->name('users.store');
-            Route::get('users/{user}', [AdminUserController::class, 'show'])
-                ->whereNumber('user')
-                ->name('users.show');
-            Route::get('users/{user}/reset-password', [AdminUserController::class, 'showResetForm'])
-                ->whereNumber('user')
-                ->name('users.reset-password');
-            Route::post('users/{user}/reset-password', [AdminUserController::class, 'resetPassword'])
-                ->whereNumber('user')
-                ->name('users.reset-password.store');
+        Route::get('users/{user}', [AdminUserController::class, 'show'])
+            ->whereNumber('user')
+            ->name('users.show');
+        Route::get('users/{user}/reset-password', [AdminUserController::class, 'showResetForm'])
+            ->whereNumber('user')
+            ->name('users.reset-password');
+        Route::post('users/{user}/reset-password', [AdminUserController::class, 'resetPassword'])
+            ->whereNumber('user')
+            ->name('users.reset-password.store');
 
         // Subject schedules (timetable)
         Route::get('schedules', [AdminSubjectScheduleController::class, 'index'])->name('schedules.index');

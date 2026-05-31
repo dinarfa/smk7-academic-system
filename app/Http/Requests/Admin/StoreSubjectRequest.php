@@ -18,6 +18,16 @@ class StoreSubjectRequest extends FormRequest
     }
 
     /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        if ($this->department_id === '0' || $this->department_id === 0) {
+            $this->merge(['department_id' => null]);
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, ValidationRule|array<mixed>|string>
@@ -26,6 +36,7 @@ class StoreSubjectRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255', Rule::unique('subjects', 'name')],
+            'department_id' => ['nullable', 'integer', Rule::exists('departments', 'id')],
             'school_class_ids' => ['sometimes', 'array', 'min:1'],
             'school_class_ids.*' => ['integer', Rule::exists('school_classes', 'id')],
             'class_teachers' => ['sometimes', 'array'],

@@ -263,8 +263,10 @@ export default function ManualAttendance({
                                         </>
                                     )}
                                     {' · '}
-                                    {current_schedule.starts_at.slice(0, 5)} -{' '}
-                                    {current_schedule.ends_at.slice(0, 5)}
+                                    {current_schedule.starts_at.slice(
+                                        0,
+                                        5,
+                                    )} - {current_schedule.ends_at.slice(0, 5)}
                                 </>
                             )}
                         </p>
@@ -465,7 +467,8 @@ export default function ManualAttendance({
                                     const currentStatus = statuses.get(
                                         student.id,
                                     );
-                                    const existing = existingRecords[student.id];
+                                    const existing =
+                                        existingRecords[student.id];
 
                                     return (
                                         <div
@@ -575,8 +578,7 @@ export default function ManualAttendance({
                                     variant="outline"
                                     className="gap-1 text-amber-600"
                                 >
-                                    <Clock className="h-3 w-3" />{' '}
-                                    {summary.late}
+                                    <Clock className="h-3 w-3" /> {summary.late}
                                 </Badge>
                                 <Badge
                                     variant="outline"
@@ -621,8 +623,7 @@ export default function ManualAttendance({
                                     {
                                         subjectClasses.find(
                                             (c) =>
-                                                c.id ===
-                                                Number(selectedClass),
+                                                c.id === Number(selectedClass),
                                         )?.name
                                     }
                                 </p>

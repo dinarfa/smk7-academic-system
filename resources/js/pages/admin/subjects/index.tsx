@@ -43,6 +43,11 @@ import admin from '@/routes/admin';
 type Subject = {
     id: number;
     name: string;
+    department: {
+        id: number;
+        name: string;
+        code: string;
+    } | null;
     school_classes: {
         id: number;
         name: string;
@@ -63,9 +68,16 @@ type Teacher = {
     email: string;
 };
 
+type Department = {
+    id: number;
+    name: string;
+    code: string;
+};
+
 type Props = {
     classes: SchoolClass[];
     teachers: Teacher[];
+    departments: Department[];
     subjects: {
         data: Subject[];
         current_page: number;
@@ -83,6 +95,7 @@ type Props = {
 export default function AdminSubjectsIndex({
     classes,
     teachers,
+    departments,
     subjects,
     filters,
 }: Props) {
@@ -112,6 +125,7 @@ export default function AdminSubjectsIndex({
 
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
+        department_id: '',
         school_class_ids: [] as string[],
     });
 
@@ -275,6 +289,46 @@ export default function AdminSubjectsIndex({
                                     )}
                                 </div>
 
+                                <div className="space-y-2">
+                                    <Label htmlFor="department_id">
+                                        Jurusan{' '}
+                                        <span className="text-muted-foreground">
+                                            (opsional)
+                                        </span>
+                                    </Label>
+                                    <Select
+                                        value={data.department_id}
+                                        onValueChange={(value) =>
+                                            setData('department_id', value)
+                                        }
+                                    >
+                                        <SelectTrigger
+                                            className="w-full"
+                                            id="department_id"
+                                        >
+                                            <SelectValue placeholder="Umum (semua jurusan)" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="0">
+                                                Umum (semua jurusan)
+                                            </SelectItem>
+                                            {departments.map((dept) => (
+                                                <SelectItem
+                                                    key={dept.id}
+                                                    value={String(dept.id)}
+                                                >
+                                                    {dept.code} - {dept.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    {errors.department_id && (
+                                        <p className="text-xs text-destructive">
+                                            {errors.department_id}
+                                        </p>
+                                    )}
+                                </div>
+
                                 <Button
                                     type="submit"
                                     disabled={processing}
@@ -323,7 +377,9 @@ export default function AdminSubjectsIndex({
                                                 <TableHead>
                                                     Mata Pelajaran
                                                 </TableHead>
-                                                <TableHead>Guru & Kelas</TableHead>
+                                                <TableHead>
+                                                    Guru & Kelas
+                                                </TableHead>
                                                 <TableHead className="pr-6 text-right">
                                                     Aksi
                                                 </TableHead>
@@ -344,6 +400,15 @@ export default function AdminSubjectsIndex({
                                                             <span className="font-medium text-foreground">
                                                                 {subject.name}
                                                             </span>
+                                                            {subject.department && (
+                                                                <span className="ml-2 inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                                                                    {
+                                                                        subject
+                                                                            .department
+                                                                            .code
+                                                                    }
+                                                                </span>
+                                                            )}
                                                         </TableCell>
                                                         <TableCell>
                                                             {subject
@@ -367,12 +432,10 @@ export default function AdminSubjectsIndex({
                                                                                             c.teacher_id ??
                                                                                                 'unassigned',
                                                                                         );
-                                                                                    (
-                                                                                        acc[
-                                                                                            key
-                                                                                        ] ??=
-                                                                                            []
-                                                                                    ).push(
+                                                                                    (acc[
+                                                                                        key
+                                                                                    ] ??=
+                                                                                        []).push(
                                                                                         c,
                                                                                     );
                                                                                     return acc;
@@ -407,6 +470,7 @@ export default function AdminSubjectsIndex({
                                                                                             {teacher
                                                                                                 ? teacher.name
                                                                                                 : 'Belum ada guru'}
+
                                                                                             :
                                                                                         </span>
                                                                                         <div className="flex flex-wrap gap-1">

@@ -123,10 +123,7 @@ export default function AdminUsersCreate({ classes }: Props) {
                                                 value as FormData['role'],
                                             );
                                             if (value !== 'student') {
-                                                setData(
-                                                    'school_class_id',
-                                                    '',
-                                                );
+                                                setData('school_class_id', '');
                                             }
                                         }}
                                     >
