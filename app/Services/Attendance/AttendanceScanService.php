@@ -14,6 +14,7 @@ class AttendanceScanService
 {
     /** @var array<int, AttendanceQrType> */
     private array $phaseCache = [];
+
     /**
      * Resolve a QR token from a raw scanned payload.
      */

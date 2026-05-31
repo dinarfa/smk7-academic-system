@@ -284,11 +284,11 @@ export default function AdminAuditLogsIndex({
                                                         <Badge variant="outline">
                                                             {log.action
                                                                 ? log.action
-                                                                    .replace(
-                                                                        /_/g,
-                                                                        ' ',
-                                                                    )
-                                                                    .toUpperCase()
+                                                                      .replace(
+                                                                          /_/g,
+                                                                          ' ',
+                                                                      )
+                                                                      .toUpperCase()
                                                                 : '-'}
                                                         </Badge>
                                                     </td>

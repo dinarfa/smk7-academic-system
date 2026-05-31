@@ -30,7 +30,9 @@ class UpdateSchoolClassRequest extends FormRequest
 
         return [
             'homeroom_teacher_id' => ['required', 'integer', Rule::exists('users', 'id')->where('role', UserRole::Teacher->value)],
-            'name' => ['required', 'string', 'max:255'],
+            'department_id' => ['required', 'integer', Rule::exists('departments', 'id')],
+            'grade_level' => ['required', 'string', 'max:10'],
+            'section' => ['required', 'integer', 'min:1'],
             'code' => ['nullable', 'string', 'max:50', Rule::unique('school_classes', 'code')->ignore($schoolClass->id)],
             'academic_year' => ['nullable', 'string', 'max:20'],
         ];

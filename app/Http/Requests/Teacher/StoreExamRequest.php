@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Teacher;
 
+use App\Models\Subject;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -37,7 +38,7 @@ class StoreExamRequest extends FormRequest
                 'integer',
                 function (string $attribute, mixed $value, \Closure $fail) use ($teacherId): void {
                     $subjectId = $this->input('subject_id');
-                    $exists = \App\Models\Subject::query()
+                    $exists = Subject::query()
                         ->where('id', $subjectId)
                         ->whereHas('schoolClasses', fn ($q) => $q
                             ->where('school_classes.id', (int) $value)

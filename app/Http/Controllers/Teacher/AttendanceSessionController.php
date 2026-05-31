@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Teacher;
 
-use App\Enums\AttendanceQrType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ManualAttendanceRequest;
 use App\Http\Requests\Teacher\OpenAttendanceSessionRequest;

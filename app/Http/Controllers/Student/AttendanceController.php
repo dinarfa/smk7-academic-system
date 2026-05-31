@@ -47,7 +47,7 @@ class AttendanceController extends Controller
 
         $stats = AttendanceRecord::query()
             ->where('student_id', $student->id)
-            ->selectRaw("count(*) as total")
+            ->selectRaw('count(*) as total')
             ->selectRaw("sum(case when status = 'present' then 1 else 0 end) as present")
             ->selectRaw("sum(case when status = 'late' then 1 else 0 end) as late")
             ->selectRaw("sum(case when status in ('absent', 'bolos') then 1 else 0 end) as absent")

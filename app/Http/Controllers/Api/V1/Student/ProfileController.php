@@ -40,7 +40,7 @@ class ProfileController extends Controller
     {
         $request->validate([
             'name' => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|required|email|unique:users,email,' . auth()->id(),
+            'email' => 'sometimes|required|email|unique:users,email,'.auth()->id(),
         ]);
 
         $user = $request->user();

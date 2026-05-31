@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\SchoolClass;
+use App\Models\User;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\DB;
@@ -67,7 +68,7 @@ class ManualAttendanceRequest extends FormRequest
                     ->where(function ($q) use ($teacher): void {
                         $q->where('homeroom_teacher_id', $teacher->id)
                             ->orWhereExists(function ($sub) use ($teacher): void {
-                                $sub->select(\Illuminate\Support\Facades\DB::raw(1))
+                                $sub->select(DB::raw(1))
                                     ->from('class_subjects')
                                     ->whereColumn('class_subjects.school_class_id', 'school_classes.id')
                                     ->where('class_subjects.teacher_id', $teacher->id);
@@ -93,7 +94,7 @@ class ManualAttendanceRequest extends FormRequest
                     return;
                 }
 
-                $studentsInClass = \App\Models\User::query()
+                $studentsInClass = User::query()
                     ->whereIn('id', $studentIds)
                     ->where('school_class_id', $classId)
                     ->pluck('id')

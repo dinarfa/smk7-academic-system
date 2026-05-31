@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Department;
 use App\Models\SchoolClass;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -20,31 +21,40 @@ class StudentClassSeeder extends Seeder
                 'email' => "guru{$i}@example.com",
             ]));
 
-        // 10 classes, each with homeroom teacher + subjects
-        $classNames = [
-            'X IPA 1',
-            'X IPA 2',
-            'X IPS 1',
-            'XI IPA 1',
-            'XI IPA 2',
-            'XI IPS 1',
-            'XII IPA 1',
-            'XII IPA 2',
-            'XII IPS 1',
-            'XII IPS 2',
+        // Load departments (must be seeded by DepartmentSeeder first)
+        $tkj = Department::where('code', 'TKJ')->firstOrFail();
+        $rpl = Department::where('code', 'RPL')->firstOrFail();
+        $akl = Department::where('code', 'AKL')->firstOrFail();
+        $mm = Department::where('code', 'MM')->firstOrFail();
+
+        // 10 classes: grade_level + department + section
+        $classDefinitions = [
+            ['grade_level' => 'X',  'department' => $tkj, 'section' => 1],
+            ['grade_level' => 'X',  'department' => $rpl, 'section' => 1],
+            ['grade_level' => 'X',  'department' => $akl, 'section' => 1],
+            ['grade_level' => 'XI', 'department' => $tkj, 'section' => 1],
+            ['grade_level' => 'XI', 'department' => $rpl, 'section' => 1],
+            ['grade_level' => 'XI', 'department' => $mm,  'section' => 1],
+            ['grade_level' => 'XII','department' => $tkj, 'section' => 1],
+            ['grade_level' => 'XII','department' => $rpl, 'section' => 1],
+            ['grade_level' => 'XII','department' => $akl, 'section' => 1],
+            ['grade_level' => 'XII','department' => $mm,  'section' => 1],
         ];
 
-        $classes = collect($classNames)->map(function (string $name, int $i) use ($teachers) {
-            $class = SchoolClass::firstOrCreate(
+        $classes = collect($classDefinitions)->map(function (array $def, int $i) use ($teachers) {
+            $name = "{$def['grade_level']} {$def['department']->code} {$def['section']}";
+
+            return SchoolClass::firstOrCreate(
                 ['name' => $name],
                 [
                     'code' => str_replace(' ', '-', $name),
                     'homeroom_teacher_id' => $teachers[$i]->id,
+                    'department_id' => $def['department']->id,
+                    'grade_level' => $def['grade_level'],
+                    'section' => $def['section'],
                     'academic_year' => '2025/2026',
                 ],
             );
-
-            return $class;
         });
 
         $this->call(SubjectSeeder::class);

@@ -22,6 +22,7 @@ import admin from '@/routes/admin';
 type Subject = {
     id: number;
     name: string;
+    department_id: number | null;
     school_class_ids: number[];
     class_teachers: Record<number, number | null>;
 };
@@ -37,25 +38,38 @@ type Teacher = {
     email: string;
 };
 
+type Department = {
+    id: number;
+    name: string;
+    code: string;
+};
+
 type Props = {
     subject: Subject;
     classes: SchoolClass[];
     teachers: Teacher[];
+    departments: Department[];
 };
 
 export default function AdminSubjectEdit({
     subject,
     classes,
     teachers,
+    departments,
 }: Props) {
     const { data, setData, put, processing, errors } = useForm({
         name: subject.name,
+        department_id: subject.department_id
+            ? String(subject.department_id)
+            : '',
         school_class_ids: subject.school_class_ids.map(String),
         class_teachers: Object.fromEntries(
-            Object.entries(subject.class_teachers).map(([classId, teacherId]) => [
-                classId,
-                teacherId ? String(teacherId) : '',
-            ]),
+            Object.entries(subject.class_teachers).map(
+                ([classId, teacherId]) => [
+                    classId,
+                    teacherId ? String(teacherId) : '',
+                ],
+            ),
         ),
     });
 
@@ -134,6 +148,46 @@ export default function AdminSubjectEdit({
                                 )}
                             </div>
 
+                            <div className="space-y-2">
+                                <Label htmlFor="department_id">
+                                    Jurusan{' '}
+                                    <span className="text-muted-foreground">
+                                        (opsional)
+                                    </span>
+                                </Label>
+                                <Select
+                                    value={data.department_id}
+                                    onValueChange={(value) =>
+                                        setData('department_id', value)
+                                    }
+                                >
+                                    <SelectTrigger
+                                        className="w-full"
+                                        id="department_id"
+                                    >
+                                        <SelectValue placeholder="Umum (semua jurusan)" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="0">
+                                            Umum (semua jurusan)
+                                        </SelectItem>
+                                        {departments.map((dept) => (
+                                            <SelectItem
+                                                key={dept.id}
+                                                value={String(dept.id)}
+                                            >
+                                                {dept.code} - {dept.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                {errors.department_id && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.department_id}
+                                    </p>
+                                )}
+                            </div>
+
                             <div className="space-y-3">
                                 <Label>Kelas & Guru per Kelas</Label>
                                 <p className="text-xs text-muted-foreground">
@@ -186,9 +240,7 @@ export default function AdminSubjectEdit({
                                                         </SelectTrigger>
                                                         <SelectContent>
                                                             {teachers.map(
-                                                                (
-                                                                    teacher,
-                                                                ) => (
+                                                                (teacher) => (
                                                                     <SelectItem
                                                                         key={
                                                                             teacher.id

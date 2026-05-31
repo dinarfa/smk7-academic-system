@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Enums\UserRole;
+use App\Models\Department;
 use App\Models\SchoolClass;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -19,11 +20,29 @@ class SchoolClassFactory extends Factory
      */
     public function definition(): array
     {
+        $gradeLevel = fake()->randomElement(['X', 'XI', 'XII']);
+        $section = fake()->numberBetween(1, 3);
+
         return [
             'homeroom_teacher_id' => User::factory()->state(['role' => UserRole::Teacher]),
-            'name' => fake()->randomElement(['X IPA 1', 'X IPA 2', 'XI IPA 1', 'XII IPS 1']),
+            'department_id' => Department::factory(),
+            'name' => '', // overridden by afterCreating
+            'grade_level' => $gradeLevel,
+            'section' => $section,
             'code' => fake()->unique()->bothify('CL-###'),
             'academic_year' => fake()->randomElement(['2025/2026', '2026/2027']),
         ];
+    }
+
+    public function configure(): static
+    {
+        return $this->afterCreating(function (SchoolClass $schoolClass): void {
+            if (empty($schoolClass->name)) {
+                $deptCode = $schoolClass->department?->code ?? 'UMUM';
+                $schoolClass->update([
+                    'name' => "{$schoolClass->grade_level} {$deptCode} {$schoolClass->section}",
+                ]);
+            }
+        });
     }
 }

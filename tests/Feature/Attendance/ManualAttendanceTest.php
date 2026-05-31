@@ -1,9 +1,6 @@
 <?php
 
-use App\Enums\AttendanceQrType;
-use App\Models\AttendanceSession;
 use App\Models\SchoolClass;
-use App\Models\Subject;
 use App\Models\SubjectSchedule;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;

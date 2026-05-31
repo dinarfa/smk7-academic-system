@@ -8,16 +8,19 @@ use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
 use App\Models\SchoolClass;
 use App\Models\SubjectSchedule;
-use Illuminate\Support\Facades\DB;
 use App\Services\Attendance\AbsenceDetectionService;
 use App\Services\Attendance\AttendanceReportService;
 use App\Services\Attendance\DailyAttendanceViewService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
+use OpenSpout\Common\Entity\Cell\StringCell;
 use OpenSpout\Common\Entity\Row;
+use OpenSpout\Common\Entity\Style\Color;
+use OpenSpout\Common\Entity\Style\Style;
 use OpenSpout\Writer\XLSX\Writer;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
@@ -410,58 +413,58 @@ class AttendanceViewController extends Controller
             abort_if($tempPath === false, 500, 'Unable to create temporary export file.');
 
             // Styles
-            $headerStyle = new \OpenSpout\Common\Entity\Style\Style(
+            $headerStyle = new Style(
                 fontBold: true,
                 fontSize: 11,
-                fontColor: \OpenSpout\Common\Entity\Style\Color::WHITE,
+                fontColor: Color::WHITE,
                 backgroundColor: '#3B82F6',
             );
 
-            $presentStyle = new \OpenSpout\Common\Entity\Style\Style(
+            $presentStyle = new Style(
                 backgroundColor: '#DCFCE7',
                 fontColor: '#166534',
             );
 
-            $absentStyle = new \OpenSpout\Common\Entity\Style\Style(
+            $absentStyle = new Style(
                 backgroundColor: '#FEE2E2',
                 fontColor: '#991B1B',
             );
 
-            $lateStyle = new \OpenSpout\Common\Entity\Style\Style(
+            $lateStyle = new Style(
                 backgroundColor: '#FEF9C3',
                 fontColor: '#854D0E',
             );
 
-            $titleStyle = new \OpenSpout\Common\Entity\Style\Style(
+            $titleStyle = new Style(
                 fontBold: true,
                 fontSize: 14,
             );
 
-            $infoStyle = new \OpenSpout\Common\Entity\Style\Style(
+            $infoStyle = new Style(
                 fontItalic: true,
                 fontColor: '#6B7280',
             );
 
-            $summaryStyle = new \OpenSpout\Common\Entity\Style\Style(
+            $summaryStyle = new Style(
                 fontBold: true,
             );
 
             // Helper: create Row from values with optional style for all cells
-            $makeRow = function (array $values, ?\OpenSpout\Common\Entity\Style\Style $style = null): Row {
+            $makeRow = function (array $values, ?Style $style = null): Row {
                 $cells = [];
                 foreach ($values as $i => $val) {
-                    $cells[$i] = new \OpenSpout\Common\Entity\Cell\StringCell((string) $val, $style);
+                    $cells[$i] = new StringCell((string) $val, $style);
                 }
 
                 return new Row($cells);
             };
 
             // Helper: create Row with per-cell style override
-            $makeRowWithHighlight = function (array $values, int $highlightIndex, \OpenSpout\Common\Entity\Style\Style $highlightStyle): Row {
+            $makeRowWithHighlight = function (array $values, int $highlightIndex, Style $highlightStyle): Row {
                 $cells = [];
                 foreach ($values as $i => $val) {
                     $style = $i === $highlightIndex ? $highlightStyle : null;
-                    $cells[$i] = new \OpenSpout\Common\Entity\Cell\StringCell((string) $val, $style);
+                    $cells[$i] = new StringCell((string) $val, $style);
                 }
 
                 return new Row($cells);
@@ -474,8 +477,8 @@ class AttendanceViewController extends Controller
             $writer->addRow($makeRow(['Laporan Absensi'], $titleStyle));
 
             // Info rows
-            $writer->addRow($makeRow(['Periode: ' . $validated['startDate'] . ' s/d ' . $validated['endDate']], $infoStyle));
-            $writer->addRow($makeRow(['Dicetak: ' . now()->format('d/m/Y H:i')], $infoStyle));
+            $writer->addRow($makeRow(['Periode: '.$validated['startDate'].' s/d '.$validated['endDate']], $infoStyle));
+            $writer->addRow($makeRow(['Dicetak: '.now()->format('d/m/Y H:i')], $infoStyle));
             $writer->addRow($makeRow([]));
 
             // Header row
@@ -504,11 +507,11 @@ class AttendanceViewController extends Controller
 
             // Summary row
             $writer->addRow($makeRow([]));
-            $writer->addRow($makeRow(['Total', '', '', '', '', '', count($data['rows']) . ' data'], $summaryStyle));
+            $writer->addRow($makeRow(['Total', '', '', '', '', '', count($data['rows']).' data'], $summaryStyle));
 
             $writer->close();
 
-            $filename = 'absensi-' . now()->format('Y-m-d-His') . '.xlsx';
+            $filename = 'absensi-'.now()->format('Y-m-d-His').'.xlsx';
 
             return response()->download(
                 $tempPath,

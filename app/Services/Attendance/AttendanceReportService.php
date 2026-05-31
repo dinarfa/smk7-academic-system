@@ -23,6 +23,7 @@ class AttendanceReportService
 
         return $value;
     }
+
     /**
      * Build the data for the admin attendance overview.
      *
