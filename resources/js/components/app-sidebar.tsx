@@ -4,6 +4,7 @@ import {
     CalendarDays,
     Layers,
     LayoutGrid,
+    PenLine,
     QrCode,
     School,
     Users,
@@ -83,6 +84,11 @@ export function AppSidebar() {
                         title: 'QR Absensi',
                         href: teacher.attendance.qr.url(),
                         icon: QrCode,
+                    },
+                    {
+                        title: 'Absensi Manual',
+                        href: teacher.attendance.manual.page.url(),
+                        icon: PenLine,
                     },
                     {
                         title: 'Rekap Absensi',
