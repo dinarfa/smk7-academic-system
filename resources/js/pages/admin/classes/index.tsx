@@ -85,7 +85,7 @@ export default function AdminSchoolClassesIndex({
         grade_level: '',
         department_id: '',
         section: '',
-        teacher_id: '',
+        homeroom_teacher_id: '',
     });
 
     const [editingClass, setEditingClass] = useState<SchoolClass | null>(null);
@@ -280,18 +280,18 @@ export default function AdminSchoolClassesIndex({
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="teacher_id">
+                                    <Label htmlFor="homeroom_teacher_id">
                                         Wali Kelas
                                     </Label>
                                     <Select
-                                        value={data.teacher_id}
+                                        value={data.homeroom_teacher_id}
                                         onValueChange={(value) =>
-                                            setData('teacher_id', value)
+                                            setData('homeroom_teacher_id', value)
                                         }
                                     >
                                         <SelectTrigger
                                             className="w-full"
-                                            id="teacher_id"
+                                            id="homeroom_teacher_id"
                                         >
                                             <SelectValue placeholder="Pilih Guru" />
                                         </SelectTrigger>
@@ -306,9 +306,9 @@ export default function AdminSchoolClassesIndex({
                                             ))}
                                         </SelectContent>
                                     </Select>
-                                    {errors.teacher_id && (
+                                    {errors.homeroom_teacher_id && (
                                         <p className="text-xs text-destructive">
-                                            {errors.teacher_id}
+                                            {errors.homeroom_teacher_id}
                                         </p>
                                     )}
                                 </div>

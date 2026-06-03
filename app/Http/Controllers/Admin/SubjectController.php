@@ -153,9 +153,7 @@ class SubjectController extends Controller
             $attachData = [];
             foreach ($classIds as $classId) {
                 $pivotTeacherId = $classTeachers[$classId] ?? null;
-                if ($pivotTeacherId) {
-                    $attachData[$classId] = ['teacher_id' => $pivotTeacherId];
-                }
+                $attachData[$classId] = ['teacher_id' => $pivotTeacherId ?: null];
             }
             $subject->schoolClasses()->attach($attachData);
         }
