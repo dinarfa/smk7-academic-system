@@ -8,6 +8,7 @@ use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 
 class AbsenceDetectionService
 {
@@ -45,6 +46,74 @@ class AbsenceDetectionService
             'teachers' => $reports,
             'created' => $totalCreated,
         ];
+    }
+
+    /**
+     * Detect and persist missing attendance records for specific closed sessions.
+     *
+     * More efficient than detectForDate() — only processes the given sessions
+     * instead of scanning all sessions for the day.
+     *
+     * @return int Number of bolos records created
+     */
+    public function detectForSessions(Collection $sessions): int
+    {
+        if ($sessions->isEmpty()) {
+            return 0;
+        }
+
+        $teacherIds = $sessions->pluck('opened_by')->unique();
+        $sessionIds = $sessions->pluck('id');
+
+        $teachers = User::query()
+            ->whereIn('id', $teacherIds)
+            ->with(['homeroomClasses.students'])
+            ->get();
+
+        $totalCreated = 0;
+
+        foreach ($teachers as $teacher) {
+            $studentIds = $teacher->homeroomClasses
+                ->flatMap(fn ($schoolClass) => $schoolClass->students)
+                ->where('role', UserRole::Student)
+                ->unique('id')
+                ->pluck('id');
+
+            if ($studentIds->isEmpty()) {
+                continue;
+            }
+
+            $teacherSessions = $sessions->where('opened_by', $teacher->id);
+
+            $existingRecords = AttendanceRecord::query()
+                ->whereIn('attendance_session_id', $sessionIds)
+                ->whereIn('student_id', $studentIds)
+                ->get()
+                ->keyBy(fn (AttendanceRecord $record): string => $record->attendance_session_id.'-'.$record->student_id);
+
+            foreach ($teacherSessions as $session) {
+                $phase = self::PHASE_MAP[$session->type->value] ?? $session->type->value;
+
+                foreach ($studentIds as $studentId) {
+                    $key = $session->id.'-'.$studentId;
+
+                    if (! $existingRecords->has($key)) {
+                        AttendanceRecord::create([
+                            'attendance_session_id' => $session->id,
+                            'student_id' => $studentId,
+                            'status' => AttendanceStatus::Bolos->value,
+                            'phase' => $phase,
+                            'scanned_at' => now(),
+                            'source' => 'system',
+                        ]);
+
+                        $totalCreated++;
+                    }
+                }
+            }
+        }
+
+        return $totalCreated;
     }
 
     /**

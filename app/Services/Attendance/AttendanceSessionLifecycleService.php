@@ -3,6 +3,7 @@
 namespace App\Services\Attendance;
 
 use App\Models\AttendanceSession;
+use App\Services\Attendance\AbsenceDetectionService;
 use Illuminate\Support\Collection;
 
 class AttendanceSessionLifecycleService
@@ -60,17 +61,32 @@ class AttendanceSessionLifecycleService
 
     /**
      * Close all active sessions that have already expired.
+     *
+     * After closing, automatically detects bolos for the closed sessions.
      */
     public function closeExpiredSessions(): int
     {
-        return AttendanceSession::query()
+        $expiredSessions = AttendanceSession::query()
             ->where('is_active', true)
             ->whereNotNull('ends_at')
             ->where('ends_at', '<=', now())
-            ->update([
-                'is_active' => false,
-                'ends_at' => now(),
-            ]);
+            ->get();
+
+        $count = $expiredSessions->count();
+
+        if ($count > 0) {
+            AttendanceSession::query()
+                ->whereIn('id', $expiredSessions->pluck('id'))
+                ->update([
+                    'is_active' => false,
+                    'ends_at' => now(),
+                ]);
+
+            // Auto-detect bolos for closed sessions
+            app(AbsenceDetectionService::class)->detectForSessions($expiredSessions);
+        }
+
+        return $count;
     }
 
     /**
