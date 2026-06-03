@@ -156,10 +156,14 @@ export default function BolosSummary() {
                     <CardContent className="pt-6">
                         <div className="flex flex-wrap items-end gap-4">
                             <div className="space-y-2">
-                                <Label htmlFor="date">Tanggal</Label>
+                                <Label htmlFor="date">
+                                    Tanggal{' '}
+                                    <span className="text-destructive">*</span>
+                                </Label>
                                 <Input
                                     id="date"
                                     type="date"
+                                    required
                                     value={date}
                                     onChange={(e) => setDate(e.target.value)}
                                     className="w-auto"

@@ -56,7 +56,7 @@ class AdminAuditLogController extends Controller
             ->pluck('action');
 
         return Inertia::render('admin/audit-logs/index', [
-            'logs' => $logs->through(fn (AuditLog $log): array => [
+            'logs' => $logs->through(fn(AuditLog $log): array => [
                 'id' => $log->id,
                 'admin_name' => $log->admin?->name ?? 'Unknown',
                 'admin_email' => $log->admin?->email ?? '-',
