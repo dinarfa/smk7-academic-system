@@ -153,10 +153,14 @@ export default function ExportAttendance({ schoolClasses, subjects }: Props) {
 
                         <div className="grid gap-4 sm:grid-cols-2">
                             <div className="space-y-2">
-                                <Label htmlFor="startDate">Tanggal Mulai</Label>
+                                <Label htmlFor="startDate">
+                                    Tanggal Mulai{' '}
+                                    <span className="text-destructive">*</span>
+                                </Label>
                                 <Input
                                     id="startDate"
                                     type="date"
+                                    required
                                     value={startDate}
                                     onChange={(e) =>
                                         setStartDate(e.target.value)
@@ -165,10 +169,14 @@ export default function ExportAttendance({ schoolClasses, subjects }: Props) {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="endDate">Tanggal Akhir</Label>
+                                <Label htmlFor="endDate">
+                                    Tanggal Akhir{' '}
+                                    <span className="text-destructive">*</span>
+                                </Label>
                                 <Input
                                     id="endDate"
                                     type="date"
+                                    required
                                     value={endDate}
                                     onChange={(e) => setEndDate(e.target.value)}
                                     className="h-10"
@@ -253,7 +261,7 @@ export default function ExportAttendance({ schoolClasses, subjects }: Props) {
                         <div className="mt-6 flex flex-wrap gap-3">
                             <Button
                                 onClick={() => handleExport('csv')}
-                                disabled={processing}
+                                disabled={processing || !startDate || !endDate}
                                 className="gap-2"
                             >
                                 <FileText className="h-4 w-4" />
@@ -262,7 +270,7 @@ export default function ExportAttendance({ schoolClasses, subjects }: Props) {
                             <Button
                                 variant="outline"
                                 onClick={() => handleExport('xlsx')}
-                                disabled={processing}
+                                disabled={processing || !startDate || !endDate}
                                 className="gap-2"
                             >
                                 <FileSpreadsheet className="h-4 w-4" />
