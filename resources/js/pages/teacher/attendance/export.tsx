@@ -1,8 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
-import { Download, FileSpreadsheet, FileText, ArrowLeft } from 'lucide-react';
+import { FileSpreadsheet, FileText, ArrowLeft } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
     Select,
@@ -24,14 +23,25 @@ interface Subject {
     school_class_id: number | null;
 }
 
+interface Semester {
+    label: string;
+    value: string;
+    startDate: string;
+    endDate: string;
+}
+
 interface Props {
     schoolClasses: SchoolClass[];
     subjects: Subject[];
+    semesters: Semester[];
 }
 
-export default function ExportAttendance({ schoolClasses, subjects }: Props) {
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
+export default function ExportAttendance({
+    schoolClasses,
+    subjects,
+    semesters,
+}: Props) {
+    const [semester, setSemester] = useState<string>('');
     const [classId, setClassId] = useState<string>('');
     const [subjectId, setSubjectId] = useState<string>('');
     const [processing, setProcessing] = useState(false);
@@ -71,8 +81,7 @@ export default function ExportAttendance({ schoolClasses, subjects }: Props) {
                         : {}),
                 },
                 body: JSON.stringify({
-                    startDate,
-                    endDate,
+                    semester,
                     format,
                     ...(classId ? { classId: Number(classId) } : {}),
                     ...(subjectId ? { subjectId: Number(subjectId) } : {}),
@@ -95,7 +104,7 @@ export default function ExportAttendance({ schoolClasses, subjects }: Props) {
             const subjectSuffix = subjectId
                 ? `-${subjects.find((s) => s.id === Number(subjectId))?.name ?? 'mapel'}`
                 : '';
-            link.download = `absensi${classSuffix}${subjectSuffix}-${startDate || 'mulai'}-sampai-${endDate || 'akhir'}.${format}`;
+            link.download = `absensi${classSuffix}${subjectSuffix}-${semester.replace('/', '-')}.${format}`;
             document.body.appendChild(link);
             link.click();
             link.remove();
@@ -135,7 +144,7 @@ export default function ExportAttendance({ schoolClasses, subjects }: Props) {
                     </h1>
                     <p className="text-sm text-muted-foreground">
                         Unduh data absensi siswa dalam format CSV atau XLSX
-                        berdasarkan rentang tanggal, kelas, dan mata pelajaran.
+                        berdasarkan semester, kelas, dan mata pelajaran.
                     </p>
                 </div>
 
@@ -147,40 +156,37 @@ export default function ExportAttendance({ schoolClasses, subjects }: Props) {
                                 Filter Ekspor
                             </h2>
                             <p className="text-sm text-muted-foreground">
-                                Pilih kelas, mata pelajaran, dan rentang tanggal
+                                Pilih semester, kelas, dan mata pelajaran
                             </p>
                         </div>
 
                         <div className="grid gap-4 sm:grid-cols-2">
-                            <div className="space-y-2">
-                                <Label htmlFor="startDate">
-                                    Tanggal Mulai{' '}
+                            <div className="space-y-2 sm:col-span-2">
+                                <Label htmlFor="semester">
+                                    Semester{' '}
                                     <span className="text-destructive">*</span>
                                 </Label>
-                                <Input
-                                    id="startDate"
-                                    type="date"
-                                    required
-                                    value={startDate}
-                                    onChange={(e) =>
-                                        setStartDate(e.target.value)
-                                    }
-                                    className="h-10"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="endDate">
-                                    Tanggal Akhir{' '}
-                                    <span className="text-destructive">*</span>
-                                </Label>
-                                <Input
-                                    id="endDate"
-                                    type="date"
-                                    required
-                                    value={endDate}
-                                    onChange={(e) => setEndDate(e.target.value)}
-                                    className="h-10"
-                                />
+                                <Select
+                                    value={semester}
+                                    onValueChange={setSemester}
+                                >
+                                    <SelectTrigger
+                                        id="semester"
+                                        className="w-full"
+                                    >
+                                        <SelectValue placeholder="Pilih semester" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {semesters.map((s) => (
+                                            <SelectItem
+                                                key={s.value}
+                                                value={s.value}
+                                            >
+                                                {s.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
 
@@ -261,7 +267,7 @@ export default function ExportAttendance({ schoolClasses, subjects }: Props) {
                         <div className="mt-6 flex flex-wrap gap-3">
                             <Button
                                 onClick={() => handleExport('csv')}
-                                disabled={processing || !startDate || !endDate}
+                                disabled={processing || !semester}
                                 className="gap-2"
                             >
                                 <FileText className="h-4 w-4" />
@@ -270,7 +276,7 @@ export default function ExportAttendance({ schoolClasses, subjects }: Props) {
                             <Button
                                 variant="outline"
                                 onClick={() => handleExport('xlsx')}
-                                disabled={processing || !startDate || !endDate}
+                                disabled={processing || !semester}
                                 className="gap-2"
                             >
                                 <FileSpreadsheet className="h-4 w-4" />
@@ -322,9 +328,9 @@ export default function ExportAttendance({ schoolClasses, subjects }: Props) {
                                 Kolom Data
                             </h3>
                             <p className="mt-2 text-sm text-muted-foreground">
-                                Data yang diekspor mencakup: Nama Siswa, Email,
-                                Tipe Sesi, Mata Pelajaran, Fase, Sumber, Status,
-                                Keterangan Izin, dan Waktu Scan.
+                                Data yang diekspor mencakup: No, Nama Siswa,
+                                Email, Kelas, Mapel, Tipe Sesi, Status, dan
+                                Waktu Absen.
                             </p>
                         </div>
 

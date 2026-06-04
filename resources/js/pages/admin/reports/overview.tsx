@@ -5,7 +5,10 @@ import {
     Activity,
     UsersRound,
     Calendar,
+    FileText,
+    FileSpreadsheet,
 } from 'lucide-react';
+import { useState } from 'react';
 import { StatCard } from '@/components/stat-card';
 import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
@@ -16,6 +19,13 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import admin from '@/routes/admin';
 
 type Summary = {
@@ -42,17 +52,76 @@ type RecentSession = {
     is_active: boolean;
 };
 
+type Semester = {
+    label: string;
+    value: string;
+    startDate: string;
+    endDate: string;
+};
+
 type Props = {
     summary: Summary;
     topStudents: TopStudent[];
     recentSessions: RecentSession[];
+    semesters: Semester[];
 };
 
 export default function AdminReportsOverview({
     summary,
     topStudents,
     recentSessions,
+    semesters,
 }: Props) {
+    const [semester, setSemester] = useState<string>('');
+    const [processing, setProcessing] = useState(false);
+
+    const getCsrfToken = () =>
+        document
+            .querySelector('meta[name="csrf-token"]')
+            ?.getAttribute('content') ?? '';
+
+    const handleExport = async (format: 'csv' | 'xlsx') => {
+        setProcessing(true);
+
+        try {
+            const response = await fetch('/admin/reports/export', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: '*/*',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    ...(getCsrfToken()
+                        ? { 'X-CSRF-TOKEN': getCsrfToken() }
+                        : {}),
+                },
+                body: JSON.stringify({
+                    format,
+                    semester,
+                }),
+            });
+
+            if (!response.ok) {
+                alert('Gagal mengekspor data');
+                return;
+            }
+
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `absensi-admin-${semester.replace('/', '-')}.${format}`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(url);
+        } catch {
+            alert('Kesalahan saat mengekspor');
+        } finally {
+            setProcessing(false);
+        }
+    };
+
     return (
         <>
             <Head title="Ringkasan Laporan" />
@@ -67,7 +136,7 @@ export default function AdminReportsOverview({
                             Statistik sistem dan data kehadiran
                         </p>
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                         <Button asChild size="sm">
                             <Link href={admin.reports.bySession.url()}>
                                 Per Sesi
@@ -78,10 +147,44 @@ export default function AdminReportsOverview({
                                 Per Kelas
                             </Link>
                         </Button>
-                        <Button asChild size="sm" variant="secondary">
-                            <Link href={admin.reports.export.url()}>
-                                Ekspor CSV
-                            </Link>
+                        {semesters.length > 0 && (
+                            <Select
+                                value={semester}
+                                onValueChange={setSemester}
+                            >
+                                <SelectTrigger className="h-9 w-[240px]">
+                                    <SelectValue placeholder="Pilih semester" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {semesters.map((s) => (
+                                        <SelectItem
+                                            key={s.value}
+                                            value={s.value}
+                                        >
+                                            {s.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        )}
+                        <Button
+                            size="sm"
+                            onClick={() => handleExport('csv')}
+                            disabled={processing || !semester}
+                            className="gap-1.5"
+                        >
+                            <FileText className="h-3.5 w-3.5" />
+                            {processing ? 'Mengekspor...' : 'CSV'}
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleExport('xlsx')}
+                            disabled={processing || !semester}
+                            className="gap-1.5"
+                        >
+                            <FileSpreadsheet className="h-3.5 w-3.5" />
+                            {processing ? 'Mengekspor...' : 'XLSX'}
                         </Button>
                     </div>
                 </div>

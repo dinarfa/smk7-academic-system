@@ -262,7 +262,7 @@ class AttendanceReportService
     /**
      * Build the CSV contents for attendance export using chunked processing.
      */
-    public function exportCsv(): string
+    public function exportCsv(?string $startDate = null, ?string $endDate = null, ?int $classId = null, ?int $subjectId = null): string
     {
         $stream = fopen('php://temp', 'r+');
 
@@ -270,6 +270,25 @@ class AttendanceReportService
 
         AttendanceRecord::query()
             ->with(['student:id,name,email', 'session', 'session.subjectModel:id,name'])
+            ->when($startDate && $endDate, function ($query) use ($startDate, $endDate): void {
+                $query->whereBetween('scanned_at', [
+                    Carbon::parse($startDate)->startOfDay(),
+                    Carbon::parse($endDate)->endOfDay(),
+                ]);
+            })
+            ->when($classId !== null || $subjectId !== null, function ($query) use ($classId, $subjectId): void {
+                $query->whereHas('session', function ($q) use ($classId, $subjectId): void {
+                    if ($classId !== null) {
+                        $q->where(function ($sq) use ($classId): void {
+                            $sq->where('class_id', $classId)
+                                ->orWhereHas('subjectModel.schoolClasses', fn ($s) => $s->where('school_classes.id', $classId));
+                        });
+                    }
+                    if ($subjectId !== null) {
+                        $q->where('subject_id', $subjectId);
+                    }
+                });
+            })
             ->orderBy('id')
             ->chunk(500, function ($records) use ($stream): void {
                 foreach ($records as $record) {
@@ -292,6 +311,63 @@ class AttendanceReportService
         fclose($stream);
 
         return $csv;
+    }
+
+    /**
+     * Build formatted attendance data for admin XLSX export.
+     *
+     * @return array{headers: array<int, string>, rows: array<int, array<int, mixed>>}
+     */
+    public function exportFormattedForAdmin(?string $startDate = null, ?string $endDate = null, ?int $classId = null, ?int $subjectId = null): array
+    {
+        $headers = ['No', 'Nama Siswa', 'Email', 'Kelas', 'Mapel', 'Tipe Sesi', 'Status', 'Waktu Absen'];
+        $rows = [];
+        $no = 0;
+
+        AttendanceRecord::query()
+            ->with(['student:id,name,email', 'session', 'session.subjectModel:id,name'])
+            ->when($startDate && $endDate, function ($query) use ($startDate, $endDate): void {
+                $query->whereBetween('scanned_at', [
+                    Carbon::parse($startDate)->startOfDay(),
+                    Carbon::parse($endDate)->endOfDay(),
+                ]);
+            })
+            ->when($classId !== null || $subjectId !== null, function ($query) use ($classId, $subjectId): void {
+                $query->whereHas('session', function ($q) use ($classId, $subjectId): void {
+                    if ($classId !== null) {
+                        $q->where(function ($sq) use ($classId): void {
+                            $sq->where('class_id', $classId)
+                                ->orWhereHas('subjectModel.schoolClasses', fn ($s) => $s->where('school_classes.id', $classId));
+                        });
+                    }
+                    if ($subjectId !== null) {
+                        $q->where('subject_id', $subjectId);
+                    }
+                });
+            })
+            ->orderBy('id')
+            ->chunk(500, function ($records) use (&$rows, &$no): void {
+                foreach ($records as $record) {
+                    $no++;
+                    $rows[] = [
+                        $no,
+                        $record->student?->name,
+                        $record->student?->email,
+                        $record->session?->class_name,
+                        $record->session?->subject_name,
+                        $record->session?->type?->label() ?? $record->session?->type?->value,
+                        match ($record->status?->value) {
+                            'present' => 'Hadir',
+                            'absent' => 'Alpha',
+                            'late' => 'Terlambat',
+                            default => $record->status?->value,
+                        },
+                        $record->scanned_at?->format('d/m/Y H:i'),
+                    ];
+                }
+            });
+
+        return ['headers' => $headers, 'rows' => $rows];
     }
 
     /**

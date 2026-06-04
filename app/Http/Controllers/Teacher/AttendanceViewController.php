@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Teacher;
 
+use App\Helpers\SemesterHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Teacher\ExportAttendanceRequest;
 use App\Models\AttendanceRecord;
@@ -383,6 +384,7 @@ class AttendanceViewController extends Controller
                 'name' => $subject->name,
                 'school_class_id' => $subject->pivot->school_class_id,
             ])->values(),
+            'semesters' => SemesterHelper::getAvailableSemesters(),
         ]);
     }
 
@@ -399,12 +401,14 @@ class AttendanceViewController extends Controller
         $format = $validated['format'] ?? 'csv';
         $classId = $validated['classId'] ?? null;
         $subjectId = $validated['subjectId'] ?? null;
+        $startDate = $request->getEffectiveStartDate();
+        $endDate = $request->getEffectiveEndDate();
 
         if ($format === 'xlsx') {
             $data = $service->exportFormattedForTeacher(
                 $request->user()->id,
-                $validated['startDate'],
-                $validated['endDate'],
+                $startDate,
+                $endDate,
                 $classId,
                 $subjectId,
             );
@@ -477,7 +481,11 @@ class AttendanceViewController extends Controller
             $writer->addRow($makeRow(['Laporan Absensi'], $titleStyle));
 
             // Info rows
-            $writer->addRow($makeRow(['Periode: '.$validated['startDate'].' s/d '.$validated['endDate']], $infoStyle));
+            $semesterLabel = $validated['semester'] ?? null;
+            $periodText = $semesterLabel
+                ? 'Semester: '.$semesterLabel.' ('.$startDate.' s/d '.$endDate.')'
+                : 'Periode: '.$startDate.' s/d '.$endDate;
+            $writer->addRow($makeRow([$periodText], $infoStyle));
             $writer->addRow($makeRow(['Dicetak: '.now()->format('d/m/Y H:i')], $infoStyle));
             $writer->addRow($makeRow([]));
 
@@ -525,8 +533,8 @@ class AttendanceViewController extends Controller
         // Fallback to CSV download
         $csv = $service->exportCsvForTeacher(
             $request->user()->id,
-            $validated['startDate'],
-            $validated['endDate'],
+            $startDate,
+            $endDate,
             $classId,
             $subjectId,
         );
