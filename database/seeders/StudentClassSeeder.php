@@ -35,10 +35,10 @@ class StudentClassSeeder extends Seeder
             ['grade_level' => 'XI', 'department' => $tkj, 'section' => 1],
             ['grade_level' => 'XI', 'department' => $rpl, 'section' => 1],
             ['grade_level' => 'XI', 'department' => $mm,  'section' => 1],
-            ['grade_level' => 'XII','department' => $tkj, 'section' => 1],
-            ['grade_level' => 'XII','department' => $rpl, 'section' => 1],
-            ['grade_level' => 'XII','department' => $akl, 'section' => 1],
-            ['grade_level' => 'XII','department' => $mm,  'section' => 1],
+            ['grade_level' => 'XII', 'department' => $tkj, 'section' => 1],
+            ['grade_level' => 'XII', 'department' => $rpl, 'section' => 1],
+            ['grade_level' => 'XII', 'department' => $akl, 'section' => 1],
+            ['grade_level' => 'XII', 'department' => $mm,  'section' => 1],
         ];
 
         $classes = collect($classDefinitions)->map(function (array $def, int $i) use ($teachers) {
