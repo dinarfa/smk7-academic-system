@@ -2,10 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
 use App\Services\Attendance\AbsenceDetectionService;
-use Carbon\Carbon;
 use Illuminate\Console\Command;
 
 class DetectMissedAbsences extends Command

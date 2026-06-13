@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Teacher;
 
+use App\Helpers\SemesterHelper;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\DB;
@@ -24,12 +25,37 @@ class ExportAttendanceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'startDate' => ['required', 'date'],
-            'endDate' => ['required', 'date', 'after_or_equal:startDate'],
+            'semester' => ['required', 'string', 'regex:/^\d{4}\/\d{4}-[12]$/'],
             'format' => ['nullable', 'string', 'in:csv,xlsx'],
             'classId' => ['nullable', 'integer'],
             'subjectId' => ['nullable', 'integer'],
         ];
+    }
+
+    /**
+     * Get the semester date range.
+     *
+     * @return array{startDate: string, endDate: string}
+     */
+    public function getSemesterDateRange(): array
+    {
+        return SemesterHelper::getDateRange($this->input('semester'));
+    }
+
+    /**
+     * Get the effective start date from semester.
+     */
+    public function getEffectiveStartDate(): string
+    {
+        return $this->getSemesterDateRange()['startDate'];
+    }
+
+    /**
+     * Get the effective end date from semester.
+     */
+    public function getEffectiveEndDate(): string
+    {
+        return $this->getSemesterDateRange()['endDate'];
     }
 
     /**
@@ -41,6 +67,9 @@ class ExportAttendanceRequest extends FormRequest
     {
         return [
             function ($validator) {
+                if (SemesterHelper::getDateRange($this->input('semester')) === null) {
+                    $validator->errors()->add('semester', 'Semester tidak valid.');
+                }
                 $teacher = auth()->user();
 
                 $subjectClassIds = $teacher->teachingSubjects()

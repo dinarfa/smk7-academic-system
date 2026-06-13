@@ -3,7 +3,6 @@
 namespace App\Services\Attendance;
 
 use App\Models\AttendanceSession;
-use App\Services\Attendance\AbsenceDetectionService;
 use Illuminate\Support\Collection;
 
 class AttendanceSessionLifecycleService

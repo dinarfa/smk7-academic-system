@@ -51,7 +51,7 @@ test('admin can export attendance data', function () {
     ]);
 
     $response = $this->actingAs($admin)
-        ->get('/admin/reports/export');
+        ->post('/admin/reports/export', ['format' => 'csv']);
 
     expect($response->getStatusCode())->toBe(200);
     expect($response->headers->get('content-type'))->toContain('csv');

@@ -56,7 +56,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('reports/by-session', [AdminReportController::class, 'bySession'])->name('reports.by-session');
         Route::get('reports/by-student', [AdminReportController::class, 'byStudent'])->name('reports.by-student');
         Route::get('reports/by-class', [AdminReportController::class, 'byClass'])->name('reports.by-class');
-        Route::get('reports/export', [AdminReportController::class, 'export'])->name('reports.export');
+        Route::post('reports/export', [AdminReportController::class, 'export'])->name('reports.export');
 
         // Audit logs
         Route::get('audit-logs', [AdminAuditLogController::class, 'index'])->name('audit-logs.index');
