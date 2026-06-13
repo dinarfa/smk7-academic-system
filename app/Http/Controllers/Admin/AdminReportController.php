@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Helpers\SemesterHelper;
 use App\Http\Controllers\Controller;
 use App\Models\SchoolClass;
+use App\Models\Subject;
 use App\Services\Attendance\AttendanceReportService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -24,11 +25,16 @@ class AdminReportController extends Controller
     {
         $data = $attendanceReportService->overview();
 
+        $schoolClasses = SchoolClass::query()->select(['id', 'name'])->orderBy('name')->get();
+        $subjects = Subject::query()->select(['id', 'name'])->orderBy('name')->get();
+
         return Inertia::render('admin/reports/overview', [
             'summary' => $data['summary'],
             'topStudents' => $data['topStudents'],
             'recentSessions' => $data['recentSessions'],
             'semesters' => SemesterHelper::getAvailableSemesters(),
+            'schoolClasses' => $schoolClasses,
+            'subjects' => $subjects,
         ]);
     }
 

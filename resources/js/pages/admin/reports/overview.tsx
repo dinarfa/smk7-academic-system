@@ -59,11 +59,23 @@ type Semester = {
     endDate: string;
 };
 
+type SchoolClass = {
+    id: number;
+    name: string;
+};
+
+type Subject = {
+    id: number;
+    name: string;
+};
+
 type Props = {
     summary: Summary;
     topStudents: TopStudent[];
     recentSessions: RecentSession[];
     semesters: Semester[];
+    schoolClasses: SchoolClass[];
+    subjects: Subject[];
 };
 
 export default function AdminReportsOverview({
@@ -71,8 +83,12 @@ export default function AdminReportsOverview({
     topStudents,
     recentSessions,
     semesters,
+    schoolClasses,
+    subjects,
 }: Props) {
     const [semester, setSemester] = useState<string>('');
+    const [classId, setClassId] = useState<string>('');
+    const [subjectId, setSubjectId] = useState<string>('');
     const [processing, setProcessing] = useState(false);
 
     const getCsrfToken = () =>
@@ -98,6 +114,8 @@ export default function AdminReportsOverview({
                 body: JSON.stringify({
                     format,
                     semester,
+                    ...(classId ? { classId: Number(classId) } : {}),
+                    ...(subjectId ? { subjectId: Number(subjectId) } : {}),
                 }),
             });
 
@@ -110,7 +128,13 @@ export default function AdminReportsOverview({
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `absensi-admin-${semester.replace('/', '-')}.${format}`;
+            const classSuffix = classId
+                ? `-${schoolClasses.find((c) => c.id === Number(classId))?.name ?? 'kelas'}`
+                : '';
+            const subjectSuffix = subjectId
+                ? `-${subjects.find((s) => s.id === Number(subjectId))?.name ?? 'mapel'}`
+                : '';
+            link.download = `absensi-admin${classSuffix}${subjectSuffix}-${semester.replace('/', '-')}.${format}`;
             document.body.appendChild(link);
             link.click();
             link.remove();
@@ -167,6 +191,53 @@ export default function AdminReportsOverview({
                                 </SelectContent>
                             </Select>
                         )}
+                        <Select
+                            value={classId || 'all'}
+                            onValueChange={(v) => {
+                                setClassId(v === 'all' ? '' : v);
+                                setSubjectId('');
+                            }}
+                        >
+                            <SelectTrigger className="h-9 w-[180px]">
+                                <SelectValue placeholder="Semua Kelas" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">
+                                    Semua Kelas
+                                </SelectItem>
+                                {schoolClasses.map((cls) => (
+                                    <SelectItem
+                                        key={cls.id}
+                                        value={String(cls.id)}
+                                    >
+                                        {cls.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Select
+                            value={subjectId || 'all'}
+                            onValueChange={(v) =>
+                                setSubjectId(v === 'all' ? '' : v)
+                            }
+                        >
+                            <SelectTrigger className="h-9 w-[200px]">
+                                <SelectValue placeholder="Semua Mapel" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">
+                                    Semua Mapel
+                                </SelectItem>
+                                {subjects.map((subject) => (
+                                    <SelectItem
+                                        key={subject.id}
+                                        value={String(subject.id)}
+                                    >
+                                        {subject.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                         <Button
                             size="sm"
                             onClick={() => handleExport('csv')}
