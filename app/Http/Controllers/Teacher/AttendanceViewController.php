@@ -226,6 +226,7 @@ class AttendanceViewController extends Controller
         $existingRecords = AttendanceRecord::query()
             ->whereHas('session', fn ($q) => $q->where('opened_by', $teacher->id))
             ->whereDate('scanned_at', $date)
+            ->orderByDesc('scanned_at')
             ->get()
             ->mapWithKeys(fn ($record) => [
                 $record->student_id => [

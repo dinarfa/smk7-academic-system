@@ -10,7 +10,7 @@ import {
     Save,
     ChevronRight,
 } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -130,11 +130,36 @@ export default function ManualAttendance({
     const [search, setSearch] = useState('');
     const [selectedSubject, setSelectedSubject] = useState('');
     const [selectedClass, setSelectedClass] = useState('');
-    const [statuses, setStatuses] = useState<Map<number, StudentStatus>>(
-        () => new Map(),
-    );
+    const [statuses, setStatuses] = useState<Map<number, StudentStatus>>(() => {
+        const initial = new Map<number, StudentStatus>();
+        for (const [studentId, record] of Object.entries(existingRecords)) {
+            if (
+                record.status === 'present' ||
+                record.status === 'late' ||
+                record.status === 'absent'
+            ) {
+                initial.set(Number(studentId), record.status);
+            }
+        }
+        return initial;
+    });
     const [processing, setProcessing] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
+
+    // Sync statuses from existing records when they change (e.g. Inertia navigation)
+    useEffect(() => {
+        const initial = new Map<number, StudentStatus>();
+        for (const [studentId, record] of Object.entries(existingRecords)) {
+            if (
+                record.status === 'present' ||
+                record.status === 'late' ||
+                record.status === 'absent'
+            ) {
+                initial.set(Number(studentId), record.status);
+            }
+        }
+        setStatuses(initial);
+    }, [existingRecords]);
 
     // Classes for selected subject
     const subjectClasses = useMemo(() => {

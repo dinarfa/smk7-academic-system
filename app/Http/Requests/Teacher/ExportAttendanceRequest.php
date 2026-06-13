@@ -25,7 +25,9 @@ class ExportAttendanceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'semester' => ['required', 'string', 'regex:/^\d{4}\/\d{4}-[12]$/'],
+            'semester' => ['nullable', 'string', 'regex:/^\d{4}\/\d{4}-[12]$/'],
+            'startDate' => ['required_without:semester', 'date'],
+            'endDate' => ['required_without:semester', 'date', 'after_or_equal:startDate'],
             'format' => ['nullable', 'string', 'in:csv,xlsx'],
             'classId' => ['nullable', 'integer'],
             'subjectId' => ['nullable', 'integer'],
@@ -43,19 +45,33 @@ class ExportAttendanceRequest extends FormRequest
     }
 
     /**
-     * Get the effective start date from semester.
+     * Get the effective start date from semester or direct input.
      */
     public function getEffectiveStartDate(): string
     {
-        return $this->getSemesterDateRange()['startDate'];
+        $semester = $this->input('semester');
+        if ($semester) {
+            $range = SemesterHelper::getDateRange($semester);
+
+            return $range ? $range['startDate'] : $this->input('startDate');
+        }
+
+        return $this->input('startDate');
     }
 
     /**
-     * Get the effective end date from semester.
+     * Get the effective end date from semester or direct input.
      */
     public function getEffectiveEndDate(): string
     {
-        return $this->getSemesterDateRange()['endDate'];
+        $semester = $this->input('semester');
+        if ($semester) {
+            $range = SemesterHelper::getDateRange($semester);
+
+            return $range ? $range['endDate'] : $this->input('endDate');
+        }
+
+        return $this->input('endDate');
     }
 
     /**
@@ -67,7 +83,8 @@ class ExportAttendanceRequest extends FormRequest
     {
         return [
             function ($validator) {
-                if (SemesterHelper::getDateRange($this->input('semester')) === null) {
+                $semester = $this->input('semester');
+                if ($semester && SemesterHelper::getDateRange($semester) === null) {
                     $validator->errors()->add('semester', 'Semester tidak valid.');
                 }
                 $teacher = auth()->user();
