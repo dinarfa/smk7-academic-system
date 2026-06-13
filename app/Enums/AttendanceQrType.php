@@ -16,4 +16,14 @@ enum AttendanceQrType: string
             default => $this,
         };
     }
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::Morning => 'Pagi',
+            self::ClassPhase => 'Jam Pelajaran',
+            self::Subject => 'Mata Pelajaran',
+            self::Dismissal => 'Pulang',
+        };
+    }
 }
