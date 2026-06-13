@@ -172,33 +172,58 @@ class AttendanceSessionController extends Controller
             }
         }
 
-        // Create session with schedule data (same as QR)
-        $endsAt = now()->setTimeFromTimeString($schedule->ends_at);
-        $minutesUntilEnd = now()->diffInMinutes($endsAt, false);
+        // Find or create session — reuse active session if available
+        $qrType = $schedule->resolveQrType()->value;
+        $session = AttendanceSession::query()
+            ->where('opened_by', $teacher->id)
+            ->where('class_id', $schedule->school_class_id)
+            ->where('type', $qrType)
+            ->where('is_active', true)
+            ->first();
 
-        $session = $lifecycleService->open($teacher->id, [
-            'class_id' => $schedule->school_class_id,
-            'type' => $schedule->resolveQrType()->value,
-            'subject_id' => $schedule->subject_id,
-            'subject' => $schedule->subject?->name,
-            'duration_minutes' => $minutesUntilEnd > 0 ? max(5, $minutesUntilEnd) : 30,
-        ]);
+        if (! $session) {
+            $endsAt = now()->setTimeFromTimeString($schedule->ends_at);
+            $minutesUntilEnd = now()->diffInMinutes($endsAt, false);
 
-        // Save attendance records
+            $session = $lifecycleService->open($teacher->id, [
+                'class_id' => $schedule->school_class_id,
+                'type' => $qrType,
+                'subject_id' => $schedule->subject_id,
+                'subject' => $schedule->subject?->name,
+                'duration_minutes' => $minutesUntilEnd > 0 ? max(5, $minutesUntilEnd) : 30,
+            ]);
+        }
+
+        // Save attendance records — overwrite existing records for today
+        $date = today()->format('Y-m-d');
         $count = 0;
         foreach ($validated['students'] as $student) {
-            AttendanceRecord::updateOrCreate(
-                [
+            // Find existing record for this student today (from any session by this teacher)
+            $existingRecord = AttendanceRecord::query()
+                ->whereHas('session', fn ($q) => $q->where('opened_by', $teacher->id))
+                ->where('student_id', $student['student_id'])
+                ->whereDate('scanned_at', $date)
+                ->first();
+
+            if ($existingRecord) {
+                // Overwrite existing record (QR or previous manual)
+                $existingRecord->update([
                     'attendance_session_id' => $session->id,
-                    'student_id' => $student['student_id'],
-                ],
-                [
                     'status' => $student['status'],
                     'phase' => $schedule->resolveQrType()->toRecordPhase()->value,
                     'source' => 'manual',
                     'scanned_at' => now(),
-                ],
-            );
+                ]);
+            } else {
+                AttendanceRecord::create([
+                    'attendance_session_id' => $session->id,
+                    'student_id' => $student['student_id'],
+                    'status' => $student['status'],
+                    'phase' => $schedule->resolveQrType()->toRecordPhase()->value,
+                    'source' => 'manual',
+                    'scanned_at' => now(),
+                ]);
+            }
             $count++;
         }
 
