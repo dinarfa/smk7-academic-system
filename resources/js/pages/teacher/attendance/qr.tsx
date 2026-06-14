@@ -1,6 +1,14 @@
 import { Head, Link, Form, router } from '@inertiajs/react';
 import DOMPurify from 'dompurify';
-import { Maximize2, CalendarClock, AlertTriangle, Scan } from 'lucide-react';
+import {
+    Maximize2,
+    CalendarClock,
+    AlertTriangle,
+    Scan,
+    Sun,
+    BookOpen,
+    Sunset,
+} from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import AttendanceSessionController from '@/actions/App/Http/Controllers/Teacher/AttendanceSessionController';
 import QRDisplay from '@/components/QRDisplayV2';
@@ -67,6 +75,8 @@ type Props = {
     current_schedule: CurrentSchedule;
     subject_groups?: SubjectGroup[];
     accessible_classes?: { id: number; name: string }[];
+    morning_classes?: { id: number; name: string }[];
+    dismissal_classes?: { id: number; name: string }[];
 };
 
 function typeLabel(type: ActiveSession['type']): string {
@@ -78,9 +88,14 @@ export default function TeacherAttendanceQr({
     current_schedule: currentSchedule,
     subject_groups: subjectGroups = [],
     accessible_classes: accessibleClasses = [],
+    morning_classes: morningClasses = [],
+    dismissal_classes: dismissalClasses = [],
 }: Props) {
     const [showQrPopup, setShowQrPopup] = useState(false);
     const [popupTimeRemaining, setPopupTimeRemaining] = useState('');
+    const [sessionType, setSessionType] = useState<
+        'morning' | 'subject' | 'dismissal'
+    >('subject');
     const [selectedSubjectKey, setSelectedSubjectKey] = useState('');
     const popupExpiredRef = useRef(false);
 
@@ -181,7 +196,14 @@ export default function TeacherAttendanceQr({
 
     const selectedSubject =
         subjectGroups.find((group) => group.key === selectedSubjectKey) ?? null;
-    const selectedClasses = selectedSubject?.classes ?? accessibleClasses ?? [];
+
+    // Determine available classes based on session type
+    const selectedClasses =
+        sessionType === 'morning'
+            ? morningClasses
+            : sessionType === 'dismissal'
+              ? dismissalClasses
+              : selectedSubject?.classes ?? [];
     const canOpenSession = selectedClasses.length > 0;
 
     useEffect(() => {
@@ -372,43 +394,121 @@ export default function TeacherAttendanceQr({
                                     >
                                         {({ processing }) => (
                                             <>
-                                                <div className="mb-2 space-y-2">
-                                                    <Label htmlFor="subject_key">
-                                                        Pilih Mata Pelajaran
-                                                    </Label>
-                                                    <select
-                                                        id="subject_key"
-                                                        name="subject_key"
-                                                        value={
-                                                            selectedSubjectKey
-                                                        }
-                                                        onChange={(event) =>
-                                                            setSelectedSubjectKey(
-                                                                event.target
-                                                                    .value,
-                                                            )
-                                                        }
-                                                        className="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-ring focus:outline-none"
-                                                    >
-                                                        <option value="">
-                                                            Pilih Mata Pelajaran
-                                                        </option>
-                                                        {subjectGroups.map(
-                                                            (group) => (
-                                                                <option
+                                                {/* Session type selector */}
+                                                <div className="mb-3 space-y-2">
+                                                    <Label>Tipe Absensi</Label>
+                                                    <div className="grid grid-cols-3 gap-2">
+                                                        {(
+                                                            [
+                                                                {
+                                                                    value: 'morning' as const,
+                                                                    label: 'Pagi',
+                                                                    icon: Sun,
+                                                                    available:
+                                                                        morningClasses.length >
+                                                                        0,
+                                                                },
+                                                                {
+                                                                    value: 'subject' as const,
+                                                                    label: 'Mapel',
+                                                                    icon: BookOpen,
+                                                                    available:
+                                                                        subjectGroups.length >
+                                                                        0,
+                                                                },
+                                                                {
+                                                                    value: 'dismissal' as const,
+                                                                    label: 'Pulang',
+                                                                    icon: Sunset,
+                                                                    available:
+                                                                        dismissalClasses.length >
+                                                                        0,
+                                                                },
+                                                            ] as const
+                                                        ).map((opt) => {
+                                                            const Icon =
+                                                                opt.icon;
+                                                            const isActive =
+                                                                sessionType ===
+                                                                opt.value;
+
+                                                            return (
+                                                                <button
                                                                     key={
-                                                                        group.key
+                                                                        opt.value
                                                                     }
-                                                                    value={
-                                                                        group.key
+                                                                    type="button"
+                                                                    disabled={
+                                                                        !opt.available
                                                                     }
+                                                                    onClick={() => {
+                                                                        setSessionType(
+                                                                            opt.value,
+                                                                        );
+                                                                        setSelectedSubjectKey(
+                                                                            '',
+                                                                        );
+                                                                    }}
+                                                                    className={`flex flex-col items-center gap-1 rounded-lg border px-3 py-2.5 text-xs font-medium transition-all ${
+                                                                        !opt.available
+                                                                            ? 'cursor-not-allowed border-dashed opacity-40'
+                                                                            : isActive
+                                                                              ? 'border-primary bg-primary/10 text-primary shadow-sm'
+                                                                              : 'border-border bg-background text-muted-foreground hover:border-primary/40 hover:bg-muted'
+                                                                    }`}
                                                                 >
-                                                                    {group.name}
-                                                                </option>
-                                                            ),
-                                                        )}
-                                                    </select>
+                                                                    <Icon className="h-4 w-4" />
+                                                                    {opt.label}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
                                                 </div>
+
+                                                {/* Subject dropdown (only for subject type) */}
+                                                {sessionType === 'subject' && (
+                                                    <div className="mb-2 space-y-2">
+                                                        <Label htmlFor="subject_key">
+                                                            Pilih Mata Pelajaran
+                                                        </Label>
+                                                        <select
+                                                            id="subject_key"
+                                                            name="subject_key"
+                                                            value={
+                                                                selectedSubjectKey
+                                                            }
+                                                            onChange={(event) =>
+                                                                setSelectedSubjectKey(
+                                                                    event
+                                                                        .target
+                                                                        .value,
+                                                                )
+                                                            }
+                                                            className="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-ring focus:outline-none"
+                                                        >
+                                                            <option value="">
+                                                                Pilih Mata
+                                                                Pelajaran
+                                                            </option>
+                                                            {subjectGroups.map(
+                                                                (group) => (
+                                                                    <option
+                                                                        key={
+                                                                            group.key
+                                                                        }
+                                                                        value={
+                                                                            group.key
+                                                                        }
+                                                                    >
+                                                                        {
+                                                                            group.name
+                                                                        }
+                                                                    </option>
+                                                                ),
+                                                            )}
+                                                        </select>
+                                                    </div>
+                                                )}
 
                                                 <div className="mb-2 space-y-2">
                                                     <Label htmlFor="class_id">
@@ -416,8 +516,8 @@ export default function TeacherAttendanceQr({
                                                     </Label>
                                                     <select
                                                         key={
-                                                            selectedSubjectKey ||
-                                                            'no-subject'
+                                                            sessionType +
+                                                            selectedSubjectKey
                                                         }
                                                         id="class_id"
                                                         name="class_id"
@@ -440,15 +540,17 @@ export default function TeacherAttendanceQr({
                                                     </select>
                                                 </div>
 
-                                                {subjectGroups.length === 0 && (
-                                                    <div className="rounded-lg border border-amber-400/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-700 dark:text-amber-300">
-                                                        Anda belum memiliki
-                                                        relasi mata
-                                                        pelajaran-kelas. Hubungi
-                                                        admin untuk penugasan
-                                                        mapel.
-                                                    </div>
-                                                )}
+                                                {sessionType === 'subject' &&
+                                                    subjectGroups.length ===
+                                                        0 && (
+                                                        <div className="rounded-lg border border-amber-400/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-700 dark:text-amber-300">
+                                                            Anda belum memiliki
+                                                            relasi mata
+                                                            pelajaran-kelas.
+                                                            Hubungi admin untuk
+                                                            penugasan mapel.
+                                                        </div>
+                                                    )}
 
                                                 <Button
                                                     type="submit"
@@ -461,7 +563,13 @@ export default function TeacherAttendanceQr({
                                                     <Scan className="h-4 w-4" />
                                                     {processing
                                                         ? 'Membuka...'
-                                                        : 'Buka QR Sesi Aktif'}
+                                                        : sessionType ===
+                                                            'morning'
+                                                          ? 'Buka Absen Pagi'
+                                                          : sessionType ===
+                                                              'dismissal'
+                                                            ? 'Buka Absen Pulang'
+                                                            : 'Buka QR Sesi Aktif'}
                                                 </Button>
                                             </>
                                         )}
