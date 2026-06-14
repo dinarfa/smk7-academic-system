@@ -9,6 +9,9 @@ import {
     RotateCcw,
     Save,
     ChevronRight,
+    Sun,
+    BookOpen,
+    Sunset,
 } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
@@ -72,6 +75,8 @@ type Props = {
     students: Student[];
     subject_groups: SubjectGroup[];
     accessible_classes: { id: number; name: string }[];
+    morning_classes?: { id: number; name: string }[];
+    dismissal_classes?: { id: number; name: string }[];
     current_schedule: CurrentSchedule | null;
     existingRecords: Record<number, ExistingRecord>;
     activeSession: ActiveSession | null;
@@ -123,11 +128,16 @@ export default function ManualAttendance({
     students,
     subject_groups,
     accessible_classes,
+    morning_classes: morningClasses = [],
+    dismissal_classes: dismissalClasses = [],
     current_schedule,
     existingRecords,
     date,
 }: Props) {
     const [search, setSearch] = useState('');
+    const [sessionType, setSessionType] = useState<
+        'morning' | 'subject' | 'dismissal'
+    >('subject');
     const [selectedSubject, setSelectedSubject] = useState('');
     const [selectedClass, setSelectedClass] = useState('');
     const [statuses, setStatuses] = useState<Map<number, StudentStatus>>(() => {
@@ -161,12 +171,21 @@ export default function ManualAttendance({
         setStatuses(initial);
     }, [existingRecords]);
 
-    // Classes for selected subject
+    // Classes based on session type
     const subjectClasses = useMemo(() => {
-        if (!selectedSubject) return accessible_classes;
+        if (sessionType === 'morning') return morningClasses;
+        if (sessionType === 'dismissal') return dismissalClasses;
+        // subject type
+        if (!selectedSubject) return [];
         const group = subject_groups.find((g) => g.key === selectedSubject);
         return group?.classes ?? [];
-    }, [selectedSubject, subject_groups, accessible_classes]);
+    }, [
+        sessionType,
+        selectedSubject,
+        subject_groups,
+        morningClasses,
+        dismissalClasses,
+    ]);
 
     // Filter students by selected class
     const filteredStudents = useMemo(() => {
@@ -310,37 +329,101 @@ export default function ManualAttendance({
                 <Card>
                     <CardContent className="pt-6">
                         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                            {/* Subject */}
+                            {/* Session type */}
                             <div className="space-y-2">
-                                <Label>Mata Pelajaran</Label>
-                                <Select
-                                    value={selectedSubject}
-                                    onValueChange={(v) => {
-                                        setSelectedSubject(v);
-                                        setSelectedClass('');
-                                    }}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Pilih mapel" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {subject_groups.length === 0 ? (
-                                            <SelectItem value="none" disabled>
-                                                Tidak ada jadwal aktif
-                                            </SelectItem>
-                                        ) : (
-                                            subject_groups.map((g) => (
-                                                <SelectItem
-                                                    key={g.key}
-                                                    value={g.key}
-                                                >
-                                                    {g.name}
-                                                </SelectItem>
-                                            ))
-                                        )}
-                                    </SelectContent>
-                                </Select>
+                                <Label>Tipe Absensi</Label>
+                                <div className="grid grid-cols-3 gap-1.5">
+                                    {(
+                                        [
+                                            {
+                                                value: 'morning' as const,
+                                                label: 'Pagi',
+                                                icon: Sun,
+                                                available:
+                                                    morningClasses.length > 0,
+                                            },
+                                            {
+                                                value: 'subject' as const,
+                                                label: 'Mapel',
+                                                icon: BookOpen,
+                                                available:
+                                                    subject_groups.length > 0,
+                                            },
+                                            {
+                                                value: 'dismissal' as const,
+                                                label: 'Pulang',
+                                                icon: Sunset,
+                                                available:
+                                                    dismissalClasses.length > 0,
+                                            },
+                                        ] as const
+                                    ).map((opt) => {
+                                        const Icon = opt.icon;
+                                        const isActive =
+                                            sessionType === opt.value;
+
+                                        return (
+                                            <button
+                                                key={opt.value}
+                                                type="button"
+                                                disabled={!opt.available}
+                                                onClick={() => {
+                                                    setSessionType(opt.value);
+                                                    setSelectedSubject('');
+                                                    setSelectedClass('');
+                                                }}
+                                                className={`flex flex-col items-center gap-1 rounded-lg border px-2 py-2 text-xs font-medium transition-all ${
+                                                    !opt.available
+                                                        ? 'cursor-not-allowed border-dashed opacity-40'
+                                                        : isActive
+                                                          ? 'border-primary bg-primary/10 text-primary shadow-sm'
+                                                          : 'border-border bg-background text-muted-foreground hover:border-primary/40 hover:bg-muted'
+                                                }`}
+                                            >
+                                                <Icon className="h-3.5 w-3.5" />
+                                                {opt.label}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
                             </div>
+
+                            {/* Subject (only for subject type) */}
+                            {sessionType === 'subject' && (
+                                <div className="space-y-2">
+                                    <Label>Mata Pelajaran</Label>
+                                    <Select
+                                        value={selectedSubject}
+                                        onValueChange={(v) => {
+                                            setSelectedSubject(v);
+                                            setSelectedClass('');
+                                        }}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Pilih mapel" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {subject_groups.length === 0 ? (
+                                                <SelectItem
+                                                    value="none"
+                                                    disabled
+                                                >
+                                                    Tidak ada jadwal aktif
+                                                </SelectItem>
+                                            ) : (
+                                                subject_groups.map((g) => (
+                                                    <SelectItem
+                                                        key={g.key}
+                                                        value={g.key}
+                                                    >
+                                                        {g.name}
+                                                    </SelectItem>
+                                                ))
+                                            )}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            )}
 
                             {/* Class */}
                             <div className="space-y-2">
@@ -473,8 +556,9 @@ export default function ManualAttendance({
                             <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
                                 <Users className="mb-3 h-10 w-10 opacity-40" />
                                 <p className="text-sm">
-                                    Pilih mata pelajaran dan kelas terlebih
-                                    dahulu
+                                    {sessionType === 'subject'
+                                        ? 'Pilih mata pelajaran dan kelas terlebih dahulu'
+                                        : 'Pilih kelas terlebih dahulu'}
                                 </p>
                             </div>
                         ) : filteredStudents.length === 0 ? (

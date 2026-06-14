@@ -87,6 +87,27 @@ class AttendanceViewController extends Controller
             ->unique('id')
             ->values();
 
+        // Classes available for morning / dismissal sessions
+        $morningClasses = $activeSchedules
+            ->filter(fn (SubjectSchedule $schedule) => $schedule->schedule_type === 'morning')
+            ->map(fn (SubjectSchedule $schedule) => [
+                'id' => $schedule->school_class_id,
+                'name' => $schedule->schoolClass?->name,
+            ])
+            ->filter(fn ($class) => filled($class['name']))
+            ->unique('id')
+            ->values();
+
+        $dismissalClasses = $activeSchedules
+            ->filter(fn (SubjectSchedule $schedule) => $schedule->schedule_type === 'dismissal')
+            ->map(fn (SubjectSchedule $schedule) => [
+                'id' => $schedule->school_class_id,
+                'name' => $schedule->schoolClass?->name,
+            ])
+            ->filter(fn ($class) => filled($class['name']))
+            ->unique('id')
+            ->values();
+
         // Prioritize schedule with a subject assigned (teacher's own subject)
         $currentSchedule = $activeSchedules->firstWhere('subject_id', '!==', null)
             ?? $activeSchedules->first();
@@ -103,6 +124,8 @@ class AttendanceViewController extends Controller
             ] : null,
             'subject_groups' => $subjectGroups,
             'accessible_classes' => $accessibleClasses,
+            'morning_classes' => $morningClasses,
+            'dismissal_classes' => $dismissalClasses,
         ]);
     }
 
@@ -205,6 +228,27 @@ class AttendanceViewController extends Controller
             ->unique('id')
             ->values();
 
+        // Classes available for morning / dismissal sessions
+        $morningClasses = $activeSchedules
+            ->filter(fn (SubjectSchedule $schedule) => $schedule->schedule_type === 'morning')
+            ->map(fn (SubjectSchedule $schedule) => [
+                'id' => $schedule->school_class_id,
+                'name' => $schedule->schoolClass?->name,
+            ])
+            ->filter(fn ($class) => filled($class['name']))
+            ->unique('id')
+            ->values();
+
+        $dismissalClasses = $activeSchedules
+            ->filter(fn (SubjectSchedule $schedule) => $schedule->schedule_type === 'dismissal')
+            ->map(fn (SubjectSchedule $schedule) => [
+                'id' => $schedule->school_class_id,
+                'name' => $schedule->schoolClass?->name,
+            ])
+            ->filter(fn ($class) => filled($class['name']))
+            ->unique('id')
+            ->values();
+
         $currentSchedule = $activeSchedules->firstWhere('subject_id', '!==', null)
             ?? $activeSchedules->first();
 
@@ -242,6 +286,8 @@ class AttendanceViewController extends Controller
             'students' => $students,
             'subject_groups' => $subjectGroups,
             'accessible_classes' => $accessibleClasses,
+            'morning_classes' => $morningClasses,
+            'dismissal_classes' => $dismissalClasses,
             'current_schedule' => $currentSchedule ? [
                 'type' => $currentSchedule->schedule_type,
                 'subject_name' => $currentSchedule->subject?->name,
