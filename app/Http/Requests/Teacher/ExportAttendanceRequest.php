@@ -31,6 +31,7 @@ class ExportAttendanceRequest extends FormRequest
             'format' => ['nullable', 'string', 'in:csv,xlsx'],
             'classId' => ['nullable', 'integer'],
             'subjectId' => ['nullable', 'integer'],
+            'sessionType' => ['nullable', 'string', 'in:morning,subject,dismissal'],
         ];
     }
 
@@ -112,6 +113,17 @@ class ExportAttendanceRequest extends FormRequest
                 }
 
                 $allowedSubjectIds = $teacher->teachingSubjects()->pluck('subjects.id')->toArray();
+
+                // Also allow ALL subjects from homeroom classes (wali kelas)
+                $homeroomClassIds = $teacher->homeroomClasses()->pluck('id')->all();
+                if (! empty($homeroomClassIds)) {
+                    $homeroomSubjectIds = DB::table('class_subjects')
+                        ->whereIn('school_class_id', $homeroomClassIds)
+                        ->pluck('subject_id')
+                        ->unique()
+                        ->toArray();
+                    $allowedSubjectIds = array_unique(array_merge($allowedSubjectIds, $homeroomSubjectIds));
+                }
 
                 $subjectId = $this->input('subjectId');
                 if ($subjectId !== null && ! in_array((int) $subjectId, $allowedSubjectIds)) {

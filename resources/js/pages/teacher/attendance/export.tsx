@@ -44,6 +44,7 @@ export default function ExportAttendance({
     const [semester, setSemester] = useState<string>('');
     const [classId, setClassId] = useState<string>('');
     const [subjectId, setSubjectId] = useState<string>('');
+    const [sessionType, setSessionType] = useState<string>('');
     const [processing, setProcessing] = useState(false);
 
     const filteredSubjects = useMemo(() => {
@@ -85,6 +86,7 @@ export default function ExportAttendance({
                     format,
                     ...(classId ? { classId: Number(classId) } : {}),
                     ...(subjectId ? { subjectId: Number(subjectId) } : {}),
+                    ...(sessionType ? { sessionType } : {}),
                 }),
             });
 
@@ -104,7 +106,13 @@ export default function ExportAttendance({
             const subjectSuffix = subjectId
                 ? `-${subjects.find((s) => s.id === Number(subjectId))?.name ?? 'mapel'}`
                 : '';
-            link.download = `absensi${classSuffix}${subjectSuffix}-${semester.replace('/', '-')}.${format}`;
+            const typeLabels: Record<string, string> = {
+                morning: '-pagi',
+                subject: '-mapel',
+                dismissal: '-pulang',
+            };
+            const typeSuffix = sessionType ? typeLabels[sessionType] ?? '' : '';
+            link.download = `absensi${classSuffix}${subjectSuffix}${typeSuffix}-${semester.replace('/', '-')}.${format}`;
             document.body.appendChild(link);
             link.click();
             link.remove();
@@ -190,6 +198,43 @@ export default function ExportAttendance({
                             </div>
                         </div>
 
+                        <div className="mt-4 space-y-2">
+                            <Label htmlFor="sessionType">Tipe Sesi</Label>
+                            <Select
+                                value={sessionType || 'all'}
+                                onValueChange={(v) => {
+                                    const val = v === 'all' ? '' : v;
+                                    setSessionType(val);
+                                    if (val === 'morning' || val === 'dismissal') {
+                                        setSubjectId('');
+                                    }
+                                }}
+                            >
+                                <SelectTrigger
+                                    id="sessionType"
+                                    className="w-full"
+                                >
+                                    <SelectValue placeholder="Semua Tipe Sesi" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">
+                                        Semua Tipe Sesi
+                                    </SelectItem>
+                                    <SelectItem value="morning">
+                                        Pagi (Masuk)
+                                    </SelectItem>
+                                    <SelectItem value="subject">
+                                        Mata Pelajaran
+                                    </SelectItem>
+                                    <SelectItem value="dismissal">
+                                        Pulang
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <p className="text-xs text-muted-foreground">
+                                Kosongkan untuk mengekspor semua tipe sesi
+                            </p>
+                        </div>
                         {schoolClasses.length > 0 && (
                             <div className="mt-4 space-y-2">
                                 <Label htmlFor="classId">Kelas</Label>
@@ -225,7 +270,8 @@ export default function ExportAttendance({
                             </div>
                         )}
 
-                        {filteredSubjects.length > 0 && (
+                        {filteredSubjects.length > 0 &&
+                            !['morning', 'dismissal'].includes(sessionType) && (
                             <div className="mt-4 space-y-2">
                                 <Label htmlFor="subjectId">
                                     Mata Pelajaran
@@ -263,6 +309,7 @@ export default function ExportAttendance({
                                 </p>
                             </div>
                         )}
+
 
                         <div className="mt-6 flex flex-wrap gap-3">
                             <Button

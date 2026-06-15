@@ -117,6 +117,7 @@ class AdminReportController extends Controller
         $semester = $request->input('semester');
         $classId = $request->filled('classId') ? (int) $request->input('classId') : null;
         $subjectId = $request->filled('subjectId') ? (int) $request->input('subjectId') : null;
+        $sessionType = $request->filled('sessionType') ? $request->input('sessionType') : null;
 
         $startDate = null;
         $endDate = null;
@@ -133,7 +134,7 @@ class AdminReportController extends Controller
         }
 
         if ($format === 'xlsx') {
-            $data = $attendanceReportService->exportFormattedForAdmin($startDate, $endDate, $classId, $subjectId);
+            $data = $attendanceReportService->exportFormattedForAdmin($startDate, $endDate, $classId, $subjectId, $sessionType);
 
             $tempPath = tempnam(sys_get_temp_dir(), 'admin_attendance_export_');
             abort_if($tempPath === false, 500, 'Unable to create temporary export file.');
@@ -175,6 +176,7 @@ class AdminReportController extends Controller
 
             $writer->addRow($makeRow($data['headers'], $headerStyle));
 
+            $defaultCellStyle = new Style;
             $statusColIndex = array_search('Status', $data['headers'], true);
 
             foreach ($data['rows'] as $rowData) {
@@ -184,19 +186,15 @@ class AdminReportController extends Controller
                         'hadir', 'present' => $presentStyle,
                         'alpha', 'absent' => $absentStyle,
                         'terlambat', 'late' => $lateStyle,
-                        default => null,
+                        default => $defaultCellStyle,
                     };
-                    if ($cellStyle) {
-                        $highlightCells = [];
-                        foreach ($rowData as $i => $val) {
-                            $highlightCells[$i] = $i === $statusColIndex
-                                ? new StringCell((string) $val, $cellStyle)
-                                : new StringCell((string) $val);
-                        }
-                        $writer->addRow(new Row($highlightCells));
-                    } else {
-                        $writer->addRow($makeRow($rowData));
+                    $highlightCells = [];
+                    foreach ($rowData as $i => $val) {
+                        $highlightCells[$i] = $i === $statusColIndex
+                            ? new StringCell((string) $val, $cellStyle)
+                            : new StringCell((string) $val, $defaultCellStyle);
                     }
+                    $writer->addRow(new Row($highlightCells));
                 } else {
                     $writer->addRow($makeRow($rowData));
                 }
@@ -217,7 +215,7 @@ class AdminReportController extends Controller
         }
 
         // CSV format
-        $csv = $attendanceReportService->exportCsv($startDate, $endDate, $classId, $subjectId);
+        $csv = $attendanceReportService->exportCsv($startDate, $endDate, $classId, $subjectId, $sessionType);
 
         return response($csv)
             ->header('Content-Type', 'text/csv')

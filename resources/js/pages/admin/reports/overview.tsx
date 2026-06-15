@@ -89,6 +89,7 @@ export default function AdminReportsOverview({
     const [semester, setSemester] = useState<string>('');
     const [classId, setClassId] = useState<string>('');
     const [subjectId, setSubjectId] = useState<string>('');
+    const [sessionType, setSessionType] = useState<string>('');
     const [processing, setProcessing] = useState(false);
 
     const getCsrfToken = () =>
@@ -116,6 +117,7 @@ export default function AdminReportsOverview({
                     semester,
                     ...(classId ? { classId: Number(classId) } : {}),
                     ...(subjectId ? { subjectId: Number(subjectId) } : {}),
+                    ...(sessionType ? { sessionType } : {}),
                 }),
             });
 
@@ -134,7 +136,13 @@ export default function AdminReportsOverview({
             const subjectSuffix = subjectId
                 ? `-${subjects.find((s) => s.id === Number(subjectId))?.name ?? 'mapel'}`
                 : '';
-            link.download = `absensi-admin${classSuffix}${subjectSuffix}-${semester.replace('/', '-')}.${format}`;
+            const typeLabels: Record<string, string> = {
+                morning: '-pagi',
+                subject: '-mapel',
+                dismissal: '-pulang',
+            };
+            const typeSuffix = sessionType ? typeLabels[sessionType] ?? '' : '';
+            link.download = `absensi-admin${classSuffix}${subjectSuffix}${typeSuffix}-${semester.replace('/', '-')}.${format}`;
             document.body.appendChild(link);
             link.click();
             link.remove();
@@ -215,27 +223,49 @@ export default function AdminReportsOverview({
                                 ))}
                             </SelectContent>
                         </Select>
+                        {!['morning', 'dismissal'].includes(sessionType) && (
+                            <Select
+                                value={subjectId || 'all'}
+                                onValueChange={(v) =>
+                                    setSubjectId(v === 'all' ? '' : v)
+                                }
+                            >
+                                <SelectTrigger className="h-9 w-[200px]">
+                                    <SelectValue placeholder="Semua Mapel" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">
+                                        Semua Mapel
+                                    </SelectItem>
+                                    {subjects.map((subject) => (
+                                        <SelectItem
+                                            key={subject.id}
+                                            value={String(subject.id)}
+                                        >
+                                            {subject.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        )}
                         <Select
-                            value={subjectId || 'all'}
-                            onValueChange={(v) =>
-                                setSubjectId(v === 'all' ? '' : v)
-                            }
+                            value={sessionType || 'all'}
+                            onValueChange={(v) => {
+                                const val = v === 'all' ? '' : v;
+                                setSessionType(val);
+                                if (val === 'morning' || val === 'dismissal') {
+                                    setSubjectId('');
+                                }
+                            }}
                         >
-                            <SelectTrigger className="h-9 w-[200px]">
-                                <SelectValue placeholder="Semua Mapel" />
+                            <SelectTrigger className="h-9 w-[180px]">
+                                <SelectValue placeholder="Semua Tipe" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">
-                                    Semua Mapel
-                                </SelectItem>
-                                {subjects.map((subject) => (
-                                    <SelectItem
-                                        key={subject.id}
-                                        value={String(subject.id)}
-                                    >
-                                        {subject.name}
-                                    </SelectItem>
-                                ))}
+                                <SelectItem value="all">Semua Tipe</SelectItem>
+                                <SelectItem value="morning">Pagi</SelectItem>
+                                <SelectItem value="subject">Mapel</SelectItem>
+                                <SelectItem value="dismissal">Pulang</SelectItem>
                             </SelectContent>
                         </Select>
                         <Button

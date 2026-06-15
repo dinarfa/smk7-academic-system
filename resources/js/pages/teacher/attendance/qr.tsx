@@ -127,7 +127,7 @@ export default function TeacherAttendanceQr({
                 : null;
             const now = new Date();
 
-            if (expiresAt && now >= expiresAt) {
+            if (!expiresAt || now >= expiresAt) {
                 // Token expired — request rotation via API
                 try {
                     const response = await fetch(
