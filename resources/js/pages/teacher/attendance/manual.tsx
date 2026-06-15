@@ -189,12 +189,12 @@ export default function ManualAttendance({
 
     // Filter students by selected class
     const filteredStudents = useMemo(() => {
+        if (!selectedClass) return [];
         return students.filter((s) => {
             const matchesSearch = s.name
                 .toLowerCase()
                 .includes(search.toLowerCase());
-            const matchesClass =
-                !selectedClass || s.class_id === Number(selectedClass);
+            const matchesClass = s.class_id === Number(selectedClass);
             return matchesSearch && matchesClass;
         });
     }, [students, search, selectedClass]);
