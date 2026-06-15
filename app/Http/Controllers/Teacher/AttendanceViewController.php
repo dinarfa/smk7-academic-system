@@ -417,9 +417,24 @@ class AttendanceViewController extends Controller
 
         $allClasses = $homeroomClasses->merge($subjectClasses);
 
-        $subjects = $teacher->teachingSubjects()
+        // Subjects the teacher teaches
+        $teachingSubjects = $teacher->teachingSubjects()
             ->select('subjects.id', 'subjects.name', 'class_subjects.school_class_id')
             ->get();
+
+        // ALL subjects for homeroom classes (wali kelas can export everything)
+        $homeroomSubjects = collect();
+        if ($homeroomClasses->isNotEmpty()) {
+            $homeroomSubjects = DB::table('class_subjects')
+                ->join('subjects', 'subjects.id', '=', 'class_subjects.subject_id')
+                ->whereIn('class_subjects.school_class_id', $homeroomClasses->pluck('id')->all())
+                ->select('subjects.id', 'subjects.name', 'class_subjects.school_class_id')
+                ->get();
+        }
+
+        $subjects = $teachingSubjects->concat($homeroomSubjects)
+            ->unique(fn ($item) => $item->id.'-'.$item->school_class_id)
+            ->values();
 
         return Inertia::render('teacher/attendance/export', [
             'schoolClasses' => $allClasses->map(fn ($class) => [
@@ -429,7 +444,7 @@ class AttendanceViewController extends Controller
             'subjects' => $subjects->map(fn ($subject) => [
                 'id' => $subject->id,
                 'name' => $subject->name,
-                'school_class_id' => $subject->pivot->school_class_id,
+                'school_class_id' => $subject->school_class_id,
             ])->values(),
             'semesters' => SemesterHelper::getAvailableSemesters(),
         ]);
@@ -448,6 +463,7 @@ class AttendanceViewController extends Controller
         $format = $validated['format'] ?? 'csv';
         $classId = $validated['classId'] ?? null;
         $subjectId = $validated['subjectId'] ?? null;
+        $sessionType = $validated['sessionType'] ?? null;
         $startDate = $request->getEffectiveStartDate();
         $endDate = $request->getEffectiveEndDate();
 
@@ -458,6 +474,7 @@ class AttendanceViewController extends Controller
                 $endDate,
                 $classId,
                 $subjectId,
+                $sessionType,
             );
 
             $tempPath = tempnam(sys_get_temp_dir(), 'attendance_export_');
@@ -584,6 +601,7 @@ class AttendanceViewController extends Controller
             $endDate,
             $classId,
             $subjectId,
+            $sessionType,
         );
 
         $filename = 'teacher-attendance-export-'.now()->format('Y-m-d-His').'.csv';

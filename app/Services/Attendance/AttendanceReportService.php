@@ -373,7 +373,7 @@ class AttendanceReportService
     /**
      * Build the CSV contents for a teacher attendance export within a date range using chunked processing.
      */
-    public function exportCsvForTeacher(int $teacherId, string $startDate, string $endDate, ?int $classId = null, ?int $subjectId = null): string
+    public function exportCsvForTeacher(int $teacherId, string $startDate, string $endDate, ?int $classId = null, ?int $subjectId = null, ?string $sessionType = null): string
     {
         $stream = fopen('php://temp', 'r+');
 
@@ -391,7 +391,7 @@ class AttendanceReportService
 
         AttendanceRecord::query()
             ->with(['student:id,name,email', 'session', 'session.subjectModel:id,name'])
-            ->whereHas('session', function ($query) use ($teacherId, $classId, $subjectId): void {
+            ->whereHas('session', function ($query) use ($teacherId, $classId, $subjectId, $sessionType): void {
                 $query->where('opened_by', $teacherId);
                 if ($classId !== null) {
                     $query->where(function ($q) use ($classId): void {
@@ -401,6 +401,9 @@ class AttendanceReportService
                 }
                 if ($subjectId !== null) {
                     $query->where('subject_id', $subjectId);
+                }
+                if ($sessionType !== null) {
+                    $query->where('type', $sessionType);
                 }
             })
             ->whereBetween('scanned_at', [
@@ -439,7 +442,7 @@ class AttendanceReportService
      *
      * @return array<int, array<int, mixed>>
      */
-    public function exportArrayForTeacher(int $teacherId, string $startDate, string $endDate, ?int $classId = null, ?int $subjectId = null): array
+    public function exportArrayForTeacher(int $teacherId, string $startDate, string $endDate, ?int $classId = null, ?int $subjectId = null, ?string $sessionType = null): array
     {
         $rows = [];
 
@@ -457,7 +460,7 @@ class AttendanceReportService
 
         AttendanceRecord::query()
             ->with(['student:id,name,email', 'session', 'session.subjectModel:id,name'])
-            ->whereHas('session', function ($query) use ($teacherId, $classId, $subjectId): void {
+            ->whereHas('session', function ($query) use ($teacherId, $classId, $subjectId, $sessionType): void {
                 $query->where('opened_by', $teacherId);
                 if ($classId !== null) {
                     $query->where(function ($q) use ($classId): void {
@@ -467,6 +470,9 @@ class AttendanceReportService
                 }
                 if ($subjectId !== null) {
                     $query->where('subject_id', $subjectId);
+                }
+                if ($sessionType !== null) {
+                    $query->where('type', $sessionType);
                 }
             })
             ->whereBetween('scanned_at', [
@@ -498,7 +504,7 @@ class AttendanceReportService
      *
      * @return array{headers: array<int, string>, rows: array<int, array<int, string>>}
      */
-    public function exportFormattedForTeacher(int $teacherId, string $startDate, string $endDate, ?int $classId = null, ?int $subjectId = null): array
+    public function exportFormattedForTeacher(int $teacherId, string $startDate, string $endDate, ?int $classId = null, ?int $subjectId = null, ?string $sessionType = null): array
     {
         $headers = ['No', 'Nama Siswa', 'Email', 'Kelas', 'Mapel', 'Tipe Sesi', 'Status', 'Waktu Absen'];
 
@@ -506,7 +512,7 @@ class AttendanceReportService
 
         AttendanceRecord::query()
             ->with(['student:id,name,email,school_class_id', 'student.schoolClass:id,name', 'session', 'session.subjectModel:id,name'])
-            ->whereHas('session', function ($query) use ($teacherId, $classId, $subjectId): void {
+            ->whereHas('session', function ($query) use ($teacherId, $classId, $subjectId, $sessionType): void {
                 $query->where('opened_by', $teacherId);
                 if ($classId !== null) {
                     $query->where(function ($q) use ($classId): void {
@@ -516,6 +522,9 @@ class AttendanceReportService
                 }
                 if ($subjectId !== null) {
                     $query->where('subject_id', $subjectId);
+                }
+                if ($sessionType !== null) {
+                    $query->where('type', $sessionType);
                 }
             })
             ->whereBetween('scanned_at', [

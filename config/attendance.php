@@ -22,4 +22,15 @@ return [
     |
     */
     'bolos_detection_time' => env('BOLOS_DETECTION_TIME', '15:00'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | QR Token Rotation Interval
+    |--------------------------------------------------------------------------
+    |
+    | Seconds before the QR token expires and a new one is generated.
+    | Example: qr_rotation_seconds = 120 means the QR refreshes every 2 minutes.
+    |
+    */
+    'qr_rotation_seconds' => (int) env('ATTENDANCE_QR_ROTATION_SECONDS', 30),
 ];
