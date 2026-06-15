@@ -33,4 +33,17 @@ return [
     |
     */
     'qr_rotation_seconds' => (int) env('ATTENDANCE_QR_ROTATION_SECONDS', 30),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Schedule-Based Bolos Detection Time
+    |--------------------------------------------------------------------------
+    |
+    | Time of day to run the schedule-based bolos detection.
+    | After this time, students with scheduled subjects but no attendance
+    | session opened will be automatically marked as bolos.
+    | Format: HH:MM (24-hour). Default: 15:00 (3 PM).
+    |
+    */
+    'schedule_bolos_time' => env('ATTENDANCE_SCHEDULE_BOLOS_TIME', '15:00'),
 ];

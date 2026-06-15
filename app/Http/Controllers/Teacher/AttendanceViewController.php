@@ -527,11 +527,14 @@ class AttendanceViewController extends Controller
                 return new Row($cells);
             };
 
+            // Default cell style (no background, no special formatting)
+            $defaultCellStyle = new Style;
+
             // Helper: create Row with per-cell style override
-            $makeRowWithHighlight = function (array $values, int $highlightIndex, Style $highlightStyle): Row {
+            $makeRowWithHighlight = function (array $values, int $highlightIndex, Style $highlightStyle) use ($defaultCellStyle): Row {
                 $cells = [];
                 foreach ($values as $i => $val) {
-                    $style = $i === $highlightIndex ? $highlightStyle : null;
+                    $style = $i === $highlightIndex ? $highlightStyle : $defaultCellStyle;
                     $cells[$i] = new StringCell((string) $val, $style);
                 }
 
@@ -565,13 +568,9 @@ class AttendanceViewController extends Controller
                         'hadir' => $presentStyle,
                         'terlambat' => $lateStyle,
                         'alpha' => $absentStyle,
-                        default => null,
+                        default => $defaultCellStyle,
                     };
-                    if ($cellStyle) {
-                        $writer->addRow($makeRowWithHighlight($rowData, $statusColIndex, $cellStyle));
-                    } else {
-                        $writer->addRow($makeRow($rowData));
-                    }
+                    $writer->addRow($makeRowWithHighlight($rowData, $statusColIndex, $cellStyle));
                 } else {
                     $writer->addRow($makeRow($rowData));
                 }

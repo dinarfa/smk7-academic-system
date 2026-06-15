@@ -20,12 +20,33 @@ Artisan::command('attendance:detect-absences {date?}', function (?string $date =
     $this->info("Records created: {$result['created']}.");
 })->purpose('Detect missing attendance and mark bolos records for teacher sessions.');
 
+Artisan::command('attendance:detect-schedule-bolos {date?}', function (?string $date = null) {
+    $service = app(AbsenceDetectionService::class);
+    $result = $service->detectForSchedule($date);
+
+    $this->info("Schedule-based bolos detection completed for {$result['date']}.");
+    $this->info("Students checked: {$result['students_checked']}.");
+    $this->info("Records created: {$result['records_created']}.");
+
+    if (! empty($result['details'])) {
+        $this->table(
+            ['Kelas', 'Siswa Terdeteksi'],
+            collect($result['details'])->map(fn ($d) => [
+                $d['class'], $d['students_affected'],
+            ]),
+        );
+    }
+})->purpose('Detect bolos for students with no attendance records today.');
+
 Schedule::call(function () {
     app(AttendanceSessionLifecycleService::class)->closeExpiredSessions();
 })->everyFiveMinutes();
 
 // Safety net: run bolos detection at end of school day
 Schedule::command('attendance:detect-absences')->dailyAt(config('attendance.bolos_detection_time', '15:00'));
+
+// Schedule-based: detect bolos for scheduled slots with no session opened
+Schedule::command('attendance:detect-schedule-bolos')->dailyAt(config('attendance.schedule_bolos_time', '15:00'));
 
 // Retroactive: check past 2 days for missed detections (e.g., after server downtime)
 Schedule::command('attendance:detect-missed --days=2')->dailyAt('07:00');
