@@ -34,19 +34,19 @@ export function AppSidebar() {
     const { auth } = usePage().props;
     const user = auth.user as
         | {
-              role?: 'admin' | 'teacher' | 'student';
-              homeroom_classes_count?: number;
-          }
+            role?: 'admin' | 'teacher' | 'student';
+            homeroom_classes_count?: number;
+        }
         | undefined;
     const role = user?.role;
     const dashboardHref =
         role === 'teacher'
             ? teacher.dashboard.url()
             : role === 'student'
-              ? student.dashboard.url()
-              : role === 'admin'
-                ? admin.dashboard.url()
-                : dashboard();
+                ? student.dashboard.url()
+                : role === 'admin'
+                    ? admin.dashboard.url()
+                    : dashboard();
 
     const dashboardItem: NavItem = {
         title: 'Dashboard',
@@ -68,12 +68,6 @@ export function AppSidebar() {
                 icon: School,
             });
         }
-
-        classItems.push({
-            title: 'Data Siswa',
-            href: teacher.students.index.url(),
-            icon: Users,
-        });
 
         sections.push(
             { items: [dashboardItem] },
