@@ -38,15 +38,23 @@ Artisan::command('attendance:detect-schedule-bolos {date?}', function (?string $
     }
 })->purpose('Detect bolos for students with no attendance records today.');
 
+// Every 5 minutes: close expired sessions + auto-detect bolos after configured time
 Schedule::call(function () {
     app(AttendanceSessionLifecycleService::class)->closeExpiredSessions();
+
+    // Auto-detect bolos if current time >= configured threshold (once per day via cache)
+    $bolosTime = config('attendance.schedule_bolos_time', '15:00');
+    if (now()->gte(today()->setTimeFromTimeString($bolosTime))) {
+        $cacheKey = 'bolos_schedule_'.today()->format('Y-m-d');
+        if (! cache()->has($cacheKey)) {
+            app(AbsenceDetectionService::class)->detectForSchedule();
+            cache()->put($cacheKey, true, now()->addDay());
+        }
+    }
 })->everyFiveMinutes();
 
-// Safety net: run bolos detection at end of school day
+// Safety net: run session-based bolos detection at end of school day
 Schedule::command('attendance:detect-absences')->dailyAt(config('attendance.bolos_detection_time', '15:00'));
-
-// Schedule-based: detect bolos for scheduled slots with no session opened
-Schedule::command('attendance:detect-schedule-bolos')->dailyAt(config('attendance.schedule_bolos_time', '15:00'));
 
 // Retroactive: check past 2 days for missed detections (e.g., after server downtime)
 Schedule::command('attendance:detect-missed --days=2')->dailyAt('07:00');
