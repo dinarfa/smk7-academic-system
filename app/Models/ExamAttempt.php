@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['exam_id', 'student_id', 'started_at', 'submitted_at', 'status', 'score'])]
+#[Fillable(['exam_id', 'student_id', 'started_at', 'submitted_at', 'status', 'score', 'graded_at', 'graded_by', 'feedback'])]
 class ExamAttempt extends Model
 {
     use HasFactory;
@@ -24,6 +24,7 @@ class ExamAttempt extends Model
             'started_at' => 'datetime',
             'submitted_at' => 'datetime',
             'score' => 'decimal:2',
+            'graded_at' => 'datetime',
         ];
     }
 
@@ -41,6 +42,14 @@ class ExamAttempt extends Model
     public function student(): BelongsTo
     {
         return $this->belongsTo(User::class, 'student_id');
+    }
+
+    /**
+     * Guru yang mengoreksi attempt ini.
+     */
+    public function gradedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'graded_by');
     }
 
     /**

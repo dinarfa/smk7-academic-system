@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['exam_attempt_id', 'question_id', 'answer_option_id', 'response_text', 'is_correct', 'points_awarded'])]
+#[Fillable(['exam_attempt_id', 'question_id', 'answer_option_id', 'response_text', 'is_correct', 'points_awarded', 'feedback'])]
 class ExamResponse extends Model
 {
     use HasFactory;

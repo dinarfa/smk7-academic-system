@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AdminAuditLogController;
 use App\Http\Controllers\Admin\AdminReportController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\DepartmentController as AdminDepartmentController;
+use App\Http\Controllers\Admin\ExamController as AdminExamController;
 use App\Http\Controllers\Admin\SchoolClassController as AdminSchoolClassController;
 use App\Http\Controllers\Admin\SubjectController as AdminSubjectController;
 use App\Http\Controllers\Admin\SubjectScheduleController as AdminSubjectScheduleController;
@@ -81,6 +82,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('schedules', [AdminSubjectScheduleController::class, 'store'])->name('schedules.store');
         Route::put('schedules/{subjectSchedule}', [AdminSubjectScheduleController::class, 'update'])->name('schedules.update');
         Route::delete('schedules/{subjectSchedule}', [AdminSubjectScheduleController::class, 'destroy'])->name('schedules.destroy');
+
+        // Exams
+        Route::get('exams', [AdminExamController::class, 'index'])->name('exams.index');
+        Route::get('exams/{exam}', [AdminExamController::class, 'show'])->name('exams.show');
+        Route::patch('exams/{exam}/status', [AdminExamController::class, 'updateStatus'])->name('exams.update-status');
+        Route::delete('exams/{exam}', [AdminExamController::class, 'destroy'])->name('exams.destroy');
     });
 
     Route::middleware('role:teacher')->prefix('teacher')->name('teacher.')->group(function () {

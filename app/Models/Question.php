@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['exam_id', 'prompt', 'type', 'points', 'sort_order', 'explanation'])]
+#[Fillable(['exam_id', 'prompt', 'prompt_images', 'has_image', 'type', 'points', 'sort_order', 'explanation'])]
 class Question extends Model
 {
     use HasFactory;
@@ -24,6 +24,8 @@ class Question extends Model
         return [
             'points' => 'integer',
             'sort_order' => 'integer',
+            'prompt_images' => 'array',
+            'has_image' => 'boolean',
         ];
     }
 

@@ -1,6 +1,7 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import QuestionController from '@/actions/App/Http/Controllers/Teacher/QuestionController';
-import RichEditor from '@/components/RichEditor';
+import RichTextEditor from '@/components/rich-text-editor';
+import HtmlPreview from '@/components/html-preview';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -101,23 +102,13 @@ export default function Edit({ exam, question }: Props) {
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={submit} className="space-y-6">
-                            <div className="space-y-2">
-                                <Label htmlFor="prompt">Pertanyaan</Label>
-                                <div className="min-h-[300px]">
-                                    <RichEditor
-                                        value={data.prompt}
-                                        onChange={(val) =>
-                                            setData('prompt', val)
-                                        }
-                                        placeholder="Ketik soal di sini..."
-                                    />
-                                </div>
-                                {errors.prompt && (
-                                    <p className="text-sm text-destructive">
-                                        {errors.prompt}
-                                    </p>
-                                )}
-                            </div>
+                            <RichTextEditor
+                                label="Pertanyaan"
+                                value={data.prompt}
+                                onChange={(val) => setData('prompt', val)}
+                                placeholder="Ketik soal di sini..."
+                                error={errors.prompt}
+                            />
 
                             <div className="grid gap-4 md:grid-cols-3">
                                 <div className="space-y-2">
@@ -206,40 +197,26 @@ export default function Edit({ exam, question }: Props) {
                                                     key={index}
                                                     className="grid gap-3 rounded-lg border border-border p-4 md:grid-cols-[1fr_auto_auto]"
                                                 >
-                                                    <div className="space-y-2">
-                                                        <Label>
-                                                            Opsi {index + 1}
-                                                        </Label>
-                                                        <div className="min-h-[150px]">
-                                                            <RichEditor
-                                                                height={150}
-                                                                value={
-                                                                    option.option_text
-                                                                }
-                                                                onChange={(
+                                                    <RichTextEditor
+                                                        label={`Opsi ${index + 1}`}
+                                                        value={
+                                                            option.option_text
+                                                        }
+                                                        onChange={(val) => {
+                                                            const next = [
+                                                                ...data.answer_options,
+                                                            ];
+                                                            next[index] = {
+                                                                ...next[index],
+                                                                option_text:
                                                                     val,
-                                                                ) => {
-                                                                    const next =
-                                                                        [
-                                                                            ...data.answer_options,
-                                                                        ];
-                                                                    next[
-                                                                        index
-                                                                    ] = {
-                                                                        ...next[
-                                                                            index
-                                                                        ],
-                                                                        option_text:
-                                                                            val,
-                                                                    };
-                                                                    setData(
-                                                                        'answer_options',
-                                                                        next,
-                                                                    );
-                                                                }}
-                                                            />
-                                                        </div>
-                                                    </div>
+                                                            };
+                                                            setData(
+                                                                'answer_options',
+                                                                next,
+                                                            );
+                                                        }}
+                                                    />
                                                     <label className="flex items-center gap-2 pt-8 text-sm">
                                                         {data.type ===
                                                         'objective' ? (
@@ -370,6 +347,51 @@ export default function Edit({ exam, question }: Props) {
                                     </p>
                                 )}
                             </div>
+
+                            {/* Preview Section */}
+                            {data.prompt && (
+                                <div className="space-y-2">
+                                    <Label>Preview Soal</Label>
+                                    <div className="rounded-lg border border-dashed border-border p-4">
+                                        <HtmlPreview content={data.prompt} />
+                                        {data.type !== 'essay' &&
+                                            data.answer_options.some(
+                                                (opt) => opt.option_text,
+                                            ) && (
+                                                <div className="mt-4 space-y-2">
+                                                    <p className="text-xs font-medium text-muted-foreground">
+                                                        Jawaban:
+                                                    </p>
+                                                    <div className="space-y-1">
+                                                        {data.answer_options.map(
+                                                            (opt, i) =>
+                                                                opt.option_text && (
+                                                                    <div
+                                                                        key={i}
+                                                                        className="flex items-start gap-2 rounded border border-border p-2"
+                                                                    >
+                                                                        <span className="text-xs text-muted-foreground">
+                                                                            {String.fromCharCode(
+                                                                                65 +
+                                                                                    i,
+                                                                            )}
+                                                                            .
+                                                                        </span>
+                                                                        <HtmlPreview
+                                                                            content={
+                                                                                opt.option_text
+                                                                            }
+                                                                            className="prose-xs"
+                                                                        />
+                                                                    </div>
+                                                                ),
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="flex flex-wrap gap-3">
                                 <Button type="submit" disabled={processing}>

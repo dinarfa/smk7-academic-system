@@ -1,9 +1,9 @@
 import { Head, Link, router } from '@inertiajs/react';
-import DOMPurify from 'dompurify';
 import type { FormEvent } from 'react';
 import { useEffect, useState, useCallback } from 'react';
 import ExamResponseController from '@/actions/App/Http/Controllers/Student/ExamResponseController';
 import ExamSubmissionController from '@/actions/App/Http/Controllers/Student/ExamSubmissionController';
+import HtmlPreview from '@/components/html-preview';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -118,11 +118,9 @@ function QuestionCard({
         <Card>
             <CardHeader>
                 <CardDescription>Poin {question.points}</CardDescription>
-                <div
-                    className="prose prose-sm max-w-none text-lg leading-7 font-medium dark:prose-invert"
-                    dangerouslySetInnerHTML={{
-                        __html: DOMPurify.sanitize(question.prompt),
-                    }}
+                <HtmlPreview
+                    content={question.prompt}
+                    className="text-lg leading-7 font-medium"
                 />
             </CardHeader>
             <CardContent className="space-y-4">
@@ -145,13 +143,9 @@ function QuestionCard({
                                     onChange={() => saveChoice(option.id)}
                                     className="mt-1"
                                 />
-                                <div
-                                    className="prose prose-sm max-w-none dark:prose-invert"
-                                    dangerouslySetInnerHTML={{
-                                        __html: DOMPurify.sanitize(
-                                            option.option_text,
-                                        ),
-                                    }}
+                                <HtmlPreview
+                                    content={option.option_text}
+                                    className="prose-sm"
                                 />
                             </label>
                         ))}

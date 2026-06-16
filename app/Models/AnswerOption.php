@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['question_id', 'option_text', 'is_correct', 'sort_order'])]
+#[Fillable(['question_id', 'option_text', 'option_images', 'has_image', 'is_correct', 'sort_order'])]
 class AnswerOption extends Model
 {
     use HasFactory;
@@ -22,6 +22,8 @@ class AnswerOption extends Model
         return [
             'is_correct' => 'boolean',
             'sort_order' => 'integer',
+            'option_images' => 'array',
+            'has_image' => 'boolean',
         ];
     }
 

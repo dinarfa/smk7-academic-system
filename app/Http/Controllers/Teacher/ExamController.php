@@ -201,6 +201,7 @@ class ExamController extends Controller
                     'answer_option_id' => $resp->answer_option_id,
                     'is_correct' => $resp->is_correct,
                     'points_awarded' => $resp->points_awarded !== null ? (float) $resp->points_awarded : null,
+                    'feedback' => $resp->feedback,
                 ] : null,
             ];
         });
@@ -235,12 +236,16 @@ class ExamController extends Controller
             'grades' => ['required', 'array'],
             'grades.*.question_id' => ['required', 'integer', 'exists:questions,id'],
             'grades.*.points_awarded' => ['required', 'numeric', 'min:0'],
+            'grades.*.feedback' => ['nullable', 'string', 'max:5000'],
         ]);
 
         foreach ($validated['grades'] as $grade) {
             ExamResponse::updateOrCreate(
                 ['exam_attempt_id' => $attempt->id, 'question_id' => $grade['question_id']],
-                ['points_awarded' => $grade['points_awarded']]
+                [
+                    'points_awarded' => $grade['points_awarded'],
+                    'feedback' => $grade['feedback'] ?? null,
+                ]
             );
         }
 
@@ -255,7 +260,11 @@ class ExamController extends Controller
             $normalizedScore = ($totalPointsAwarded / $totalPossiblePoints) * 100;
         }
 
-        $attempt->update(['score' => $normalizedScore]);
+        $attempt->update([
+            'score' => $normalizedScore,
+            'graded_at' => now(),
+            'graded_by' => auth()->id(),
+        ]);
 
         return redirect()->route('teacher.exams.results', $exam)->with('success', 'Nilai berhasil disimpan dan dikalkulasi ulang.');
     }

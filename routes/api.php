@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\Student\ExamResponseController;
 use App\Http\Controllers\Api\V1\Student\ExamSubmissionController;
 use App\Http\Controllers\Api\V1\Student\ExcuseController;
 use App\Http\Controllers\Api\V1\Student\ProfileController;
+use App\Http\Controllers\Api\V1\UploadController;
 use Illuminate\Support\Facades\Route;
 
 // Public auth routes
@@ -20,6 +21,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Auth
     Route::post('v1/logout', [AuthController::class, 'logout']);
     Route::get('v1/me', [AuthController::class, 'me']);
+
+    // Upload (teacher/admin only)
+    Route::middleware('role:teacher,admin')->post('v1/upload/image', [UploadController::class, 'store']);
 
     // Student routes
     Route::middleware('role:student')->prefix('v1/student')->name('api.student.')->group(function () {
